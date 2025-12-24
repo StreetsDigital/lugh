@@ -1,0 +1,29 @@
+# New Codebase Onboarding
+# Get up to speed on an unfamiliar codebase
+
+name: Codebase Onboarding
+description: Understand a new codebase from architecture to conventions
+estimated_time: 1-2 hours
+
+steps:
+  - agent: arch-investigator
+    task: Map the overall architecture, components, and data flow
+    output: docs/architecture-overview.md
+    compact_after: true
+
+  - agent: audit-docs
+    task: Review existing documentation quality and gaps
+    output: docs/documentation-audit.md
+    compact_after: true
+
+  - agent: audit-tests
+    task: Understand test structure and coverage
+    output: docs/test-overview.md
+    compact_after: false
+
+summary: |
+  After this chain you'll understand:
+  - How the system is architected
+  - What documentation exists (and what's missing)
+  - How tests are organized
+  Great for onboarding to a new project.

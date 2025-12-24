@@ -1,0 +1,69 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+*.egg-info/
+
+# Node.js
+node_modules/
+dist/
+coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ESLint cache
+.eslintcache
+
+# Environment files
+.env
+.env.local
+
+# Caddy configuration (keep Caddyfile.example)
+Caddyfile
+
+# Session files
+sessions/
+api_sessions/
+
+# RCA reports (generated, local only)
+.agents/rca-reports/
+.claude/PRPs/features
+.agents/pr-reviews
+.agents/implementation-reports
+
+# Local workspace
+workspace/
+workspace
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Integration testing
+.test-repo-name
+.test-repo-url
+.test-issue-number
+
+coverage
+
+worktrees
+.claude/worktree-registry.json
+
+.agents/PRDs
+.agents/context
+.agents/posts
+.agents/PRODUCT.md

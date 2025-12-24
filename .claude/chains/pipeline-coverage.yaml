@@ -1,0 +1,52 @@
+# Review Pipeline: Test Coverage
+# Find untested code, write tests, verify coverage
+
+name: Test Coverage Pipeline
+description: Identify coverage gaps, write tests, verify
+estimated_time: 1-2 hours
+
+pipeline:
+  analyzer:
+    agent: audit-tests
+    produces: coverage_gaps
+    
+  writer:
+    agent: build-tests
+    consumes: coverage_gaps
+    produces: new_tests
+    
+  verifier:
+    agent: audit-tests
+    consumes: new_tests
+    produces: coverage_report
+
+instructions: |
+  ## Test Coverage Loop
+  
+  ### Step 1: Analyze Coverage
+  ```
+  @audit-tests Analyze test coverage. Find:
+  - Untested functions/methods
+  - Missing edge cases
+  - Critical paths without tests
+  Prioritize by risk.
+  ```
+  
+  ### Step 2: Write Tests
+  ```
+  /compact
+  @build-tests Write tests for: [paste top priority gaps]
+  Follow existing test patterns.
+  ```
+  
+  ### Step 3: Verify
+  ```
+  /compact
+  @audit-tests Verify new tests:
+  - Do they actually test the right things?
+  - Are edge cases covered?
+  - Run: pytest / go test / npm test
+  ```
+  
+  ### Step 4: Repeat
+  Loop until coverage targets met.

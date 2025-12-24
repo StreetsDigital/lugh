@@ -1,0 +1,57 @@
+# Full Production Audit Chain
+# Complete audit before going live
+
+name: Full Production Audit
+description: Comprehensive audit covering code, security, performance, and production readiness
+estimated_time: 2-3 hours
+
+steps:
+  - agent: audit-go
+    task: Review all Go code for quality, patterns, and issues
+    output: docs/audits/go-review.md
+    compact_after: true
+
+  - agent: audit-python
+    task: Review all Python code for quality, patterns, and issues
+    output: docs/audits/python-review.md
+    compact_after: true
+
+  - agent: audit-tests
+    task: Assess test coverage and quality
+    output: docs/audits/test-coverage.md
+    compact_after: true
+
+  - agent: audit-concurrency
+    task: Check for race conditions, deadlocks, and concurrency issues
+    output: docs/audits/concurrency.md
+    compact_after: true
+
+  - agent: security-api
+    task: Deep security audit of all API endpoints
+    output: docs/audits/security-api.md
+    compact_after: true
+
+  - agent: security-privacy
+    task: GDPR/CCPA compliance and data handling review
+    output: docs/audits/privacy.md
+    compact_after: true
+
+  - agent: perf-latency
+    task: Identify latency bottlenecks and optimization opportunities
+    output: docs/audits/performance.md
+    compact_after: true
+
+  - agent: meta-production-readiness
+    task: Final go/no-go assessment with traffic light scorecard
+    output: reports/production-readiness.md
+    compact_after: false
+
+summary: |
+  After completing this chain, you'll have:
+  - Code quality assessments for Go and Python
+  - Test coverage analysis
+  - Concurrency safety verification
+  - Security audit results
+  - Privacy compliance check
+  - Performance analysis
+  - Final go/no-go recommendation

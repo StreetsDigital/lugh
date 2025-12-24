@@ -1,0 +1,34 @@
+# Bidder Adapter Build
+# Complete workflow for adding a new bidder to PBS
+
+name: New Bidder Adapter
+description: Build and test a new Prebid Server bidder adapter
+estimated_time: 3-4 hours
+
+steps:
+  - agent: adtech-bidder
+    task: Research the SSP's OpenRTB implementation and create the adapter
+    output: null
+    compact_after: true
+
+  - agent: audit-go
+    task: Review the adapter code for quality and patterns
+    output: docs/bidder-review.md
+    compact_after: true
+
+  - agent: audit-tests
+    task: Write adapter tests with sample bid requests/responses
+    output: null
+    compact_after: true
+
+  - agent: adtech-ortb
+    task: Verify OpenRTB compliance and edge cases
+    output: docs/ortb-compliance.md
+    compact_after: false
+
+summary: |
+  Complete bidder adapter workflow:
+  - Adapter implementation
+  - Code review
+  - Test suite
+  - OpenRTB compliance check

@@ -1,0 +1,34 @@
+# Documentation Sprint
+# Generate comprehensive documentation
+
+name: Documentation Sprint
+description: Create or update project documentation
+estimated_time: 2-3 hours
+
+steps:
+  - agent: arch-investigator
+    task: Document the system architecture
+    output: docs/architecture.md
+    compact_after: true
+
+  - agent: audit-docs
+    task: Review and improve existing documentation
+    output: null
+    compact_after: true
+
+  - agent: arch-api
+    task: Generate API documentation
+    output: docs/api/README.md
+    compact_after: true
+
+  - agent: build-docs
+    task: Create getting started guide and tutorials
+    output: docs/getting-started.md
+    compact_after: false
+
+summary: |
+  Documentation outputs:
+  - Architecture documentation
+  - Improved existing docs
+  - API reference
+  - Getting started guide

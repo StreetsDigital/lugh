@@ -1,0 +1,23 @@
+# Quick Security Check
+# Fast security review for PRs or quick assessments
+
+name: Quick Security Check
+description: Rapid security assessment - API + dependencies
+estimated_time: 30-45 mins
+
+steps:
+  - agent: security-api
+    task: Check authentication, authorization, and common vulnerabilities
+    output: docs/audits/security-quick.md
+    compact_after: true
+
+  - agent: security-deps
+    task: Scan dependencies for known vulnerabilities
+    output: docs/audits/deps-scan.md
+    compact_after: false
+
+summary: |
+  Quick security check covering:
+  - API endpoint security
+  - Dependency vulnerabilities
+  Good for PR reviews or periodic checks.

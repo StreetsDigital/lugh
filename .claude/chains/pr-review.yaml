@@ -1,0 +1,30 @@
+# PR Review Chain
+# Thorough review of a pull request
+
+name: PR Review
+description: Comprehensive pull request review
+estimated_time: 30-60 mins
+
+steps:
+  - agent: audit-code
+    task: Review code changes for quality, patterns, and bugs
+    output: null
+    compact_after: true
+
+  - agent: audit-tests
+    task: Check test coverage for the changes
+    output: null
+    compact_after: true
+
+  - agent: security-api
+    task: Quick security check on changed code
+    output: null
+    compact_after: false
+
+summary: |
+  PR review covering:
+  - Code quality
+  - Test coverage
+  - Security implications
+  
+  Use with: git diff main...feature-branch

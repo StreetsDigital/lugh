@@ -1,0 +1,28 @@
+# Performance Deep Dive
+# Comprehensive performance analysis
+
+name: Performance Analysis
+description: Full performance audit - latency, memory, and cost
+estimated_time: 1-2 hours
+
+steps:
+  - agent: perf-latency
+    task: Identify latency bottlenecks and P99 issues
+    output: docs/perf/latency-analysis.md
+    compact_after: true
+
+  - agent: perf-memory
+    task: Analyze memory usage, leaks, and allocation patterns
+    output: docs/perf/memory-analysis.md
+    compact_after: true
+
+  - agent: perf-cost
+    task: Cloud cost analysis and optimization opportunities
+    output: docs/perf/cost-analysis.md
+    compact_after: false
+
+summary: |
+  Performance deep dive covering:
+  - Latency optimization
+  - Memory efficiency
+  - Cloud cost reduction

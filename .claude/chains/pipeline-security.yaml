@@ -1,0 +1,49 @@
+# Review Pipeline: Security Hardening
+# Security agent finds issues, builder fixes them
+
+name: Security Hardening Pipeline
+description: Find security issues, fix them, verify fixes
+estimated_time: 1-2 hours
+
+pipeline:
+  scanner:
+    agent: security-api
+    produces: vulnerabilities
+    
+  fixer:
+    agent: build-feature
+    consumes: vulnerabilities
+    produces: fixes
+    
+  verifier:
+    agent: security-api
+    consumes: fixes
+    produces: verification
+
+instructions: |
+  ## Security Hardening Loop
+  
+  ### Step 1: Scan
+  ```
+  @security-api Full security audit. For each issue:
+  - File and line number
+  - Severity (Critical/High/Medium/Low)
+  - How to fix
+  ```
+  
+  ### Step 2: Fix Critical/High
+  ```
+  /compact
+  @build-feature Fix these security issues: [paste Critical and High items]
+  ```
+  
+  ### Step 3: Verify
+  ```
+  /compact
+  @security-api Verify the fixes. Check:
+  - Original issues resolved?
+  - No new issues introduced?
+  ```
+  
+  ### Step 4: Repeat
+  Loop until all Critical/High issues resolved.

@@ -1,0 +1,48 @@
+# Review Pipeline: Code → Review → Fix
+# Writer produces code, reviewer checks it, fixer addresses issues
+
+name: Code Review Pipeline
+description: Write code, get it reviewed, fix issues - iterative loop
+estimated_time: Variable
+
+pipeline:
+  writer:
+    agent: build-feature
+    produces: code
+    
+  reviewer:
+    agent: audit-code
+    consumes: code
+    produces: review
+    
+  fixer:
+    agent: build-feature
+    consumes: review
+    produces: code
+    loop_until: review.issues == 0
+
+instructions: |
+  ## How to Run This Pipeline
+  
+  ### Step 1: Write
+  ```
+  @build-feature Implement [your feature]
+  ```
+  
+  ### Step 2: Review
+  ```
+  /compact
+  @audit-code Review the code just written. List issues as:
+  - 🔴 Critical: [issue]
+  - 🟡 Warning: [issue]
+  - 🟢 Suggestion: [issue]
+  ```
+  
+  ### Step 3: Fix (if issues found)
+  ```
+  /compact
+  @build-feature Fix these issues: [paste 🔴 and 🟡 items]
+  ```
+  
+  ### Step 4: Repeat until clean
+  Loop steps 2-3 until no 🔴 or 🟡 issues remain.
