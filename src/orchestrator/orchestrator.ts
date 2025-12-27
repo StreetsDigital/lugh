@@ -221,7 +221,7 @@ async function saveLongResponseToFile(
   }
 
   // Create temp directory for responses
-  const tempDir = '/tmp/archon-responses';
+  const tempDir = '/tmp/lugh-responses';
   await mkdir(tempDir, { recursive: true });
 
   // Generate unique filename

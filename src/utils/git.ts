@@ -2,7 +2,7 @@ import { readFile, access, mkdir as fsMkdir } from 'fs/promises';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { join } from 'path';
-import { getArchonWorktreesPath } from './archon-paths';
+import { getLughWorktreesPath } from './lugh-paths';
 
 const promisifiedExecFile = promisify(execFile);
 
@@ -27,10 +27,10 @@ export async function mkdirAsync(path: string, options?: { recursive?: boolean }
 
 /**
  * Get the base directory for worktrees
- * Now delegates to archon-paths module for consistency
+ * Now delegates to lugh-paths module for consistency
  */
 export function getWorktreeBase(_repoPath: string): string {
-  return getArchonWorktreesPath();
+  return getLughWorktreesPath();
 }
 
 /**
@@ -138,7 +138,7 @@ export async function createWorktreeForIssue(
   const branchName = isPR ? `pr-${String(issueNumber)}` : `issue-${String(issueNumber)}`;
 
   // Extract owner and repo name from repoPath to avoid collisions
-  // repoPath format: /.archon/workspaces/owner/repo
+  // repoPath format: /.lugh/workspaces/owner/repo
   const pathParts = repoPath.split('/').filter(p => p.length > 0);
   const repoName = pathParts[pathParts.length - 1]; // Last part: "repo"
   const ownerName = pathParts[pathParts.length - 2]; // Second to last: "owner"

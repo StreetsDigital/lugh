@@ -26,7 +26,7 @@ describe('config-loader', () => {
     'MAX_CONCURRENT_CONVERSATIONS',
     'WORKSPACE_PATH',
     'WORKTREE_BASE',
-    'ARCHON_HOME',
+    'LUGH_HOME',
   ];
 
   beforeEach(() => {
@@ -100,9 +100,9 @@ concurrency:
   });
 
   describe('loadRepoConfig', () => {
-    test('loads from .archon/config.yaml', async () => {
+    test('loads from .lugh/config.yaml', async () => {
       mockReadFile.mockImplementation(async (path: string) => {
-        if (path.includes('.archon/config.yaml')) {
+        if (path.includes('.lugh/config.yaml')) {
           return 'assistant: codex';
         }
         throw new Error('Not found');
@@ -166,10 +166,10 @@ streaming:
       let callCount = 0;
       mockReadFile.mockImplementation(async (path: string) => {
         callCount++;
-        if (path.includes('.archon/config.yaml') && callCount <= 1) {
+        if (path.includes('.lugh/config.yaml') && callCount <= 1) {
           return 'defaultAssistant: claude';
         }
-        if (path.includes('/repo/.archon/config.yaml')) {
+        if (path.includes('/repo/.lugh/config.yaml')) {
           return 'assistant: codex';
         }
         throw new Error('Not found');
@@ -179,15 +179,15 @@ streaming:
       expect(config.assistant).toBe('codex');
     });
 
-    test('paths use archon defaults', async () => {
+    test('paths use lugh defaults', async () => {
       const error = new Error('ENOENT') as NodeJS.ErrnoException;
       error.code = 'ENOENT';
       mockReadFile.mockRejectedValue(error);
 
       const config = await loadConfig();
 
-      expect(config.paths.workspaces).toBe(join(homedir(), '.archon', 'workspaces'));
-      expect(config.paths.worktrees).toBe(join(homedir(), '.archon', 'worktrees'));
+      expect(config.paths.workspaces).toBe(join(homedir(), '.lugh', 'workspaces'));
+      expect(config.paths.worktrees).toBe(join(homedir(), '.lugh', 'worktrees'));
     });
   });
 });

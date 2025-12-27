@@ -17,7 +17,7 @@ import { parseAllowedUsers, isGitHubUserAuthorized } from '../utils/github-auth'
 import { getLinkedIssueNumbers } from '../utils/github-graphql';
 import { onConversationClosed } from '../services/cleanup-service';
 import { isWorktreePath } from '../utils/git';
-import { getArchonWorkspacesPath, getCommandFolderSearchPaths } from '../utils/archon-paths';
+import { getLughWorkspacesPath, getCommandFolderSearchPaths } from '../utils/lugh-paths';
 
 const execAsync = promisify(exec);
 
@@ -366,7 +366,7 @@ export class GitHubAdapter implements IPlatformAdapter {
   }
 
   /**
-   * Auto-detect and load commands from .archon/commands, .claude/commands or .agents/commands
+   * Auto-detect and load commands from .lugh/commands, .claude/commands or .agents/commands
    */
   private async autoDetectAndLoadCommands(repoPath: string, codebaseId: string): Promise<void> {
     const commandFolders = getCommandFolderSearchPaths();
@@ -418,7 +418,7 @@ export class GitHubAdapter implements IPlatformAdapter {
 
     // Canonical path includes owner to prevent collisions between repos with same name
     // e.g., alice/utils and bob/utils get separate directories
-    const canonicalPath = join(getArchonWorkspacesPath(), owner, repo);
+    const canonicalPath = join(getLughWorkspacesPath(), owner, repo);
 
     if (existing) {
       // Check if existing codebase points to a worktree path - fix it if so

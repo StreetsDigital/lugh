@@ -186,7 +186,7 @@ export class WorktreeProvider implements IIsolationProvider {
    */
   getWorktreePath(request: IsolationRequest, branchName: string): string {
     // Extract owner and repo name from canonicalRepoPath to avoid collisions
-    // canonicalRepoPath format: /.archon/workspaces/owner/repo
+    // canonicalRepoPath format: /.lugh/workspaces/owner/repo
     const pathParts = request.canonicalRepoPath.split('/').filter(p => p.length > 0);
     const repoName = pathParts[pathParts.length - 1]; // Last part: "repo"
     const ownerName = pathParts[pathParts.length - 2]; // Second to last: "owner"

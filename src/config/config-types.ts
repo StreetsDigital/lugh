@@ -1,14 +1,14 @@
 /**
- * Configuration types for Archon YAML config files
+ * Configuration types for Lugh YAML config files
  *
  * Two levels:
- * - Global: ~/.archon/config.yaml (user preferences)
- * - Repository: .archon/config.yaml (project settings)
+ * - Global: ~/.lugh/config.yaml (user preferences)
+ * - Repository: .lugh/config.yaml (project settings)
  */
 
 /**
  * Global configuration (non-secret user preferences)
- * Located at ~/.archon/config.yaml
+ * Located at ~/.lugh/config.yaml
  */
 export interface GlobalConfig {
   /**
@@ -33,13 +33,13 @@ export interface GlobalConfig {
   paths?: {
     /**
      * Override workspaces directory
-     * @default '~/.archon/workspaces'
+     * @default '~/.lugh/workspaces'
      */
     workspaces?: string;
 
     /**
      * Override worktrees directory
-     * @default '~/.archon/worktrees'
+     * @default '~/.lugh/worktrees'
      */
     worktrees?: string;
   };
@@ -58,7 +58,7 @@ export interface GlobalConfig {
 
 /**
  * Repository configuration (project-specific settings)
- * Located at .archon/config.yaml in any repository
+ * Located at .lugh/config.yaml in any repository
  */
 export interface RepoConfig {
   /**
@@ -73,7 +73,7 @@ export interface RepoConfig {
   commands?: {
     /**
      * Custom command folder path (relative to repo root)
-     * @default '.archon/commands'
+     * @default '.lugh/commands'
      */
     folder?: string;
 
