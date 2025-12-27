@@ -89,6 +89,7 @@ export interface CommandResult {
   success: boolean;
   message: string;
   modified?: boolean; // Indicates if conversation state was modified
+  followUpPrompt?: string; // Optional prompt to send to AI after command completes (e.g., /stop asking "why?")
 }
 
 /**
@@ -100,6 +101,14 @@ export interface IPlatformAdapter {
    * Send a message to the platform
    */
   sendMessage(conversationId: string, message: string): Promise<void>;
+
+  /**
+   * Send a file to the platform (optional - not all platforms support this)
+   * @param conversationId - Target conversation
+   * @param filePath - Path to the file on the server
+   * @param caption - Optional caption/description
+   */
+  sendFile?(conversationId: string, filePath: string, caption?: string): Promise<void>;
 
   /**
    * Get the underlying bot instance (optional, platform-specific)

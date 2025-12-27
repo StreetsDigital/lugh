@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="#0d1117"/>
+
+  <!-- Outer ring -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#30363d" stroke-width="12"/>
+
+  <!-- Inner gradient ring -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#238636"/>
+      <stop offset="100%" style="stop-color:#58a6ff"/>
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="140" fill="none" stroke="url(#gradient)" stroke-width="16"/>
+
+  <!-- Center icon - stylized "A" for Agent -->
+  <path d="M256 120 L320 340 L280 340 L268 300 L244 300 L232 340 L192 340 L256 120 Z M256 200 L248 270 L264 270 L256 200 Z" fill="#c9d1d9"/>
+
+  <!-- Orbiting dots representing agents -->
+  <circle cx="256" cy="76" r="16" fill="#238636"/>
+  <circle cx="411" cy="181" r="14" fill="#58a6ff"/>
+  <circle cx="411" cy="331" r="12" fill="#da3633"/>
+  <circle cx="256" cy="436" r="14" fill="#9e6a03"/>
+  <circle cx="101" cy="331" r="12" fill="#8b5cf6"/>
+  <circle cx="101" cy="181" r="16" fill="#238636"/>
+</svg>

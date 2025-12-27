@@ -21,6 +21,7 @@ import {
 } from '../services/cleanup-service';
 import { getArchonWorkspacesPath, getCommandFolderSearchPaths } from '../utils/archon-paths';
 import { toggleVerbose, setVerbose, isVerboseEnabled } from '../utils/logger';
+import { signalAbort } from '../orchestrator/abort-manager';
 
 /**
  * Convert an absolute path to a relative path from the repository root
@@ -897,20 +898,41 @@ Setup:
     }
 
     case 'stop': {
-      // Emergency stop - abort the current session
-      // This is for Phone Vibecoding V1 - stop when you see a dangerous operation
+      // Emergency stop - abort the current operation but keep session alive for follow-up
+      // Claude will ask why the user stopped and what they'd like to do differently
+
+      // Signal abort to interrupt any running AI query
+      const aborted = signalAbort(conversation.platform_conversation_id);
+      console.log(
+        `[CommandHandler] /stop: signalAbort(${conversation.platform_conversation_id}) = ${aborted}`
+      );
+
       const activeSession = await sessionDb.getActiveSession(conversation.id);
+
+      // Keep session alive so Claude can ask follow-up questions
+      // Only deactivate if there's no session at all
       if (activeSession) {
-        await sessionDb.deactivateSession(activeSession.id);
         return {
           success: true,
-          message:
-            '🛑 **STOPPED**\n\nSession aborted. Any operation in progress may complete, but no further actions will be taken.\n\nUse any message to start a new conversation.',
+          message: aborted
+            ? '🛑 **STOPPED** - Operation interrupted.'
+            : '🛑 **STOPPED** - Stopping after current action completes.',
+          // This prompt will be sent to Claude to ask clarifying questions
+          followUpPrompt: `The user just sent /stop to interrupt the previous operation.
+
+Please respond conversationally:
+1. Acknowledge that you've stopped
+2. Briefly mention what you were doing (if you remember)
+3. Ask the user what went wrong or what they'd like you to do differently
+4. Offer 2-3 specific options for how to proceed (e.g., "try a different approach", "explain what I was doing", "start over with new instructions")
+
+Keep your response concise and helpful. The user stopped you for a reason - find out why and help them.`,
         };
       }
+
       return {
         success: true,
-        message: '🛑 No active session to stop.',
+        message: '🛑 No active operation to stop.',
       };
     }
 

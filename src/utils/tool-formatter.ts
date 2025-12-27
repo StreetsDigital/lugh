@@ -1,86 +1,189 @@
 /**
  * Tool Call Formatter
  *
- * Formats tool calls from AI assistants into user-friendly messages
- * Based on claude-telegram-bot (lines 572-604) and codex-telegram-bot patterns
+ * Formats tool calls from AI assistants into CLI-like display
+ * Shows real-time feedback of what Claude Code is doing
+ *
+ * Phone Vibecoding V1: These messages help you decide when to /stop
  */
 
+// Tool emoji mapping for CLI-like display
+const TOOL_EMOJI: Record<string, string> = {
+  Bash: '⚡',
+  Read: '📖',
+  Write: '✏️',
+  Edit: '🔧',
+  Glob: '🔍',
+  Grep: '🔎',
+  Task: '🤖',
+  TodoWrite: '📝',
+  WebFetch: '🌐',
+  WebSearch: '🔍',
+};
+
 /**
- * Format a tool call for display
+ * Format a tool call for CLI-like display
  *
  * @param toolName - Name of the tool being called
  * @param toolInput - Input parameters for the tool
- * @returns Formatted tool message with emoji and brief description
+ * @param options - Display options
+ * @returns Formatted tool message with emoji and details
  */
-export function formatToolCall(toolName: string, toolInput?: Record<string, unknown>): string {
-  // Start with tool emoji and name
-  let message = `🔧 ${toolName.toUpperCase()}`;
+export function formatToolCall(
+  toolName: string,
+  toolInput?: Record<string, unknown>,
+  options: { verbose?: boolean } = {}
+): string {
+  const emoji = TOOL_EMOJI[toolName] || '🔧';
+  const parts: string[] = [];
 
-  // Add brief command/input info if available
+  // Header line with emoji and tool name
+  parts.push(`${emoji} **${toolName}**`);
+
+  // Add tool-specific details
   if (toolInput) {
-    const briefInfo = extractBriefInfo(toolName, toolInput);
-    if (briefInfo) {
-      message += `\n${briefInfo}`;
+    const details = extractToolDetails(toolName, toolInput, options.verbose);
+    if (details) {
+      parts.push(details);
     }
   }
 
-  return message;
+  return parts.join('\n');
 }
 
 /**
- * Extract brief, relevant info from tool input
+ * Extract CLI-like details from tool input
  *
  * @param toolName - Name of the tool
  * @param toolInput - Tool input parameters
- * @returns Brief description of what the tool is doing
+ * @param verbose - Show more details
+ * @returns Formatted details string
  */
-function extractBriefInfo(toolName: string, toolInput: Record<string, unknown>): string | null {
-  // Bash commands - show the command (truncated)
-  if (toolName === 'Bash' && toolInput.command) {
-    const cmd = toolInput.command as string;
-    return cmd.length > 100 ? cmd.substring(0, 100) + '...' : cmd;
-  }
+function extractToolDetails(
+  toolName: string,
+  toolInput: Record<string, unknown>,
+  verbose?: boolean
+): string | null {
+  const maxLen = verbose ? 200 : 100;
 
-  // Read operations - show file path
-  if (toolName === 'Read' && toolInput.file_path) {
-    return `Reading: ${toolInput.file_path as string}`;
-  }
+  switch (toolName) {
+    case 'Bash': {
+      const cmd = (toolInput.command as string) || '';
+      const desc = toolInput.description as string;
+      const lines: string[] = [];
 
-  // Write operations - show file path
-  if (toolName === 'Write' && toolInput.file_path) {
-    return `Writing: ${toolInput.file_path as string}`;
-  }
+      // Show description if available (Claude Code often provides this)
+      if (desc) {
+        lines.push(`└─ ${desc}`);
+      }
 
-  // Edit operations - show file path
-  if (toolName === 'Edit' && toolInput.file_path) {
-    return `Editing: ${toolInput.file_path as string}`;
-  }
+      // Show command (truncated)
+      if (cmd) {
+        const truncated = cmd.length > maxLen ? cmd.substring(0, maxLen) + '...' : cmd;
+        lines.push(`\`${truncated}\``);
+      }
 
-  // Glob operations - show pattern
-  if (toolName === 'Glob' && toolInput.pattern) {
-    return `Pattern: ${toolInput.pattern as string}`;
-  }
+      return lines.join('\n');
+    }
 
-  // Grep operations - show pattern
-  if (toolName === 'Grep' && toolInput.pattern) {
-    return `Searching: ${toolInput.pattern as string}`;
-  }
+    case 'Read': {
+      const path = toolInput.file_path as string;
+      if (path) {
+        // Show just filename for brevity, full path in verbose
+        const filename = verbose ? path : path.split('/').pop() || path;
+        return `└─ ${filename}`;
+      }
+      return null;
+    }
 
-  // MCP tools - show tool name
-  if (toolName.startsWith('mcp__')) {
-    // Extract readable name from mcp__server__tool format
-    const parts = toolName.split('__');
-    if (parts.length >= 2) {
-      return `MCP: ${parts.slice(1).join(' ')}`;
+    case 'Write': {
+      const path = toolInput.file_path as string;
+      if (path) {
+        const filename = verbose ? path : path.split('/').pop() || path;
+        const content = toolInput.content as string;
+        const lines = content ? content.split('\n').length : 0;
+        return `└─ ${filename} (${lines} lines)`;
+      }
+      return null;
+    }
+
+    case 'Edit': {
+      const path = toolInput.file_path as string;
+      if (path) {
+        const filename = verbose ? path : path.split('/').pop() || path;
+        const oldStr = (toolInput.old_string as string) || '';
+        const preview = oldStr.substring(0, 30).replace(/\n/g, '↵');
+        return `└─ ${filename}\n   replacing: "${preview}${oldStr.length > 30 ? '...' : ''}"`;
+      }
+      return null;
+    }
+
+    case 'Glob': {
+      const pattern = toolInput.pattern as string;
+      const path = toolInput.path as string;
+      if (pattern) {
+        return path ? `└─ ${pattern} in ${path}` : `└─ ${pattern}`;
+      }
+      return null;
+    }
+
+    case 'Grep': {
+      const pattern = toolInput.pattern as string;
+      const path = toolInput.path as string;
+      if (pattern) {
+        return path ? `└─ "${pattern}" in ${path}` : `└─ "${pattern}"`;
+      }
+      return null;
+    }
+
+    case 'Task': {
+      const desc = toolInput.description as string;
+      const subagent = toolInput.subagent_type as string;
+      if (desc || subagent) {
+        return `└─ ${subagent || 'agent'}: ${desc || '(running...)'}`;
+      }
+      return null;
+    }
+
+    case 'TodoWrite': {
+      const todos = toolInput.todos as Array<{ content: string; status: string }>;
+      if (todos && todos.length > 0) {
+        const summary = todos
+          .slice(0, 3)
+          .map((t) => `  ${t.status === 'completed' ? '✓' : '○'} ${t.content}`)
+          .join('\n');
+        const more = todos.length > 3 ? `\n  ...+${todos.length - 3} more` : '';
+        return summary + more;
+      }
+      return null;
+    }
+
+    default: {
+      // MCP tools
+      if (toolName.startsWith('mcp__')) {
+        const parts = toolName.split('__');
+        if (parts.length >= 3) {
+          return `└─ ${parts[1]}/${parts[2]}`;
+        }
+        return null;
+      }
+
+      // Generic: show first key-value pair
+      const keys = Object.keys(toolInput);
+      if (keys.length > 0) {
+        const firstKey = keys[0];
+        const value = String(toolInput[firstKey]);
+        const truncated = value.length > 50 ? value.substring(0, 50) + '...' : value;
+        return `└─ ${firstKey}: ${truncated}`;
+      }
+      return null;
     }
   }
+}
 
-  // Generic handling for other tools - show JSON input (truncated)
-  const toolInputStr = JSON.stringify(toolInput);
-  if (toolInputStr.length > 80) {
-    return toolInputStr.substring(0, 80) + '...';
-  }
-  return toolInputStr;
+// Keep old function name for backward compatibility
+function extractBriefInfo(toolName: string, toolInput: Record<string, unknown>): string | null {
+  return extractToolDetails(toolName, toolInput, false);
 }
 
 /**

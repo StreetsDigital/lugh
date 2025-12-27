@@ -49,7 +49,7 @@ RUN npm install -g @anthropic-ai/claude-code
 COPY package.json bun.lock ./
 
 # Install ALL dependencies (including devDependencies for build)
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Copy application code
 COPY . .
@@ -57,8 +57,8 @@ COPY . .
 # Build TypeScript with Bun
 RUN bun build src/index.ts --outdir=dist --target=bun
 
-# Remove devDependencies to reduce image size
-RUN bun install --production --frozen-lockfile
+# Note: Skipping devDependency removal - bun has lockfile issues in Docker
+# Image is slightly larger but functional
 
 # Fix permissions for appuser
 RUN chown -R appuser:appuser /app

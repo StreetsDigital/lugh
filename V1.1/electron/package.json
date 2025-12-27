@@ -1,0 +1,96 @@
+{
+  "name": "agentcommander-desktop",
+  "version": "1.1.0",
+  "description": "AgentCommander Desktop - Multi-LLM Agent Orchestrator",
+  "main": "main.js",
+  "author": "AgentCommander Team",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dev": "NODE_ENV=development electron .",
+    "build": "npm run generate-icons && electron-builder",
+    "build:mac": "npm run generate-icons && electron-builder --mac",
+    "build:win": "npm run generate-icons && electron-builder --win",
+    "build:linux": "npm run generate-icons && electron-builder --linux",
+    "pack": "electron-builder --dir",
+    "generate-icons": "node scripts/generate-icons.js"
+  },
+  "build": {
+    "appId": "com.agentcommander.desktop",
+    "productName": "AgentCommander",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "assets/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../public",
+        "to": "public"
+      },
+      {
+        "from": "../orchestrator",
+        "to": "orchestrator"
+      },
+      {
+        "from": "../docs",
+        "to": "docs"
+      },
+      {
+        "from": "../redis",
+        "to": "redis"
+      },
+      {
+        "from": "../agent",
+        "to": "agent"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "assets/icon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "darkModeSupport": true,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Development"
+    },
+    "dmg": {
+      "title": "AgentCommander ${version}",
+      "backgroundColor": "#0d1117"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^24.9.0",
+    "png-to-ico": "^3.0.1",
+    "sharp": "^0.34.5"
+  }
+}

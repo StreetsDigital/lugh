@@ -10,6 +10,7 @@ import 'dotenv/config';
 import express from 'express';
 import { TelegramAdapter } from './adapters/telegram';
 import { TestAdapter } from './adapters/test';
+import { createMockApproval } from './adapters/telegram-agent-approvals';
 import { GitHubAdapter } from './adapters/github';
 import { DiscordAdapter } from './adapters/discord';
 import { SlackAdapter } from './adapters/slack';
@@ -372,6 +373,25 @@ async function main(): Promise<void> {
     }
     testAdapter.setStreamingMode(mode);
     return res.json({ success: true, mode });
+  });
+
+  // Create mock agent approval for testing
+  app.post('/test/mock-approval', (req, res) => {
+    const { swarmId, role, title, description, priority } = req.body as {
+      swarmId?: string;
+      role?: string;
+      title?: string;
+      description?: string;
+      priority?: string;
+    };
+    const approval = createMockApproval({
+      swarmId: swarmId ?? 'test-swarm-001',
+      role: role ?? 'Code Reviewer',
+      title: title ?? 'Review authentication module',
+      description: description ?? 'Analyze the auth module for security vulnerabilities and best practices.',
+      priority: (priority as 'critical' | 'high' | 'medium' | 'low') ?? 'high',
+    });
+    return res.json({ success: true, approval });
   });
 
   app.listen(port, () => {

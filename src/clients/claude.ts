@@ -127,6 +127,19 @@ export class ClaudeClient implements IAssistantClient {
     const blockingApprovalsEnabled =
       approvalContext && process.env.BLOCKING_APPROVALS !== 'false';
 
+    // Configure git to use GITHUB_TOKEN for authentication (if available)
+    // Git will use these environment variables for HTTPS auth
+    const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+    const gitEnv = githubToken ? {
+      // Configure git credential helper via environment
+      // This tells git to use our token for github.com
+      GIT_CONFIG_COUNT: '2',
+      GIT_CONFIG_KEY_0: 'credential.https://github.com.helper',
+      GIT_CONFIG_VALUE_0: `!f() { echo "username=x-access-token"; echo "password=${githubToken}"; }; f`,
+      GIT_CONFIG_KEY_1: 'credential.helper',
+      GIT_CONFIG_VALUE_1: 'cache --timeout=3600',
+    } : {};
+
     const options: Options = {
       cwd,
       // Credentials passed via env - OAuth token takes priority over API key
@@ -134,6 +147,7 @@ export class ClaudeClient implements IAssistantClient {
         PATH: process.env.PATH,
         ...(oauthToken ? { CLAUDE_CODE_OAUTH_TOKEN: oauthToken } : {}),
         ...(apiKey ? { ANTHROPIC_API_KEY: apiKey } : {}),
+        ...gitEnv, // Add git authentication
         ...process.env,
       },
       permissionMode: 'bypassPermissions', // Still bypass - we handle approval in hook

@@ -443,6 +443,42 @@ export function isAutoApproveEnabled(chatId: number): boolean {
 }
 
 /**
+ * Create a mock approval for testing purposes
+ */
+export function createMockApproval(options: {
+  swarmId?: string;
+  role?: string;
+  title?: string;
+  description?: string;
+  priority?: 'critical' | 'high' | 'medium' | 'low';
+}): AgentSpawnRequest {
+  const approvalId = uuidv4().substring(0, 8);
+  const agentId = `agent-${uuidv4().substring(0, 6)}`;
+
+  const request: AgentSpawnRequest = {
+    id: approvalId,
+    swarmId: options.swarmId ?? 'mock-swarm-001',
+    agentId,
+    role: options.role ?? 'Test Agent',
+    title: options.title ?? 'Mock task for testing',
+    description: options.description ?? 'This is a mock approval request for testing the /pending command.',
+    priority: options.priority ?? 'medium',
+    estimatedDuration: 'medium',
+    requiredTools: true,
+    status: 'pending',
+    createdAt: new Date(),
+    expiresAt: new Date(Date.now() + 300000), // 5 minutes
+    respondedBy: null,
+    respondedAt: null,
+  };
+
+  pendingApprovals.set(approvalId, request);
+  console.log(`[AgentApprovals] Created mock approval ${approvalId} for agent ${agentId}`);
+
+  return request;
+}
+
+/**
  * Exported handler object for use in telegram.ts
  */
 export const telegramAgentApprovalHandler = {

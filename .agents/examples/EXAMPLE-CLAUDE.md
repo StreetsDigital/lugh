@@ -374,3 +374,59 @@ async def test_integration(test_agent_deps: AgentDeps) -> None:
 - **Error Responses**: Use `ErrorResponse` schema
 - **Route Prefixes**: Use router `prefix` parameter for feature namespacing
 - **Authentication**: Bearer token via `Authorization: Bearer <API_KEY>` header
+
+## Git Worktree Best Practices
+
+**Use git worktrees for parallel development when working on multiple features simultaneously.**
+
+Git worktrees create isolated working directories from the same repository, each on a different branch. This is ideal for:
+- Multiple AI sessions working on independent features
+- Reviewing PRs while continuing development
+- Hotfixes that can't wait for current work
+
+### When to Use Worktrees
+
+**DO use worktrees when:**
+- Working on 2+ independent features that won't conflict
+- Each feature has its own branch and PR
+- You want parallel AI coding sessions
+- You're reviewing/testing PRs while continuing other work
+
+**DON'T use worktrees when:**
+- Features share significant code (high conflict risk)
+- Working on a single feature iteratively
+- The codebase requires complex shared state
+
+### Worktree Commands
+
+```bash
+# Create worktree for feature branch
+/worktree feature-auth
+
+# Create worktree for PR review
+/worktree pr-42
+
+# List all worktrees
+/worktree list
+
+# Clean up merged worktrees
+/worktree cleanup merged
+```
+
+### Directory Structure
+
+Worktrees are created under `~/.archon/worktrees/`:
+```
+~/.archon/worktrees/
+└── project-name/
+    ├── feature-auth/     # Working on auth feature
+    ├── feature-dashboard/ # Working on dashboard
+    └── pr-42/            # Reviewing PR #42
+```
+
+### Best Practices
+
+1. **One feature per worktree**: Keep each worktree focused on a single feature/PR
+2. **Clean up after merge**: Run `/worktree cleanup merged` regularly
+3. **Name clearly**: Use descriptive names like `feature-auth` not `wt1`
+4. **Check orphans**: Run `/worktree orphans` to find abandoned worktrees

@@ -197,6 +197,12 @@ src/
 - **GitHub**: Webhooks + GitHub CLI, conversation ID = `owner/repo#number`
 - **Discord**: discord.js WebSocket, conversation ID = channel ID
 
+**File Sending (Telegram only):**
+- `sendFile(conversationId, filePath, caption?)` - Send files directly to user
+- Useful for sharing generated files, exports, logs
+- Falls back to file path message if sending fails
+- Other platforms: Use file path in message (user accesses server directly)
+
 **Adapter Authorization Pattern:**
 - Auth checks happen INSIDE adapters (encapsulation, consistency)
 - Auth utilities in `src/utils/{platform}-auth.ts`
@@ -213,8 +219,9 @@ src/
 
 **2. Command Handler** (`src/handlers/`)
 - Process slash commands (deterministic, no AI)
-- Commands: `/command-set`, `/command-invoke`, `/load-commands`, `/clone`, `/getcwd`, `/setcwd`, `/codebase-switch`, `/status`, `/commands`, `/help`, `/reset`
+- Commands: `/command-set`, `/command-invoke`, `/load-commands`, `/clone`, `/getcwd`, `/setcwd`, `/codebase-switch`, `/status`, `/commands`, `/help`, `/reset`, `/stop`
 - Update database, perform operations, return responses
+- **`/stop`**: Interrupts running AI operations, keeps session alive, Claude asks "why did you stop?"
 
 **3. Orchestrator** (`src/orchestrator/`)
 - Manage AI conversations

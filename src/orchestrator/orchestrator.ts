@@ -2,8 +2,8 @@
  * Orchestrator - Main conversation handler
  * Routes slash commands and AI messages appropriately
  */
-import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { readFile, stat, writeFile, mkdir } from 'fs/promises';
+import { join, basename } from 'path';
 import {
   IPlatformAdapter,
   IsolationHints,
@@ -33,6 +33,11 @@ import {
   WorktreeStatusBreakdown,
 } from '../services/cleanup-service';
 import * as approvalDb from '../db/approvals';
+import {
+  createAbortController,
+  isAborted,
+  clearAbortState,
+} from './abort-manager';
 
 /**
  * Format the worktree limit reached message
@@ -56,6 +61,187 @@ function formatWorktreeLimitMessage(
   msg += '• `/worktree remove <name>` - Remove specific worktree';
 
   return msg;
+}
+
+/**
+ * File-writing tool detection for auto-send feature
+ * Returns the file path if this is a file-writing tool, null otherwise
+ */
+const FILE_WRITING_TOOLS = [
+  'write_file', 'Write',           // Claude Code's file writing
+  'create_file', 'create',         // File creation variants
+  'str_replace_editor', 'Edit',    // File editing (creates if new)
+];
+
+function extractWrittenFilePath(toolName: string, toolInput: Record<string, unknown> | undefined): string | null {
+  if (!toolInput) return null;
+  if (!FILE_WRITING_TOOLS.includes(toolName)) return null;
+
+  // Different tools use different parameter names
+  const path = toolInput.path ?? toolInput.file_path ?? toolInput.filename;
+  if (typeof path === 'string' && path.length > 0) {
+    return path;
+  }
+  return null;
+}
+
+/**
+ * File extensions worth sending to user (code, docs, config, data)
+ */
+const SENDABLE_EXTENSIONS = new Set([
+  // Source code
+  '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
+  '.py', '.pyw', '.pyi',
+  '.go', '.rs', '.java', '.kt', '.kts',
+  '.rb', '.php', '.swift', '.c', '.cpp', '.h', '.hpp',
+  '.cs', '.fs', '.scala', '.clj', '.ex', '.exs',
+  // Config
+  '.json', '.yaml', '.yml', '.toml', '.ini', '.cfg',
+  '.env.example', '.env.local', '.env.development',
+  // Docs
+  '.md', '.txt', '.rst', '.adoc',
+  // Data
+  '.csv', '.sql', '.graphql', '.prisma',
+  // Scripts
+  '.sh', '.bash', '.zsh', '.fish', '.ps1', '.bat', '.cmd',
+  // Web
+  '.html', '.htm', '.css', '.scss', '.sass', '.less',
+  '.svg', '.xml',
+]);
+
+/**
+ * Files/paths to never send (noise, generated, sensitive)
+ */
+const BLOCKED_PATTERNS = [
+  // Lock files
+  /package-lock\.json$/,
+  /yarn\.lock$/,
+  /bun\.lockb$/,
+  /Cargo\.lock$/,
+  /Gemfile\.lock$/,
+  /composer\.lock$/,
+  /poetry\.lock$/,
+  /pnpm-lock\.yaml$/,
+  // Build/generated directories
+  /node_modules\//,
+  /\.next\//,
+  /dist\//,
+  /build\//,
+  /out\//,
+  /target\//,
+  /\.cache\//,
+  /__pycache__\//,
+  /\.pyc$/,
+  // Hidden/internal
+  /\.git\//,
+  /\.DS_Store$/,
+  /\.env$/, // Actual .env files (not .env.example)
+  /\.env\.local$/,
+  // Binary artifacts
+  /\.exe$/,
+  /\.dll$/,
+  /\.so$/,
+  /\.dylib$/,
+  /\.o$/,
+  /\.class$/,
+  /\.wasm$/,
+];
+
+/**
+ * Check if file type is worth sending based on extension
+ */
+function isFileTypeWorthSending(filePath: string): boolean {
+  const fileName = basename(filePath).toLowerCase();
+
+  // Check blocked patterns first
+  for (const pattern of BLOCKED_PATTERNS) {
+    if (pattern.test(filePath)) {
+      return false;
+    }
+  }
+
+  // Check extension whitelist
+  const ext = fileName.includes('.') ? '.' + fileName.split('.').pop() : '';
+  if (SENDABLE_EXTENSIONS.has(ext)) {
+    return true;
+  }
+
+  // Special cases: files without extensions that are useful
+  const usefulFilenames = ['Dockerfile', 'Makefile', 'Rakefile', 'Gemfile', 'Procfile'];
+  if (usefulFilenames.includes(basename(filePath))) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Check if a file should be auto-sent (right type, small enough, exists)
+ */
+async function shouldAutoSendFile(filePath: string): Promise<{ send: boolean; size: number; reason?: string }> {
+  // Check file type first (before stat to save I/O)
+  if (!isFileTypeWorthSending(filePath)) {
+    return { send: false, size: 0, reason: 'file type not in whitelist' };
+  }
+
+  try {
+    const stats = await stat(filePath);
+    const MAX_AUTO_SEND_SIZE = 10 * 1024 * 1024; // 10MB limit for Telegram
+
+    if (!stats.isFile()) {
+      return { send: false, size: 0, reason: 'not a file' };
+    }
+
+    if (stats.size > MAX_AUTO_SEND_SIZE) {
+      return { send: false, size: stats.size, reason: 'file too large' };
+    }
+
+    return { send: true, size: stats.size };
+  } catch {
+    return { send: false, size: 0, reason: 'file not found' };
+  }
+}
+
+/**
+ * Threshold for converting long text responses to .txt files
+ * Telegram messages get unwieldy above ~2000 chars on mobile
+ */
+const LONG_RESPONSE_THRESHOLD = 2000;
+
+/**
+ * Save a long text response to a .txt file for easier reading on mobile
+ * Returns the file path if saved, null if too short
+ */
+async function saveLongResponseToFile(
+  content: string,
+  conversationId: string
+): Promise<string | null> {
+  if (content.length < LONG_RESPONSE_THRESHOLD) {
+    return null;
+  }
+
+  // Create temp directory for responses
+  const tempDir = '/tmp/archon-responses';
+  await mkdir(tempDir, { recursive: true });
+
+  // Generate unique filename
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const shortId = conversationId.slice(-6);
+  const fileName = `response-${shortId}-${timestamp}.txt`;
+  const filePath = join(tempDir, fileName);
+
+  // Add header with metadata
+  const header = `Claude Response
+Generated: ${new Date().toLocaleString()}
+Conversation: ${conversationId}
+${'─'.repeat(50)}
+
+`;
+
+  await writeFile(filePath, header + content, 'utf-8');
+  console.log(`[Orchestrator] Saved long response (${content.length} chars) to ${filePath}`);
+
+  return filePath;
 }
 
 /**
@@ -346,6 +532,9 @@ export async function handleMessage(
   parentConversationId?: string, // Optional parent channel ID for thread inheritance
   isolationHints?: IsolationHints // Optional hints from adapter for isolation decisions
 ): Promise<void> {
+  // Track if operation was aborted via /stop command (needs to be before try for finally access)
+  let wasAborted = false;
+
   try {
     console.log(`[Orchestrator] Handling message for conversation ${conversationId}`);
 
@@ -403,6 +592,7 @@ export async function handleMessage(
         'worktree',
         'init',
         'verbose', // Toggle verbose logging
+        'stop', // Emergency abort (interrupt running operations)
         // Reference documentation commands
         'quickref',
         'agents',
@@ -423,7 +613,16 @@ export async function handleMessage(
             conversationId
           );
         }
-        return;
+
+        // If command has a followUpPrompt, send it to Claude instead of returning
+        // This is used by /stop to have Claude ask "why did you stop?"
+        if (result.followUpPrompt) {
+          console.log('[Orchestrator] Command has followUpPrompt, sending to AI');
+          promptToSend = result.followUpPrompt;
+          // Don't return - let execution continue to AI query section
+        } else {
+          return;
+        }
       }
 
       // Handle /command-invoke (codebase-specific commands)
@@ -643,46 +842,65 @@ export async function handleMessage(
     // Check if phone notifications are enabled (observe-only mode)
     const notifyOnRisk = process.env.NOTIFY_ON_RISK_TOOLS !== 'false';
 
+    // Create abort controller for this conversation (allows /stop to interrupt)
+    createAbortController(conversationId);
+
+    // Track files written during this response for auto-send feature
+    const writtenFiles = new Set<string>();
+
     if (mode === 'stream') {
-      // Stream mode: Send each chunk immediately
-      for await (const msg of aiClient.sendQuery(
-        promptToSend,
-        cwd,
-        session.assistant_session_id ?? undefined,
-        approvalContext
-      )) {
-        if (msg.type === 'assistant' && msg.content) {
-          await platform.sendMessage(conversationId, msg.content);
-        } else if (msg.type === 'tool' && msg.toolName) {
-          // Format and send tool call notification
-          const toolMessage = formatToolCall(msg.toolName, msg.toolInput);
-          await platform.sendMessage(conversationId, toolMessage);
-
-          // Send risk notification for high-risk tools
-          if (notifyOnRisk && isHighRiskTool(msg.toolName)) {
-            const riskLevel = getToolRiskLevel(msg.toolName, msg.toolInput ?? {});
-
-            // Record in database for audit trail
-            await approvalDb.createApproval({
-              session_id: session.id,
-              tool_name: msg.toolName,
-              tool_input: msg.toolInput ?? {},
-              risk_level: riskLevel,
-            }).catch(err => {
-              console.warn('[Orchestrator] Failed to record tool execution:', err);
-            });
-
-            // Log for monitoring
-            console.log(
-              `[Orchestrator] ${riskLevel.toUpperCase()} risk tool: ${msg.toolName}`
-            );
+        // Stream mode: Send each chunk immediately
+        for await (const msg of aiClient.sendQuery(
+          promptToSend,
+          cwd,
+          session.assistant_session_id ?? undefined,
+          approvalContext
+        )) {
+          // Check for abort signal before processing each chunk
+          if (isAborted(conversationId)) {
+            console.log('[Orchestrator] Abort detected, stopping stream');
+            wasAborted = true;
+            break;
           }
-        } else if (msg.type === 'result' && msg.sessionId) {
-          // Save session ID for resume
-          await sessionDb.updateSession(session.id, msg.sessionId);
+
+          if (msg.type === 'assistant' && msg.content) {
+            await platform.sendMessage(conversationId, msg.content);
+          } else if (msg.type === 'tool' && msg.toolName) {
+            // Format and send tool call notification
+            const toolMessage = formatToolCall(msg.toolName, msg.toolInput);
+            await platform.sendMessage(conversationId, toolMessage);
+
+            // Track file writes for auto-send feature
+            const writtenPath = extractWrittenFilePath(msg.toolName, msg.toolInput as Record<string, unknown>);
+            if (writtenPath) {
+              writtenFiles.add(writtenPath);
+            }
+
+            // Send risk notification for high-risk tools
+            if (notifyOnRisk && isHighRiskTool(msg.toolName)) {
+              const riskLevel = getToolRiskLevel(msg.toolName, msg.toolInput ?? {});
+
+              // Record in database for audit trail
+              await approvalDb.createApproval({
+                session_id: session.id,
+                tool_name: msg.toolName,
+                tool_input: msg.toolInput ?? {},
+                risk_level: riskLevel,
+              }).catch(err => {
+                console.warn('[Orchestrator] Failed to record tool execution:', err);
+              });
+
+              // Log for monitoring
+              console.log(
+                `[Orchestrator] ${riskLevel.toUpperCase()} risk tool: ${msg.toolName}`
+              );
+            }
+          } else if (msg.type === 'result' && msg.sessionId) {
+            // Save session ID for resume
+            await sessionDb.updateSession(session.id, msg.sessionId);
+          }
         }
-      }
-    } else {
+      } else {
       // Batch mode: Accumulate all chunks for logging, send only final clean summary
       const allChunks: { type: string; content: string }[] = [];
       const assistantMessages: string[] = [];
@@ -693,6 +911,13 @@ export async function handleMessage(
         session.assistant_session_id ?? undefined,
         approvalContext
       )) {
+        // Check for abort signal before processing each chunk
+        if (isAborted(conversationId)) {
+          console.log('[Orchestrator] Abort detected, stopping batch accumulation');
+          wasAborted = true;
+          break;
+        }
+
         if (msg.type === 'assistant' && msg.content) {
           assistantMessages.push(msg.content);
           allChunks.push({ type: 'assistant', content: msg.content });
@@ -701,6 +926,12 @@ export async function handleMessage(
           const toolMessage = formatToolCall(msg.toolName, msg.toolInput);
           allChunks.push({ type: 'tool', content: toolMessage });
           console.log(`[Orchestrator] Tool call: ${msg.toolName}`);
+
+          // Track file writes for auto-send feature
+          const writtenPath = extractWrittenFilePath(msg.toolName, msg.toolInput as Record<string, unknown>);
+          if (writtenPath) {
+            writtenFiles.add(writtenPath);
+          }
 
           // Record high-risk tools for audit trail
           if (notifyOnRisk && isHighRiskTool(msg.toolName)) {
@@ -760,7 +991,60 @@ export async function handleMessage(
 
       if (finalMessage) {
         console.log(`[Orchestrator] Sending final message (${String(finalMessage.length)} chars)`);
-        await platform.sendMessage(conversationId, finalMessage);
+
+        // Check if response is long enough to warrant a .txt file
+        if (finalMessage.length >= LONG_RESPONSE_THRESHOLD && platform.sendFile) {
+          // Save to .txt and send as file for easier mobile reading
+          const txtPath = await saveLongResponseToFile(finalMessage, conversationId);
+          if (txtPath) {
+            // Send a brief summary message first
+            const preview = finalMessage.slice(0, 200).trim() + '...';
+            await platform.sendMessage(
+              conversationId,
+              `📝 *Long response* (${finalMessage.length} chars)\n\n${preview}\n\n_Full response attached as file_`
+            );
+            // Send the .txt file
+            await platform.sendFile(conversationId, txtPath, '📄 Full response');
+          } else {
+            // Fallback to regular message
+            await platform.sendMessage(conversationId, finalMessage);
+          }
+        } else {
+          // Normal length - send as regular message
+          await platform.sendMessage(conversationId, finalMessage);
+        }
+      }
+    }
+
+    // Auto-send created files if platform supports it
+    if (writtenFiles.size > 0 && platform.sendFile) {
+      console.log(`[Orchestrator] Checking ${writtenFiles.size} written files for auto-send`);
+      const filesToSend: Array<{ path: string; size: number }> = [];
+
+      for (const filePath of writtenFiles) {
+        // Resolve relative paths against cwd
+        const fullPath = filePath.startsWith('/') ? filePath : join(cwd, filePath);
+        const { send, size } = await shouldAutoSendFile(fullPath);
+        if (send) {
+          filesToSend.push({ path: fullPath, size });
+        }
+      }
+
+      if (filesToSend.length > 0) {
+        // Send files to user
+        for (const { path: filePath, size } of filesToSend) {
+          const fileName = basename(filePath);
+          const sizeKB = Math.round(size / 1024);
+          console.log(`[Orchestrator] Auto-sending file: ${fileName} (${sizeKB}KB)`);
+
+          try {
+            await platform.sendFile(conversationId, filePath, `📁 ${fileName} (${sizeKB}KB)`);
+          } catch (err) {
+            console.warn(`[Orchestrator] Failed to send file ${fileName}:`, err);
+          }
+        }
+
+        console.log(`[Orchestrator] Sent ${filesToSend.length} files to user`);
       }
     }
 
@@ -775,5 +1059,19 @@ export async function handleMessage(
     console.error('[Orchestrator] Error:', error);
     const userMessage = classifyAndFormatError(err);
     await platform.sendMessage(conversationId, userMessage);
+  } finally {
+    // Always clean up abort state when query completes
+    clearAbortState(conversationId);
+
+    // Notify user if operation was aborted via /stop
+    if (wasAborted) {
+      console.log('[Orchestrator] Operation was aborted by /stop command');
+      await platform.sendMessage(
+        conversationId,
+        '⚠️ Operation interrupted by /stop command'
+      ).catch(err => {
+        console.warn('[Orchestrator] Failed to send abort notification:', err);
+      });
+    }
   }
 }

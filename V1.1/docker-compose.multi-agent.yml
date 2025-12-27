@@ -1,0 +1,230 @@
+# Multi-Agent Architecture
+# ========================
+# - Orchestrator: Single container managing task queue + control surfaces
+# - Agents: 1-12 containers, each running Claude Code sessions
+# - Redis: Pub/sub messaging between orchestrator and agents
+# - Postgres: Persistent storage for conversations, tasks, memory
+
+services:
+  # ===================
+  # ORCHESTRATOR
+  # ===================
+  orchestrator:
+    build:
+      context: ..
+      dockerfile: V1.1/Dockerfile.orchestrator
+    container_name: agentcommander-orchestrator-v11
+    ports:
+      - "3001:3000"  # Use 3001 externally to avoid conflict with V1.0
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/agentcommander
+      - REDIS_URL=redis://redis:6379
+      - AGENT_COUNT=${AGENT_COUNT:-3}
+      # Control surfaces
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_STREAMING_MODE=stream
+      - TELEGRAM_ALLOWED_USER_IDS=${TELEGRAM_ALLOWED_USER_IDS}
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - SLACK_APP_TOKEN=${SLACK_APP_TOKEN}
+      # OAuth for Claude (shared with agents via Redis)
+      - CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN}
+      # GitHub token for git push operations
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      # LLM Provider API Keys for Swarm
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - XAI_API_KEY=${XAI_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    volumes:
+      - worktrees:/worktrees
+      - archon-data:/.archon
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # ===================
+  # AGENT POOL - Claude Code (Primary, Agentic Coding)
+  # ===================
+  agent-claude:
+    build:
+      context: ..
+      dockerfile: V1.1/Dockerfile.agent
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - ORCHESTRATOR_URL=http://orchestrator:3000
+      - AGENT_PROVIDER=claude-code
+      - CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    volumes:
+      - worktrees:/worktrees
+      - archon-data:/.archon
+    depends_on:
+      redis:
+        condition: service_healthy
+      orchestrator:
+        condition: service_healthy
+    deploy:
+      replicas: ${CLAUDE_AGENT_COUNT:-3}
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+    restart: unless-stopped
+
+  # ===================
+  # AGENT POOL - Grok (Fast, Cost-Effective)
+  # ===================
+  agent-grok:
+    build:
+      context: ..
+      dockerfile: V1.1/Dockerfile.agent
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - ORCHESTRATOR_URL=http://orchestrator:3000
+      - AGENT_PROVIDER=grok
+      - XAI_API_KEY=${XAI_API_KEY}
+      - XAI_BASE_URL=https://api.x.ai/v1
+    volumes:
+      - worktrees:/worktrees
+      - archon-data:/.archon
+    depends_on:
+      redis:
+        condition: service_healthy
+      orchestrator:
+        condition: service_healthy
+    deploy:
+      replicas: ${GROK_AGENT_COUNT:-0}
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    restart: unless-stopped
+
+  # ===================
+  # AGENT POOL - OpenAI GPT (Alternative)
+  # ===================
+  agent-openai:
+    build:
+      context: ..
+      dockerfile: V1.1/Dockerfile.agent
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - ORCHESTRATOR_URL=http://orchestrator:3000
+      - AGENT_PROVIDER=openai
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - worktrees:/worktrees
+      - archon-data:/.archon
+    depends_on:
+      redis:
+        condition: service_healthy
+      orchestrator:
+        condition: service_healthy
+    deploy:
+      replicas: ${OPENAI_AGENT_COUNT:-0}
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    restart: unless-stopped
+
+  # ===================
+  # AGENT POOL - Ollama (Local, Free)
+  # ===================
+  agent-ollama:
+    build:
+      context: ..
+      dockerfile: V1.1/Dockerfile.agent
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - ORCHESTRATOR_URL=http://orchestrator:3000
+      - AGENT_PROVIDER=ollama
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
+    volumes:
+      - worktrees:/worktrees
+      - archon-data:/.archon
+    depends_on:
+      redis:
+        condition: service_healthy
+      orchestrator:
+        condition: service_healthy
+    deploy:
+      replicas: ${OLLAMA_AGENT_COUNT:-0}
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    restart: unless-stopped
+
+  # ===================
+  # REDIS (Message Bus)
+  # ===================
+  redis:
+    image: redis:7-alpine
+    container_name: agentcommander-redis-v11
+    ports:
+      - "6380:6379"  # Use 6380 externally to avoid conflict with V1.0
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+  # ===================
+  # POSTGRES
+  # ===================
+  postgres:
+    image: postgres:16-alpine
+    container_name: agentcommander-postgres-v11
+    ports:
+      - "5433:5432"  # Use 5433 externally to avoid conflict with V1.0
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=agentcommander
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  worktrees:
+    driver: local
+  archon-data:
+    driver: local
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+
+networks:
+  default:
+    name: agentcommander-network
