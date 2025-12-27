@@ -274,6 +274,44 @@ export class TelegramAdapter implements IPlatformAdapter {
       await ctx.reply(summary, { parse_mode: 'Markdown' });
     });
 
+    // Register /test-approval command to create mock approvals with buttons
+    this.bot.command('test_approval', async ctx => {
+      const userId = ctx.from.id;
+      if (!isUserAuthorized(userId, this.allowedUserIds)) {
+        return;
+      }
+
+      const chatId = ctx.chat.id;
+      const swarmId = `test-swarm-${Date.now().toString(36)}`;
+
+      // Create 3 test agents with different priorities
+      const testAgents = [
+        { role: 'Researcher', title: 'Find API documentation', priority: 'high' as const },
+        { role: 'Code Writer', title: 'Implement login endpoint', priority: 'medium' as const },
+        { role: 'Debugger', title: 'Fix authentication bug', priority: 'critical' as const },
+      ];
+
+      await ctx.reply(`🧪 Creating ${testAgents.length} test approval requests...`);
+
+      for (const agent of testAgents) {
+        await telegramAgentApprovalHandler.sendAgentSpawnApproval(
+          this.bot,
+          chatId,
+          swarmId,
+          `agent-${Math.random().toString(36).substring(2, 8)}`,
+          agent.role,
+          agent.title,
+          `Test task: ${agent.title}. This is a mock approval for testing the button interface.`,
+          agent.priority,
+          'medium',
+          true,
+          300000
+        );
+        // Small delay between messages
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    });
+
     // Register callback query handlers for approval buttons
     this.bot.on('callback_query', async ctx => {
       const data = 'data' in ctx.callbackQuery ? ctx.callbackQuery.data : undefined;
