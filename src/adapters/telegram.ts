@@ -7,6 +7,7 @@ import { IPlatformAdapter } from '../types';
 import { parseAllowedUserIds, isUserAuthorized } from '../utils/telegram-auth';
 import { convertToTelegramMarkdown, stripMarkdown } from '../utils/telegram-markdown';
 import { telegramApprovalHandler } from './telegram-approvals';
+import { telegramAgentApprovalHandler } from './telegram-agent-approvals';
 
 const MAX_LENGTH = 4096;
 
@@ -75,6 +76,36 @@ export class TelegramAdapter implements IPlatformAdapter {
       for (const chunk of chunks) {
         await this.sendFormattedChunk(id, chunk);
       }
+    }
+  }
+
+  /**
+   * Send a file to the user via Telegram
+   * Supports local file paths or Buffer content
+   */
+  async sendFile(
+    chatId: string,
+    filePath: string,
+    caption?: string
+  ): Promise<void> {
+    const id = parseInt(chatId);
+    console.log(`[Telegram] sendFile called: ${filePath}`);
+
+    try {
+      // Use Telegraf's sendDocument with file path
+      await this.bot.telegram.sendDocument(
+        id,
+        { source: filePath },
+        { caption: caption || undefined }
+      );
+      console.log(`[Telegram] File sent successfully: ${filePath}`);
+    } catch (error) {
+      console.error(`[Telegram] Failed to send file: ${filePath}`, error);
+      // Fallback: send file path as message
+      await this.sendMessage(
+        chatId,
+        `📁 File created: \`${filePath}\`\n\n_(File sending failed - access it directly on the server)_`
+      );
     }
   }
 
@@ -203,6 +234,46 @@ export class TelegramAdapter implements IPlatformAdapter {
    * Start the bot (begins polling)
    */
   async start(): Promise<void> {
+    // Register /pending command to show all pending agent approvals
+    this.bot.command('pending', async ctx => {
+      const userId = ctx.from.id;
+      if (!isUserAuthorized(userId, this.allowedUserIds)) {
+        return; // Silent rejection
+      }
+
+      // Get all pending approvals across all swarms
+      const allPending = telegramAgentApprovalHandler.getAllPendingApprovals();
+
+      if (allPending.length === 0) {
+        await ctx.reply('✅ No pending agent approvals.', { parse_mode: 'Markdown' });
+        return;
+      }
+
+      let summary = `👀 **All Pending Agent Approvals**\n\n`;
+      summary += `📊 Total pending: ${allPending.length} agent${allPending.length > 1 ? 's' : ''}\n\n`;
+
+      // Group by swarm
+      const bySwarm = new Map<string, typeof allPending>();
+      for (const req of allPending) {
+        const swarmList = bySwarm.get(req.swarmId) || [];
+        swarmList.push(req);
+        bySwarm.set(req.swarmId, swarmList);
+      }
+
+      for (const [swarmId, agents] of bySwarm) {
+        summary += `🐝 **Swarm:** \`${swarmId}\`\n`;
+        for (const req of agents) {
+          const priorityEmoji = req.priority === 'critical' ? '🔴' :
+                               req.priority === 'high' ? '🟠' :
+                               req.priority === 'medium' ? '🟡' : '🟢';
+          summary += `  ${priorityEmoji} ${req.role}: ${req.title}\n`;
+        }
+        summary += '\n';
+      }
+
+      await ctx.reply(summary, { parse_mode: 'Markdown' });
+    });
+
     // Register callback query handlers for approval buttons
     this.bot.on('callback_query', async ctx => {
       const data = 'data' in ctx.callbackQuery ? ctx.callbackQuery.data : undefined;
@@ -254,6 +325,65 @@ export class TelegramAdapter implements IPlatformAdapter {
           await ctx.answerCbQuery();
           await ctx.reply(details, { parse_mode: 'Markdown' });
         }
+        // ========== AGENT SPAWN APPROVALS ==========
+        else if (data.startsWith('agent_approve:')) {
+          const approvalId = data.replace('agent_approve:', '');
+          const success = await telegramAgentApprovalHandler.handleAgentApprove(approvalId, userId.toString());
+
+          if (success) {
+            await ctx.answerCbQuery('🚀 Agent starting!');
+            const originalText =
+              ctx.callbackQuery.message && 'text' in ctx.callbackQuery.message
+                ? ctx.callbackQuery.message.text
+                : '';
+            await ctx.editMessageText(originalText + '\n\n✅ **AGENT APPROVED - Starting...**', {
+              parse_mode: 'Markdown',
+            });
+          } else {
+            await ctx.answerCbQuery('Already processed or expired');
+          }
+        } else if (data.startsWith('agent_reject:')) {
+          const approvalId = data.replace('agent_reject:', '');
+          const success = await telegramAgentApprovalHandler.handleAgentReject(approvalId, userId.toString());
+
+          if (success) {
+            await ctx.answerCbQuery('Agent skipped');
+            const originalText =
+              ctx.callbackQuery.message && 'text' in ctx.callbackQuery.message
+                ? ctx.callbackQuery.message.text
+                : '';
+            await ctx.editMessageText(originalText + '\n\n⏭ **SKIPPED** - Agent will not run', {
+              parse_mode: 'Markdown',
+            });
+          } else {
+            await ctx.answerCbQuery('Already processed or expired');
+          }
+        } else if (data.startsWith('agent_approve_all:')) {
+          const swarmId = data.replace('agent_approve_all:', '');
+          const count = await telegramAgentApprovalHandler.handleApproveAllInSwarm(swarmId, userId.toString());
+
+          await ctx.answerCbQuery(`✅ Approved ${count} agents`);
+          await ctx.reply(`✅ **Auto-approved ${count} remaining agents** in swarm \`${swarmId}\``, {
+            parse_mode: 'Markdown',
+          });
+        } else if (data.startsWith('agent_details:')) {
+          const approvalId = data.replace('agent_details:', '');
+          const details = telegramAgentApprovalHandler.getAgentDetails(approvalId);
+          await ctx.answerCbQuery();
+          await ctx.reply(details, { parse_mode: 'Markdown' });
+        } else if (data.startsWith('agent_modify:')) {
+          const approvalId = data.replace('agent_modify:', '');
+          await ctx.answerCbQuery();
+          await ctx.reply(
+            `📝 **Modify Task**\n\nReply to this message with modified instructions for agent \`${approvalId}\`.\n\n_Feature coming soon - for now, reject and create a new request._`,
+            { parse_mode: 'Markdown' }
+          );
+        } else if (data.startsWith('agent_see_all:')) {
+          const swarmId = data.replace('agent_see_all:', '');
+          const summary = telegramAgentApprovalHandler.getAllRemainingAgentsSummary(swarmId);
+          await ctx.answerCbQuery('👀 Loading...');
+          await ctx.reply(summary, { parse_mode: 'Markdown' });
+        }
       } catch (error) {
         console.error('[Telegram] Callback query error:', error);
         await ctx.answerCbQuery('Error processing request');
@@ -261,7 +391,7 @@ export class TelegramAdapter implements IPlatformAdapter {
     });
 
     // Register message handler before launch
-    this.bot.on('message', ctx => {
+    this.bot.on('message', async ctx => {
       if (!('text' in ctx.message)) return;
 
       const message = ctx.message.text;
@@ -274,6 +404,23 @@ export class TelegramAdapter implements IPlatformAdapter {
         const maskedId = `${String(userId).slice(0, 4)}***`;
         console.log(`[Telegram] Unauthorized message from user ${maskedId}`);
         return; // Silent rejection
+      }
+
+      // Handle text-based agent approval: "please start agent-xxxxxx" or "start agent-xxxxxx"
+      const startMatch = message.toLowerCase().match(/(?:please\s+)?start\s+agent[- ]?([a-z0-9]+)/i);
+      if (startMatch) {
+        const agentIdFragment = startMatch[1];
+        const result = await telegramAgentApprovalHandler.approveByAgentId(agentIdFragment, userId.toString());
+        if (result.success) {
+          await ctx.reply(`✅ **Agent approved!**\n\n🎭 Role: ${result.role}\n📋 Task: ${result.title}\n\n_Agent is now starting..._`, {
+            parse_mode: 'Markdown',
+          });
+        } else {
+          await ctx.reply(`❌ Could not find pending agent matching \`${agentIdFragment}\`\n\n_Try /pending to see all pending agents_`, {
+            parse_mode: 'Markdown',
+          });
+        }
+        return; // Don't pass to main message handler
       }
 
       if (this.messageHandler) {
