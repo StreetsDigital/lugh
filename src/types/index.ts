@@ -162,6 +162,36 @@ export interface MessageChunk {
 }
 
 /**
+ * File operation types for visibility tracking
+ */
+export type FileOperationType = 'read' | 'write' | 'edit' | 'search' | 'delete';
+
+/**
+ * Single file operation record
+ */
+export interface FileOperation {
+  type: FileOperationType;
+  path: string;
+  toolName: string;
+  timestamp: Date;
+  /** For searches: the pattern used */
+  searchPattern?: string;
+  /** For edits: brief description of change */
+  editSummary?: string;
+}
+
+/**
+ * Aggregated file operations for a session/response
+ */
+export interface FileOperationsSummary {
+  filesRead: string[];
+  filesWritten: string[];
+  filesEdited: string[];
+  searchesPerformed: Array<{ pattern: string; path?: string }>;
+  totalOperations: number;
+}
+
+/**
  * Context for phone-based approval workflow (Phone Vibecoding V1)
  * When provided, high-risk tools will require user approval via Telegram
  */
