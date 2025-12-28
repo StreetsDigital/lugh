@@ -1,13 +1,13 @@
 /**
- * Archon path resolution utilities
+ * Lugh path resolution utilities
  *
  * Directory structure:
- * ~/.archon/              # User-level (ARCHON_HOME)
+ * ~/.lugh/              # User-level (LUGH_HOME)
  * ├── workspaces/         # Cloned repositories
  * ├── worktrees/          # Git worktrees
  * └── config.yaml         # Global config
  *
- * For Docker: /.archon/
+ * For Docker: /.lugh/
  */
 
 import { join } from 'path';
@@ -31,47 +31,47 @@ export function isDocker(): boolean {
   return (
     process.env.WORKSPACE_PATH === '/workspace' ||
     (process.env.HOME === '/root' && Boolean(process.env.WORKSPACE_PATH)) ||
-    process.env.ARCHON_DOCKER === 'true'
+    process.env.LUGH_DOCKER === 'true'
   );
 }
 
 /**
- * Get the Archon home directory
- * - Docker: /.archon
- * - Local: ~/.archon (or ARCHON_HOME env var)
+ * Get the Lugh home directory
+ * - Docker: /.lugh
+ * - Local: ~/.lugh (or LUGH_HOME env var)
  */
-export function getArchonHome(): string {
+export function getLughHome(): string {
   if (isDocker()) {
-    return '/.archon';
+    return '/.lugh';
   }
 
-  const envHome = process.env.ARCHON_HOME;
+  const envHome = process.env.LUGH_HOME;
   if (envHome) {
     return expandTilde(envHome);
   }
 
-  return join(homedir(), '.archon');
+  return join(homedir(), '.lugh');
 }
 
 /**
  * Get the workspaces directory (where repos are cloned)
  */
-export function getArchonWorkspacesPath(): string {
-  return join(getArchonHome(), 'workspaces');
+export function getLughWorkspacesPath(): string {
+  return join(getLughHome(), 'workspaces');
 }
 
 /**
  * Get the worktrees directory (where git worktrees are created)
  */
-export function getArchonWorktreesPath(): string {
-  return join(getArchonHome(), 'worktrees');
+export function getLughWorktreesPath(): string {
+  return join(getLughHome(), 'worktrees');
 }
 
 /**
  * Get the global config file path
  */
-export function getArchonConfigPath(): string {
-  return join(getArchonHome(), 'config.yaml');
+export function getLughConfigPath(): string {
+  return join(getLughHome(), 'config.yaml');
 }
 
 /**
@@ -79,26 +79,26 @@ export function getArchonConfigPath(): string {
  * Returns folders in priority order (first match wins)
  */
 export function getCommandFolderSearchPaths(): string[] {
-  return ['.archon/commands', '.claude/commands', '.agents/commands'];
+  return ['.lugh/commands', '.claude/commands', '.agents/commands'];
 }
 
 /**
  * Get workflow folder search paths for a repository (future)
  */
 export function getWorkflowFolderSearchPaths(): string[] {
-  return ['.archon/workflows', '.claude/workflows', '.agents/workflows'];
+  return ['.lugh/workflows', '.claude/workflows', '.agents/workflows'];
 }
 
 /**
- * Log the Archon paths configuration (for startup)
+ * Log the Lugh paths configuration (for startup)
  */
-export function logArchonPaths(): void {
-  const home = getArchonHome();
-  const workspaces = getArchonWorkspacesPath();
-  const worktrees = getArchonWorktreesPath();
-  const config = getArchonConfigPath();
+export function logLughPaths(): void {
+  const home = getLughHome();
+  const workspaces = getLughWorkspacesPath();
+  const worktrees = getLughWorktreesPath();
+  const config = getLughConfigPath();
 
-  console.log('[Archon] Paths configured:');
+  console.log('[Lugh] Paths configured:');
   console.log(`  Home: ${home}`);
   console.log(`  Workspaces: ${workspaces}`);
   console.log(`  Worktrees: ${worktrees}`);

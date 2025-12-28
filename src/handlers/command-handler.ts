@@ -19,7 +19,7 @@ import {
   getWorktreeStatusBreakdown,
   MAX_WORKTREES_PER_CODEBASE,
 } from '../services/cleanup-service';
-import { getArchonWorkspacesPath, getCommandFolderSearchPaths } from '../utils/archon-paths';
+import { getLughWorkspacesPath, getCommandFolderSearchPaths } from '../utils/lugh-paths';
 import { toggleVerbose, setVerbose, isVerboseEnabled } from '../utils/logger';
 import { signalAbort } from '../orchestrator/abort-manager';
 
@@ -38,7 +38,7 @@ function shortenPath(absolutePath: string, repoRoot?: string): string {
   }
 
   // Fallback: show relative to workspace
-  const workspacePath = getArchonWorkspacesPath();
+  const workspacePath = getLughWorkspacesPath();
   const relPath = relative(workspacePath, absolutePath);
   if (!relPath.startsWith('..')) {
     return relPath;
@@ -221,7 +221,7 @@ export async function handleCommand(
 \`/load-commands <folder>\` - Bulk load (recursive)
 \`/command-invoke <name> [args]\` - Execute
 \`/commands\` - List registered
-\`/init\` - Create .archon structure
+\`/init\` - Create .lugh structure
 
 ## 🤖 AGENT ARMY REFERENCE
 
@@ -320,7 +320,7 @@ Codebase Commands (per-project):
   /load-commands <folder> - Bulk load (recursive)
   /command-invoke <name> [args] - Execute
   /commands - List registered
-  Note: Commands use relative paths (e.g., .archon/commands)
+  Note: Commands use relative paths (e.g., .lugh/commands)
 
 Codebase:
   /clone <repo-url> - Clone repository
@@ -352,7 +352,7 @@ Reference:
   /prompts - Reusable prompts
 
 Setup:
-  /init - Create .archon structure in current repo
+  /init - Create .lugh structure in current repo
   /verbose [on|off] - Toggle verbose logging`,
       };
 
@@ -468,7 +468,7 @@ Setup:
       const resolvedCwd = resolve(newCwd);
 
       // Validate path is within workspace to prevent path traversal
-      const workspacePath = getArchonWorkspacesPath();
+      const workspacePath = getLughWorkspacesPath();
       if (!isPathWithinWorkspace(resolvedCwd)) {
         return { success: false, message: `Path must be within ${workspacePath} directory` };
       }
@@ -523,9 +523,9 @@ Setup:
       const repoName = urlParts.pop() ?? 'unknown';
       const ownerName = urlParts.pop() ?? 'unknown';
 
-      // Use Archon workspaces path (ARCHON_HOME/workspaces or ~/.archon/workspaces)
+      // Use Lugh workspaces path (LUGH_HOME/workspaces or ~/.lugh/workspaces)
       // Include owner in path to prevent collisions (e.g., alice/utils vs bob/utils)
-      const workspacePath = getArchonWorkspacesPath();
+      const workspacePath = getLughWorkspacesPath();
       const targetPath = join(workspacePath, ownerName, repoName);
 
       try {
@@ -712,7 +712,7 @@ Setup:
 
       const [commandName, commandPath, ...textParts] = args;
       const commandText = textParts.join(' ');
-      const workspacePath = getArchonWorkspacesPath();
+      const workspacePath = getLughWorkspacesPath();
       const basePath = conversation.cwd ?? workspacePath;
       const fullPath = resolve(basePath, commandPath);
 
@@ -751,7 +751,7 @@ Setup:
       }
 
       const folderPath = args.join(' ');
-      const workspacePath = getArchonWorkspacesPath();
+      const workspacePath = getLughWorkspacesPath();
       const basePath = conversation.cwd ?? workspacePath;
       const fullPath = resolve(basePath, folderPath);
 
@@ -817,7 +817,7 @@ Setup:
     }
 
     case 'repos': {
-      const workspacePath = getArchonWorkspacesPath();
+      const workspacePath = getLughWorkspacesPath();
 
       try {
         const entries = await readdir(workspacePath, { withFileTypes: true });
@@ -941,7 +941,7 @@ Keep your response concise and helpful. The user stopped you for a reason - find
         return { success: false, message: 'Usage: /repo <number|name> [pull]' };
       }
 
-      const workspacePath = getArchonWorkspacesPath();
+      const workspacePath = getLughWorkspacesPath();
       const identifier = args[0];
       const shouldPull = args[1]?.toLowerCase() === 'pull';
 
@@ -1076,7 +1076,7 @@ Keep your response concise and helpful. The user stopped you for a reason - find
         return { success: false, message: 'Usage: /repo-remove <number|name>' };
       }
 
-      const workspacePath = getArchonWorkspacesPath();
+      const workspacePath = getLughWorkspacesPath();
       const identifier = args[0];
 
       try {
@@ -1488,7 +1488,7 @@ Keep your response concise and helpful. The user stopped you for a reason - find
     }
 
     case 'init': {
-      // Create .archon structure in current repo
+      // Create .lugh structure in current repo
       if (!conversation.cwd) {
         return {
           success: false,
@@ -1496,17 +1496,17 @@ Keep your response concise and helpful. The user stopped you for a reason - find
         };
       }
 
-      const archonDir = join(conversation.cwd, '.archon');
-      const commandsDir = join(archonDir, 'commands');
-      const configPath = join(archonDir, 'config.yaml');
+      const lughDir = join(conversation.cwd, '.lugh');
+      const commandsDir = join(lughDir, 'commands');
+      const configPath = join(lughDir, 'config.yaml');
 
       try {
-        // Check if .archon already exists
+        // Check if .lugh already exists
         try {
-          await access(archonDir);
+          await access(lughDir);
           return {
             success: false,
-            message: '.archon directory already exists. Nothing to do.',
+            message: '.lugh directory already exists. Nothing to do.',
           };
         } catch {
           // Directory doesn't exist, we can create it
@@ -1516,7 +1516,7 @@ Keep your response concise and helpful. The user stopped you for a reason - find
         await import('fs/promises').then(fs => fs.mkdir(commandsDir, { recursive: true }));
 
         // Create default config.yaml
-        const defaultConfig = `# Archon repository configuration
+        const defaultConfig = `# Lugh repository configuration
 # See: https://github.com/dynamous-community/remote-coding-agent
 
 # AI assistant preference (optional - overrides global default)
@@ -1524,7 +1524,7 @@ Keep your response concise and helpful. The user stopped you for a reason - find
 
 # Commands configuration (optional)
 # commands:
-#   folder: .archon/commands
+#   folder: .lugh/commands
 #   autoLoad: true
 `;
         await writeFile(configPath, defaultConfig);
@@ -1548,13 +1548,13 @@ Task: $ARGUMENTS
 
         return {
           success: true,
-          message: `Created .archon structure:
-  .archon/
+          message: `Created .lugh structure:
+  .lugh/
   ├── config.yaml
   └── commands/
       └── example.md
 
-Use /load-commands .archon/commands to register commands.`,
+Use /load-commands .lugh/commands to register commands.`,
         };
       } catch (error) {
         const err = error as Error;

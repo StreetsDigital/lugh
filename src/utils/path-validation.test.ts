@@ -13,25 +13,25 @@ import { homedir } from 'os';
 async function importFresh() {
   // Clear the module from cache by deleting it from Loader registry
   const modulePath = require.resolve('./path-validation');
-  const archonPathsModulePath = require.resolve('./archon-paths');
+  const lughPathsModulePath = require.resolve('./lugh-paths');
   delete require.cache[modulePath];
-  delete require.cache[archonPathsModulePath];
+  delete require.cache[lughPathsModulePath];
   return import('./path-validation');
 }
 
-// Default archon workspaces path
+// Default lugh workspaces path
 function getDefaultWorkspacesPath(): string {
-  return join(homedir(), '.archon', 'workspaces');
+  return join(homedir(), '.lugh', 'workspaces');
 }
 
 describe('path-validation', () => {
   const originalWorkspacePath = process.env.WORKSPACE_PATH;
-  const originalArchonHome = process.env.ARCHON_HOME;
+  const originalLughHome = process.env.LUGH_HOME;
 
   beforeEach(() => {
     // Reset to default for consistent test behavior
     delete process.env.WORKSPACE_PATH;
-    delete process.env.ARCHON_HOME;
+    delete process.env.LUGH_HOME;
   });
 
   afterAll(() => {
@@ -41,15 +41,15 @@ describe('path-validation', () => {
     } else {
       delete process.env.WORKSPACE_PATH;
     }
-    if (originalArchonHome !== undefined) {
-      process.env.ARCHON_HOME = originalArchonHome;
+    if (originalLughHome !== undefined) {
+      process.env.LUGH_HOME = originalLughHome;
     } else {
-      delete process.env.ARCHON_HOME;
+      delete process.env.LUGH_HOME;
     }
   });
 
   describe('isPathWithinWorkspace', () => {
-    test('should allow paths within default archon workspaces', async () => {
+    test('should allow paths within default lugh workspaces', async () => {
       const { isPathWithinWorkspace } = await importFresh();
       const defaultPath = getDefaultWorkspacesPath();
       expect(isPathWithinWorkspace(`${defaultPath}/repo`)).toBe(true);
@@ -87,10 +87,10 @@ describe('path-validation', () => {
       expect(isPathWithinWorkspace(`${defaultPath}-other`)).toBe(false);
     });
 
-    test('should use ARCHON_HOME env var when set', async () => {
-      process.env.ARCHON_HOME = '/custom/archon';
+    test('should use LUGH_HOME env var when set', async () => {
+      process.env.LUGH_HOME = '/custom/lugh';
       const { isPathWithinWorkspace } = await importFresh();
-      expect(isPathWithinWorkspace('/custom/archon/workspaces/repo')).toBe(true);
+      expect(isPathWithinWorkspace('/custom/lugh/workspaces/repo')).toBe(true);
       const defaultPath = getDefaultWorkspacesPath();
       expect(isPathWithinWorkspace(`${defaultPath}/repo`)).toBe(false); // Default path now rejected
     });
@@ -129,13 +129,13 @@ describe('path-validation', () => {
       );
     });
 
-    test('should use custom ARCHON_HOME for validation and error message', async () => {
-      process.env.ARCHON_HOME = '/my/custom/archon';
+    test('should use custom LUGH_HOME for validation and error message', async () => {
+      process.env.LUGH_HOME = '/my/custom/lugh';
       const { validateAndResolvePath } = await importFresh();
-      const customWorkspace = resolve('/my/custom/archon/workspaces');
+      const customWorkspace = resolve('/my/custom/lugh/workspaces');
       // Valid path under custom workspace
-      expect(validateAndResolvePath('/my/custom/archon/workspaces/repo')).toBe(
-        resolve('/my/custom/archon/workspaces/repo')
+      expect(validateAndResolvePath('/my/custom/lugh/workspaces/repo')).toBe(
+        resolve('/my/custom/lugh/workspaces/repo')
       );
       // Path under default workspace should now throw with custom workspace in message
       const defaultPath = getDefaultWorkspacesPath();

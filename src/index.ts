@@ -20,7 +20,7 @@ import { ConversationLockManager } from './utils/conversation-lock';
 import { classifyAndFormatError } from './utils/error-formatter';
 import { seedDefaultCommands } from './scripts/seed-commands';
 import { startCleanupScheduler, stopCleanupScheduler } from './services/cleanup-service';
-import { logArchonPaths } from './utils/archon-paths';
+import { logLughPaths } from './utils/lugh-paths';
 import { loadConfig, logConfig } from './config';
 
 async function main(): Promise<void> {
@@ -66,8 +66,8 @@ async function main(): Promise<void> {
   // Start cleanup scheduler
   startCleanupScheduler();
 
-  // Log Archon paths configuration
-  logArchonPaths();
+  // Log Lugh paths configuration
+  logLughPaths();
 
   // Load and log configuration
   const config = await loadConfig();

@@ -38,6 +38,11 @@ import {
   isAborted,
   clearAbortState,
 } from './abort-manager';
+import {
+  FileOperationsTracker,
+  formatFileOperationsSummary,
+  getBriefFileOperationsSummary,
+} from '../utils/file-operations-tracker';
 
 /**
  * Format the worktree limit reached message
@@ -221,7 +226,7 @@ async function saveLongResponseToFile(
   }
 
   // Create temp directory for responses
-  const tempDir = '/tmp/archon-responses';
+  const tempDir = '/tmp/lugh-responses';
   await mkdir(tempDir, { recursive: true });
 
   // Generate unique filename
@@ -848,6 +853,9 @@ export async function handleMessage(
     // Track files written during this response for auto-send feature
     const writtenFiles = new Set<string>();
 
+    // Track all file operations for visibility (Phone Vibecoding V1)
+    const fileOpsTracker = new FileOperationsTracker();
+
     if (mode === 'stream') {
         // Stream mode: Send each chunk immediately
         for await (const msg of aiClient.sendQuery(
@@ -869,6 +877,9 @@ export async function handleMessage(
             // Format and send tool call notification
             const toolMessage = formatToolCall(msg.toolName, msg.toolInput);
             await platform.sendMessage(conversationId, toolMessage);
+
+            // Track all file operations for visibility
+            fileOpsTracker.recordToolCall(msg.toolName, msg.toolInput as Record<string, unknown>);
 
             // Track file writes for auto-send feature
             const writtenPath = extractWrittenFilePath(msg.toolName, msg.toolInput as Record<string, unknown>);
@@ -926,6 +937,9 @@ export async function handleMessage(
           const toolMessage = formatToolCall(msg.toolName, msg.toolInput);
           allChunks.push({ type: 'tool', content: toolMessage });
           console.log(`[Orchestrator] Tool call: ${msg.toolName}`);
+
+          // Track all file operations for visibility
+          fileOpsTracker.recordToolCall(msg.toolName, msg.toolInput as Record<string, unknown>);
 
           // Track file writes for auto-send feature
           const writtenPath = extractWrittenFilePath(msg.toolName, msg.toolInput as Record<string, unknown>);
@@ -1045,6 +1059,22 @@ export async function handleMessage(
         }
 
         console.log(`[Orchestrator] Sent ${filesToSend.length} files to user`);
+      }
+    }
+
+    // Send file operations summary (if any file operations occurred)
+    if (fileOpsTracker.hasOperations()) {
+      const summary = fileOpsTracker.getSummary();
+      console.log(`[Orchestrator] File operations: ${summary.totalOperations} total`);
+
+      // Use brief summary for batch mode, detailed for stream mode
+      const summaryMessage =
+        mode === 'stream'
+          ? formatFileOperationsSummary(summary)
+          : getBriefFileOperationsSummary(summary);
+
+      if (summaryMessage) {
+        await platform.sendMessage(conversationId, summaryMessage);
       }
     }
 

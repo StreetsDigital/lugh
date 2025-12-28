@@ -1,20 +1,20 @@
 /**
- * Configuration loader for Archon YAML config files
+ * Configuration loader for Lugh YAML config files
  *
  * Loading order (later overrides earlier):
  * 1. Defaults
- * 2. Global config (~/.archon/config.yaml)
- * 3. Repository config (.archon/config.yaml)
+ * 2. Global config (~/.lugh/config.yaml)
+ * 3. Repository config (.lugh/config.yaml)
  * 4. Environment variables
  */
 
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { join, dirname } from 'path';
 import {
-  getArchonConfigPath,
-  getArchonWorkspacesPath,
-  getArchonWorktreesPath,
-} from '../utils/archon-paths';
+  getLughConfigPath,
+  getLughWorkspacesPath,
+  getLughWorktreesPath,
+} from '../utils/lugh-paths';
 import type { GlobalConfig, RepoConfig, MergedConfig } from './config-types';
 
 /**
@@ -30,7 +30,7 @@ let cachedGlobalConfig: GlobalConfig | null = null;
 /**
  * Default config file content
  */
-const DEFAULT_CONFIG_CONTENT = `# Archon Global Configuration
+const DEFAULT_CONFIG_CONTENT = `# Lugh Global Configuration
 # See: https://github.com/dynamous-community/remote-coding-agent/blob/main/docs/configuration.md
 
 # Default AI assistant (claude or codex)
@@ -66,7 +66,7 @@ async function createDefaultConfig(configPath: string): Promise<void> {
 }
 
 /**
- * Load global config from ~/.archon/config.yaml
+ * Load global config from ~/.lugh/config.yaml
  * Creates default config if file doesn't exist
  */
 export async function loadGlobalConfig(forceReload = false): Promise<GlobalConfig> {
@@ -74,7 +74,7 @@ export async function loadGlobalConfig(forceReload = false): Promise<GlobalConfi
     return cachedGlobalConfig;
   }
 
-  const configPath = getArchonConfigPath();
+  const configPath = getLughConfigPath();
 
   try {
     const content = await readFile(configPath, 'utf-8');
@@ -94,13 +94,13 @@ export async function loadGlobalConfig(forceReload = false): Promise<GlobalConfi
 }
 
 /**
- * Load repository config from .archon/config.yaml
+ * Load repository config from .lugh/config.yaml
  * Falls back to .claude/config.yaml for legacy support
  * Returns empty object if no config found
  */
 export async function loadRepoConfig(repoPath: string): Promise<RepoConfig> {
   const configPaths = [
-    join(repoPath, '.archon', 'config.yaml'),
+    join(repoPath, '.lugh', 'config.yaml'),
     join(repoPath, '.claude', 'config.yaml'),
   ];
 
@@ -131,8 +131,8 @@ function getDefaults(): MergedConfig {
       github: 'batch',
     },
     paths: {
-      workspaces: getArchonWorkspacesPath(),
-      worktrees: getArchonWorktreesPath(),
+      workspaces: getLughWorkspacesPath(),
+      worktrees: getLughWorktreesPath(),
     },
     concurrency: {
       maxConversations: 10,
@@ -172,7 +172,7 @@ function applyEnvOverrides(config: MergedConfig): MergedConfig {
     config.streaming.github = githubMode as 'stream' | 'batch';
   }
 
-  // Path overrides (these come from archon-paths.ts which already checks env vars)
+  // Path overrides (these come from lugh-paths.ts which already checks env vars)
   // No need to re-apply here since getDefaults() uses those functions
 
   // Concurrency override
