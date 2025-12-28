@@ -28,7 +28,7 @@ services:
     env_file: .env
     environment:
       # Override DATABASE_URL to use Docker service name
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/remote_coding_agent
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/lugh
       # Signal Docker environment for Archon path detection
       ARCHON_DOCKER: "true"
     ports:
@@ -50,7 +50,7 @@ services:
     image: postgres:18
     profiles: ["with-db"]
     environment:
-      POSTGRES_DB: remote_coding_agent
+      POSTGRES_DB: lugh
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
