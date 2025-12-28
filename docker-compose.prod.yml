@@ -19,11 +19,17 @@ services:
       - lugh_prod_data:/.lugh
       - claude_prod_data:/home/appuser/.claude
     restart: unless-stopped
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+        labels: "service,environment"
+    labels:
+      - "service=lugh-app"
+      - "environment=production"
     depends_on:
       postgres-prod:
         condition: service_healthy
@@ -44,6 +50,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+    labels:
+      - "service=lugh-postgres"
+      - "environment=production"
 
 volumes:
   postgres_prod_data:
