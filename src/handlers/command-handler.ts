@@ -191,7 +191,7 @@ export async function handleCommand(
 ## 🔧 CODEBASE COMMANDS
 
 \`/clone <repo-url>\` - Clone repository
-\`/repos\` - List local repositories
+\`/workspaces\` - List local repositories (alias: /repos)
 \`/repos github\` - List your GitHub repos
 \`/repo <#|name|owner/repo> [pull]\` - Switch repo (auto-clones from GitHub)
 \`/repo-remove <#|name>\` - Remove repo and codebase record
@@ -332,7 +332,7 @@ Codebase Commands (per-project):
 
 Codebase:
   /clone <repo-url> - Clone repository
-  /repos - List local repositories
+  /workspaces - List local repositories (alias: /repos)
   /repos github - List your GitHub repos
   /repo <#|name|owner/repo> [pull] - Switch repo (auto-clones)
   /repo-remove <#|name> - Remove repo and codebase record
@@ -844,6 +844,7 @@ Setup:
       return { success: true, message: msg };
     }
 
+    case 'workspaces':
     case 'repos': {
       const subcommand = args[0]?.toLowerCase();
       const workspacePath = getLughWorkspacesPath();
@@ -967,7 +968,7 @@ Setup:
         if (!repos.length) {
           return {
             success: true,
-            message: 'No local repositories.\n\nUse `/repos github` to see your GitHub repos\nUse `/clone <url>` to clone one',
+            message: 'No local repositories.\n\nUse `/workspaces github` to see your GitHub repos\nUse `/clone <url>` to clone one',
           };
         }
 
@@ -990,7 +991,7 @@ Setup:
         }
 
         msg += '\nUse `/repo <#|name>` to switch';
-        msg += '\nUse `/repos github` to see your GitHub repos';
+        msg += '\nUse `/workspaces github` to see your GitHub repos';
 
         return { success: true, message: msg };
       } catch (error) {
@@ -1182,7 +1183,7 @@ Keep your response concise and helpful. The user stopped you for a reason - find
         if (!targetRepo) {
           return {
             success: false,
-            message: `Repository not found: ${identifier}\n\nUse /repos to see local repos\nUse /repos github to see your GitHub repos`,
+            message: `Repository not found: ${identifier}\n\nUse /workspaces to see local repos\nUse /workspaces github to see your GitHub repos`,
           };
         }
 
