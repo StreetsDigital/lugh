@@ -33,9 +33,9 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
 RUN useradd -m -u 1001 -s /bin/bash appuser \
     && chown -R appuser:appuser /app
 
-# Create Archon directories
-RUN mkdir -p /.archon/workspaces /.archon/worktrees \
-    && chown -R appuser:appuser /.archon
+# Create Lugh directories
+RUN mkdir -p /.lugh/workspaces /.lugh/worktrees \
+    && chown -R appuser:appuser /.lugh
 
 # Install Node.js for Claude Code CLI (it requires node, not bun)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
@@ -78,13 +78,13 @@ RUN chmod -R 755 /home/appuser/.claude && \
     chmod 644 /home/appuser/.claude/*.md /home/appuser/.claude/*.json 2>/dev/null || true && \
     chmod +x /home/appuser/.claude/*.py /home/appuser/.claude/*.sh 2>/dev/null || true
 
-# Configure git to trust Archon directories
+# Configure git to trust Lugh directories
 # This prevents "fatal: detected dubious ownership" errors when git operations
 # are performed in mounted volumes or repos cloned by different users
-RUN git config --global --add safe.directory '/.archon/workspaces' && \
-    git config --global --add safe.directory '/.archon/workspaces/*' && \
-    git config --global --add safe.directory '/.archon/worktrees' && \
-    git config --global --add safe.directory '/.archon/worktrees/*'
+RUN git config --global --add safe.directory '/.lugh/workspaces' && \
+    git config --global --add safe.directory '/.lugh/workspaces/*' && \
+    git config --global --add safe.directory '/.lugh/worktrees' && \
+    git config --global --add safe.directory '/.lugh/worktrees/*'
 
 # Expose port
 EXPOSE 3000

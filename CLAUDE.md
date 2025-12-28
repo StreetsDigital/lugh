@@ -49,7 +49,7 @@ docker-compose --profile with-db up -d postgres
 bun run dev
 ```
 
-Requires `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/remote_coding_agent` in `.env`.
+Requires `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/lugh` in `.env`.
 
 Code changes auto-reload instantly. Telegram/Slack work from any device (polling-based, no port forwarding needed).
 
@@ -272,7 +272,7 @@ SLACK_STREAMING_MODE=stream     # Default: stream
 GITHUB_STREAMING_MODE=batch     # Default: batch
 
 # Optional
-ARCHON_HOME=~/.archon  # Override the base directory
+LUGH_HOME=~/.lugh  # Override the base directory
 PORT=3000
 
 # Builtin Commands (default: true)
@@ -292,17 +292,17 @@ The app can work alongside the worktree-manager Claude Code skill. Both use git 
 
 **To enable symbiosis:**
 
-1. Configure the worktree-manager skill to use Archon's worktrees directory:
+1. Configure the worktree-manager skill to use Lugh's worktrees directory:
    ```json
    // In ~/.claude/settings.json or worktree-manager config
    {
-     "worktreeBase": "~/.archon/worktrees"
+     "worktreeBase": "~/.lugh/worktrees"
    }
    ```
 
 2. Both systems will use the same directory:
-   - Skill creates: `~/.archon/worktrees/<project>/<branch-slug>/`
-   - App creates: `~/.archon/worktrees/<project>/<issue|pr>-<number>/`
+   - Skill creates: `~/.lugh/worktrees/<project>/<branch-slug>/`
+   - App creates: `~/.lugh/worktrees/<project>/<issue|pr>-<number>/`
 
 3. The app will **adopt** skill-created worktrees when:
    - A PR is opened for a branch that already has a worktree
@@ -316,13 +316,13 @@ The app can work alongside the worktree-manager Claude Code skill. Both use git 
 
 Git (`git worktree list`) is the source of truth for what actually exists on disk.
 
-### Archon Directory Structure
+### Lugh Directory Structure
 
-All Archon-managed files are organized under a dedicated namespace:
+All Lugh-managed files are organized under a dedicated namespace:
 
-**User-level (`~/.archon/`):**
+**User-level (`~/.lugh/`):**
 ```
-~/.archon/
+~/.lugh/
 ├── workspaces/     # Cloned repositories (via /clone)
 │   └── owner/repo/
 ├── worktrees/      # Git worktrees for isolation
@@ -331,21 +331,21 @@ All Archon-managed files are organized under a dedicated namespace:
 └── config.yaml     # Global configuration (non-secrets)
 ```
 
-**Repo-level (`.archon/` in any repository):**
+**Repo-level (`.lugh/` in any repository):**
 ```
-.archon/
+.lugh/
 ├── commands/       # Custom command templates
 ├── workflows/      # Future: workflow definitions
 └── config.yaml     # Repo-specific configuration
 ```
 
-**For Docker:** Paths are automatically set to `/.archon/`.
+**For Docker:** Paths are automatically set to `/.lugh/`.
 
 **Configuration:**
-- `ARCHON_HOME` - Override the base directory (default: `~/.archon`)
+- `LUGH_HOME` - Override the base directory (default: `~/.lugh`)
 
 **Command folder detection priority:**
-1. `.archon/commands/` - Archon-specific commands
+1. `.lugh/commands/` - Lugh-specific commands
 2. `.claude/commands/` - Claude Code standard location
 3. `.agents/commands/` - Alternative location
 
@@ -647,7 +647,7 @@ try {
 - Run app locally: `bun run dev` (hot reload enabled)
 
 **Volumes:**
-- `/.archon/` - All Archon-managed data (workspaces, worktrees)
+- `/.lugh/` - All Lugh-managed data (workspaces, worktrees)
 
 **Networking:**
 - App: Port 3000 (configurable via `PORT` env var)

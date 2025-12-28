@@ -1,0 +1,108 @@
+name: Deploy to Lightsail
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Allow manual trigger
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.4
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Type check
+        run: bun run type-check
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Run tests
+        run: |
+          bun test --coverage src/db src/utils src/handlers src/clients src/adapters src/config
+          bun test --coverage src/orchestrator
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Lightsail
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            cd ~/makewithLugh
+            git fetch origin main
+            git reset --hard origin/main
+            docker compose --profile with-db down
+            docker compose --profile with-db up -d --build
+            sleep 10
+            curl -sf http://localhost:3000/health || exit 1
+
+      - name: Notify success via Telegram
+        if: success()
+        uses: appleboy/telegram-action@v0.1.1
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ✅ *Lugh Deployed Successfully*
+
+            Branch: `${{ github.ref_name }}`
+            Commit: `${{ github.sha }}`
+            Author: ${{ github.actor }}
+
+            [View Commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+
+      - name: Notify failure via Telegram
+        if: failure()
+        uses: appleboy/telegram-action@v0.1.1
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ❌ *Lugh Deploy Failed*
+
+            Branch: `${{ github.ref_name }}`
+            Commit: `${{ github.sha }}`
+            Author: ${{ github.actor }}
+
+            [View Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+  notify-test-failure:
+    needs: test
+    runs-on: ubuntu-latest
+    if: failure()
+
+    steps:
+      - name: Notify test failure via Telegram
+        uses: appleboy/telegram-action@v0.1.1
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ❌ *Lugh Tests Failed*
+
+            Branch: `${{ github.ref_name }}`
+            Commit: `${{ github.sha }}`
+            Author: ${{ github.actor }}
+
+            [View Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
