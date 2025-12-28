@@ -299,7 +299,7 @@ Use a managed database service for easier backups and scaling.
 To run PostgreSQL in Docker alongside the app:
 
 ```env
-DATABASE_URL=postgresql://postgres:postgres@postgres:5432/remote_coding_agent
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/lugh
 ```
 
 Use the `with-db` profile when starting services (see Section 6).

@@ -178,7 +178,7 @@ psql $DATABASE_URL < migrations/007_drop_legacy_columns.sql
 Use the `with-db` profile for automatic PostgreSQL setup:
 
 ```env
-DATABASE_URL=postgresql://postgres:postgres@postgres:5432/remote_coding_agent
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/lugh
 ```
 
 **For fresh installations**, database schema is created automatically when you start with `docker compose --profile with-db`. The combined migration runs on first startup.
@@ -187,7 +187,7 @@ DATABASE_URL=postgresql://postgres:postgres@postgres:5432/remote_coding_agent
 
 ```bash
 # Connect to the running postgres container
-docker compose exec postgres psql -U postgres -d remote_coding_agent
+docker compose exec postgres psql -U postgres -d lugh
 
 # Then run the migrations you haven't applied yet
 \i /migrations/002_command_templates.sql
@@ -201,11 +201,11 @@ docker compose exec postgres psql -U postgres -d remote_coding_agent
 Or from your host machine (requires `psql` installed):
 
 ```bash
-psql postgresql://postgres:postgres@localhost:5432/remote_coding_agent < migrations/002_command_templates.sql
-psql postgresql://postgres:postgres@localhost:5432/remote_coding_agent < migrations/003_add_worktree.sql
-psql postgresql://postgres:postgres@localhost:5432/remote_coding_agent < migrations/004_worktree_sharing.sql
-psql postgresql://postgres:postgres@localhost:5432/remote_coding_agent < migrations/006_isolation_environments.sql
-psql postgresql://postgres:postgres@localhost:5432/remote_coding_agent < migrations/007_drop_legacy_columns.sql
+psql postgresql://postgres:postgres@localhost:5432/lugh < migrations/002_command_templates.sql
+psql postgresql://postgres:postgres@localhost:5432/lugh < migrations/003_add_worktree.sql
+psql postgresql://postgres:postgres@localhost:5432/lugh < migrations/004_worktree_sharing.sql
+psql postgresql://postgres:postgres@localhost:5432/lugh < migrations/006_isolation_environments.sql
+psql postgresql://postgres:postgres@localhost:5432/lugh < migrations/007_drop_legacy_columns.sql
 ```
 
 </details>
@@ -1031,7 +1031,7 @@ psql $DATABASE_URL -c "SELECT 1"
 **Verify tables exist:**
 ```bash
 # For local postgres
-docker compose exec postgres psql -U postgres -d remote_coding_agent -c "\dt"
+docker compose exec postgres psql -U postgres -d lugh -c "\dt"
 
 # Should show: remote_agent_codebases, remote_agent_conversations, remote_agent_sessions,
 # remote_agent_command_templates, remote_agent_isolation_environments

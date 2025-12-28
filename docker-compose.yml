@@ -6,12 +6,12 @@ services:
     build: .
     env_file: .env
     environment:
-      # Signal Docker environment for Archon path detection
-      ARCHON_DOCKER: "true"
+      # Signal Docker environment for Lugh path detection
+      LUGH_DOCKER: "true"
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
     volumes:
-      - archon_data:/.archon  # All Archon-managed data (workspaces, worktrees, config)
+      - lugh_data:/.lugh  # All Lugh-managed data (workspaces, worktrees, config)
       - claude_data:/home/appuser/.claude  # Claude Code config, agents, settings
     restart: unless-stopped
     dns:
@@ -28,7 +28,7 @@ services:
     env_file: .env
     environment:
       # Override DATABASE_URL to use Docker service name
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/remote_coding_agent
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/lugh
       # Signal Docker environment for Archon path detection
       ARCHON_DOCKER: "true"
     ports:
@@ -50,7 +50,7 @@ services:
     image: postgres:18
     profiles: ["with-db"]
     environment:
-      POSTGRES_DB: remote_coding_agent
+      POSTGRES_DB: lugh
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
@@ -69,5 +69,5 @@ services:
 
 volumes:
   postgres_data:
-  archon_data:  # Persistent Archon data (workspaces, worktrees)
+  lugh_data:  # Persistent Lugh data (workspaces, worktrees)
   claude_data:  # Persistent Claude Code data (agents, settings, MCP configs)
