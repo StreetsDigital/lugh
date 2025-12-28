@@ -7,18 +7,23 @@
 ## P0 - MVP (Must Have)
 
 ### FEAT-001: Dual Instance Architecture
-**Status:** Not Started
+**Status:** Partial (infrastructure ready, needs bot setup + deployment)
 **Description:** Two completely separate environments
 - @LughDev bot (staging) for development
 - @Lugh bot (prod) for stable usage
 - Separate databases, worktrees, configs
 - PR-based promotion between them
 
-**Files to create/modify:**
-- `docker-compose.staging.yml`
-- `docker-compose.prod.yml`
-- `.env.staging.example`
-- `.env.prod.example`
+**Files created:**
+- [x] `docker-compose.staging.yml` *(2024-12-28)*
+- [x] `docker-compose.prod.yml` *(2024-12-28)*
+- [x] `.env.staging.example` *(2024-12-28)*
+- [x] `.env.prod.example` *(2024-12-28)*
+
+**Remaining:**
+- [ ] Create @LughDev bot via @BotFather
+- [ ] Create @Lugh bot via @BotFather
+- [ ] Deploy to server
 
 ---
 
@@ -33,9 +38,9 @@
 ---
 
 ### FEAT-003: Multi-Agent Pool Activation
-**Status:** Partial (code exists)
+**Status:** Partial (code exists in src/agent/, src/swarm/, src/redis/)
 **Description:** Enable 3-12 parallel agents
-- Wire up V1.1 agent pool code
+- Enable feature flags for multi-agent pool
 - Redis task distribution
 - Agent health monitoring
 - Feature flag: `FEATURE_AGENT_POOL=true`

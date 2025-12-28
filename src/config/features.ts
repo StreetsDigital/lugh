@@ -115,7 +115,7 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
   },
 
   // ---------------------------------------------------------------------------
-  // V1.1 AGENT POOL (Experimental)
+  // MULTI-AGENT POOL (Experimental)
   // ---------------------------------------------------------------------------
   AGENT_POOL: {
     key: 'AGENT_POOL',
@@ -145,7 +145,7 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
   },
 
   // ---------------------------------------------------------------------------
-  // V1.1 MULTI-LLM SUPPORT (Experimental)
+  // MULTI-LLM SUPPORT (Experimental)
   // ---------------------------------------------------------------------------
   MULTI_LLM: {
     key: 'MULTI_LLM',
@@ -172,7 +172,7 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
   },
 
   // ---------------------------------------------------------------------------
-  // V1.1 SWARM COORDINATION (Experimental)
+  // SWARM COORDINATION (Experimental)
   // ---------------------------------------------------------------------------
   SWARM_COORDINATION: {
     key: 'SWARM_COORDINATION',
@@ -200,7 +200,7 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
   },
 
   // ---------------------------------------------------------------------------
-  // V1.1 VERIFICATION & RECOVERY (Experimental)
+  // VERIFICATION & RECOVERY (Experimental)
   // ---------------------------------------------------------------------------
   EXTERNAL_VERIFICATION: {
     key: 'EXTERNAL_VERIFICATION',
@@ -221,7 +221,7 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
   },
 
   // ---------------------------------------------------------------------------
-  // V1.1 DESKTOP APP (Experimental)
+  // DESKTOP APP (Experimental)
   // ---------------------------------------------------------------------------
   ELECTRON_APP: {
     key: 'ELECTRON_APP',

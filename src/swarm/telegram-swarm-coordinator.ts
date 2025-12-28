@@ -14,7 +14,7 @@ import {
 } from '../adapters/telegram-agent-approvals';
 
 /**
- * Simplified sub-task interface (mirrors V1.1 types)
+ * Simplified sub-task interface for swarm coordination
  */
 interface SubTask {
   id: string;
@@ -328,10 +328,10 @@ export function createTelegramApprovalHook(
 }
 
 /**
- * Example usage with the V1.1 swarm coordinator
+ * Example usage with the swarm coordinator
  *
  * ```typescript
- * import { swarmCoordinator } from '../V1.1/orchestrator/swarm/swarm-coordinator';
+ * import { swarmCoordinator } from '../swarm/swarm-coordinator';
  * import { createTelegramApprovalHook } from './telegram-swarm-coordinator';
  *
  * async function executeSwarmWithApproval(

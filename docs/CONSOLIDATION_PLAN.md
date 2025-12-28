@@ -1,5 +1,7 @@
 # Agent Command Codebase Consolidation Plan
 
+> **STATUS: COMPLETED** - V1.1 experimental code has been merged into src/ and the V1.1 directory removed (December 2024). This document is kept for historical reference.
+
 ## Current State Analysis
 
 ### Directory Structure (Before)

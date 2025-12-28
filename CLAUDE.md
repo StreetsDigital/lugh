@@ -141,6 +141,46 @@ docker-compose --profile with-db down
 
 **Note:** For development, use the hybrid approach above instead (postgres in Docker, app locally).
 
+### Dual Instance (Staging + Production)
+
+Run separate staging and production environments with different Telegram bots:
+
+```bash
+# 1. Create your bots via @BotFather
+#    - Staging: @LughDev_bot (or similar)
+#    - Production: @Lugh_bot (or similar)
+
+# 2. Copy and configure environment files
+cp .env.staging.example .env.staging
+cp .env.prod.example .env.prod
+# Edit each with the respective bot tokens
+
+# 3. Start staging (port 3001, postgres on 5433)
+docker-compose -f docker-compose.staging.yml up -d
+
+# 4. Start production (port 3000, postgres on 5432)
+docker-compose -f docker-compose.prod.yml up -d
+
+# View logs
+docker-compose -f docker-compose.staging.yml logs -f
+docker-compose -f docker-compose.prod.yml logs -f
+
+# Stop environments
+docker-compose -f docker-compose.staging.yml down
+docker-compose -f docker-compose.prod.yml down
+```
+
+**Isolation:**
+- Separate databases (`lugh_staging`, `lugh_prod`)
+- Separate volumes (worktrees, Claude config)
+- Separate ports (3001 staging, 3000 prod)
+- Different bot tokens = different Telegram bots
+
+**Workflow:**
+1. Test new features in staging (@LughDev)
+2. When stable, deploy to production (@Lugh)
+3. Both can run simultaneously on the same server
+
 ## Architecture
 
 ### Directory Structure
