@@ -415,9 +415,9 @@ Git worktrees create isolated working directories from the same repository, each
 
 ### Directory Structure
 
-Worktrees are created under `~/.archon/worktrees/`:
+Worktrees are created under `~/.lugh/worktrees/`:
 ```
-~/.archon/worktrees/
+~/.lugh/worktrees/
 └── project-name/
     ├── feature-auth/     # Working on auth feature
     ├── feature-dashboard/ # Working on dashboard

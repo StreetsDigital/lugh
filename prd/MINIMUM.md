@@ -26,7 +26,7 @@
 - [ ] PR-based promotion from staging → prod
 
 ### 4. Knowledge Layer (NOT STARTED)
-- [ ] Integrate Archon MCP as knowledge server
+- [ ] Integrate Lugh MCP as knowledge server
 - [ ] Per-project siloed knowledge
 - [ ] Document upload (PDF, MD, code)
 - [ ] RAG search during agent work
@@ -54,7 +54,7 @@
 | Message Bus | Redis | ✅ Done |
 | AI | Claude Agent SDK | ✅ Done |
 | Telegram | Telegraf | ✅ Done |
-| Knowledge | Archon MCP | ❌ Not integrated |
+| Knowledge | Lugh MCP | ❌ Not integrated |
 | Deployment | Docker Compose | ✅ Done |
 | Hosting | Lightsail/Hetzner | ❌ Not deployed |
 
@@ -81,8 +81,8 @@
 - [ ] Test parallel execution
 
 ### Phase 4: Knowledge
-- [ ] Deploy Archon MCP alongside
-- [ ] Connect Lugh → Archon
+- [ ] Deploy Lugh MCP alongside
+- [ ] Connect Lugh → Lugh
 - [ ] Test document ingestion
 - [ ] Verify RAG in agent prompts
 

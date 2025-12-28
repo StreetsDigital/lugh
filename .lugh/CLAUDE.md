@@ -107,7 +107,7 @@ You can:
 ## Remember
 
 - You're running inside a Docker container
-- Working directories are in `/.archon/workspaces/`
+- Working directories are in `/.lugh/workspaces/`
 - User configs are in `/home/appuser/.claude/`
 - Always use `/status` to check current context
 - Use `/quickref` to refresh your memory on capabilities

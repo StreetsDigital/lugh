@@ -137,25 +137,25 @@ else
   check_warn "Docker not installed (required for containerized deployment)"
 fi
 
-# Archon paths
+# Lugh paths
 echo ""
-echo "Archon Paths"
+echo "Lugh Paths"
 echo "---------------"
 
-ARCHON_HOME="${ARCHON_HOME:-$HOME/.archon}"
-echo "  Home: $ARCHON_HOME"
-echo "  Workspaces: $ARCHON_HOME/workspaces"
-echo "  Worktrees: $ARCHON_HOME/worktrees"
+LUGH_HOME="${LUGH_HOME:-$HOME/.lugh}"
+echo "  Home: $LUGH_HOME"
+echo "  Workspaces: $LUGH_HOME/workspaces"
+echo "  Worktrees: $LUGH_HOME/worktrees"
 
-if [ -d "$ARCHON_HOME" ]; then
-  check_pass "Archon home directory exists"
-  if [ -f "$ARCHON_HOME/config.yaml" ]; then
-    check_pass "Global config exists ($ARCHON_HOME/config.yaml)"
+if [ -d "$LUGH_HOME" ]; then
+  check_pass "Lugh home directory exists"
+  if [ -f "$LUGH_HOME/config.yaml" ]; then
+    check_pass "Global config exists ($LUGH_HOME/config.yaml)"
   else
     check_warn "Global config will be created on first run"
   fi
 else
-  check_warn "Archon home directory will be created on first run"
+  check_warn "Lugh home directory will be created on first run"
 fi
 
 # Summary

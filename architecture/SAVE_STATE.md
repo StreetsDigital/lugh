@@ -230,7 +230,7 @@ async function createCheckpoint(
   // 4. Worktrees
   await exec(`tar -czf ${dir}/worktrees.tar.gz ${LUGH_HOME}/worktrees`);
 
-  // 5. Knowledge index (if using Archon)
+  // 5. Knowledge index (if using Lugh)
   const knowledgeState = await captureKnowledgeState();
 
   // 6. Write metadata

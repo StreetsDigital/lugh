@@ -187,10 +187,10 @@ Set at least one of:
 3. For Discord: Ensure MESSAGE CONTENT INTENT is enabled
 4. For Slack: Ensure Socket Mode is enabled
 
-### Archon Directory Not Created
+### Lugh Directory Not Created
 
-The `~/.archon/` directory is created automatically on first use. To create manually:
+The `~/.lugh/` directory is created automatically on first use. To create manually:
 
 ```bash
-mkdir -p ~/.archon/workspaces ~/.archon/worktrees
+mkdir -p ~/.lugh/workspaces ~/.lugh/worktrees
 ```

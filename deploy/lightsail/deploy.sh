@@ -1,5 +1,5 @@
 #!/bin/bash
-# Lugh/Archon Lightsail Deployment Script
+# Lugh/Lugh Lightsail Deployment Script
 # Usage: curl -sL https://raw.githubusercontent.com/StreetsDigital/makewithLugh/main/deploy/lightsail/deploy.sh | bash
 
 set -e

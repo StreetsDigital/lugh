@@ -78,11 +78,11 @@ source .env
 PROJECT_ROOT="$(pwd)"
 export PROJECT_ROOT
 
-# Determine workspace path (use ARCHON_HOME from .env or fallback to ~/.archon)
-if [ -n "$ARCHON_HOME" ]; then
-  WORK_DIR="${ARCHON_HOME}/workspaces"
+# Determine workspace path (use LUGH_HOME from .env or fallback to ~/.lugh)
+if [ -n "$LUGH_HOME" ]; then
+  WORK_DIR="${LUGH_HOME}/workspaces"
 else
-  WORK_DIR="${HOME}/.archon/workspaces"
+  WORK_DIR="${HOME}/.lugh/workspaces"
 fi
 
 echo "Using workspace directory: ${WORK_DIR}"
@@ -137,7 +137,7 @@ export WORK_DIR
 **Why this is needed:**
 1. **Workspace cleanup:** The workspace is mounted from the host into the Docker container. If a directory exists on the host, git clone inside the container will fail with "directory already exists".
 2. **Database cleanup:** Test adapter conversations (e.g., `test-e2e`) persist across validation runs. Without cleanup, old conversations retain their original `ai_assistant_type` even if `DEFAULT_AI_ASSISTANT` environment variable has changed. This causes the test to use the wrong AI assistant.
-3. **ARCHON_HOME support:** Reads ARCHON_HOME from .env to use a custom base directory. Default: `~/.archon` (workspaces at `~/.archon/workspaces`).
+3. **LUGH_HOME support:** Reads LUGH_HOME from .env to use a custom base directory. Default: `~/.lugh` (workspaces at `~/.lugh/workspaces`).
 4. **Remote database support:** Works with both local PostgreSQL and remote databases (like Supabase) by using `psql` with the connection string directly, with Node.js fallback.
 
 ### 2.1 Store ngrok URL
@@ -1438,7 +1438,7 @@ rm -rf "${WORK_DIR}/${TEST_REPO_NAME}"
 - **Batch Mode**: GitHub responses should be single comments, not streaming (verified in Phase 6-7)
 - **Database**: Queries use psql (if available) or Node.js fallback - works with both local and remote databases
 - **Database Validation**: Critical throughout - verifies conversations, sessions, and state transitions
-- **Workspace**: Uses ARCHON_HOME from .env (or defaults to ~/.archon/workspaces), cleaned automatically at start
+- **Workspace**: Uses LUGH_HOME from .env (or defaults to ~/.lugh/workspaces), cleaned automatically at start
 - **Webhook**: Automatically configured with secret from `.env`
 
 ### Database Validation Checkpoints
