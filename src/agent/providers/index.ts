@@ -2,7 +2,7 @@
  * LLM Providers Module
  * ====================
  *
- * Multi-LLM provider support for AgentCommander V1.1.
+ * Multi-LLM provider support for parallel agent execution.
  *
  * Supported providers:
  * - claude-code: Claude Code SDK (agentic coding with tool use)

@@ -11,7 +11,7 @@
 - [ ] Inline approval buttons for risky actions
 - [ ] File upload/download
 
-### 2. Multi-Agent Pool (PARTIAL - V1.1 exists)
+### 2. Multi-Agent Pool (PARTIAL - code exists)
 - [x] Spawn multiple Claude agents
 - [x] Redis coordination
 - [ ] Agent health monitoring

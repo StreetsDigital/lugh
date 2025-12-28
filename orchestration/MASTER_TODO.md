@@ -22,11 +22,11 @@
 
 ### Dual Instance Setup
 - [ ] **DUAL-001**: Create second Telegram bot via @BotFather (@LughDev)
-- [ ] **DUAL-002**: Create docker-compose.staging.yml
-- [ ] **DUAL-003**: Create docker-compose.prod.yml
-- [ ] **DUAL-004**: Create .env.staging with staging bot token
-- [ ] **DUAL-005**: Create .env.prod with prod bot token
-- [ ] **DUAL-006**: Create staging database (staging_lugh)
+- [x] **DUAL-002**: Create docker-compose.staging.yml *(completed 2024-12-28)*
+- [x] **DUAL-003**: Create docker-compose.prod.yml *(completed 2024-12-28)*
+- [x] **DUAL-004**: Create .env.staging.example template *(completed 2024-12-28)*
+- [x] **DUAL-005**: Create .env.prod.example template *(completed 2024-12-28)*
+- [x] **DUAL-006**: Staging database configured in docker-compose *(completed 2024-12-28)*
 - [ ] **DUAL-007**: Deploy both instances to same server (different ports)
 - [ ] **DUAL-008**: Test isolation - changes in staging don't affect prod
 
@@ -45,7 +45,7 @@
 - [ ] **RENAME-008**: Create .lugh/ directory structure template
 
 ### Multi-Agent Activation
-- [ ] **AGENT-001**: Review V1.1 agent pool code
+- [ ] **AGENT-001**: Review multi-agent pool code (src/agent/, src/swarm/)
 - [ ] **AGENT-002**: Enable FEATURE_AGENT_POOL flag
 - [ ] **AGENT-003**: Enable FEATURE_REDIS_MESSAGING flag
 - [ ] **AGENT-004**: Test agent spawning with 2 agents

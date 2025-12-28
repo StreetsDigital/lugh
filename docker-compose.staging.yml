@@ -1,0 +1,51 @@
+# Lugh Staging Environment
+# Usage: docker-compose -f docker-compose.staging.yml up -d
+#
+# Requires: .env.staging file with TELEGRAM_BOT_TOKEN for @LughDev bot
+#
+# Runs on port 3001 with isolated database and volumes
+
+services:
+  app-staging:
+    build: .
+    env_file: .env.staging
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres-staging:5432/lugh_staging
+      LUGH_DOCKER: "true"
+      LUGH_ENV: "staging"
+    ports:
+      - "3001:3001"
+    volumes:
+      - lugh_staging_data:/.lugh
+      - claude_staging_data:/home/appuser/.claude
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    depends_on:
+      postgres-staging:
+        condition: service_healthy
+
+  postgres-staging:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: lugh_staging
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql
+      - ./migrations/000_combined.sql:/docker-entrypoint-initdb.d/000_combined.sql:ro
+    ports:
+      - "5433:5432"  # Different port to avoid conflict with prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_staging_data:
+  lugh_staging_data:
+  claude_staging_data:
