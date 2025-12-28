@@ -41,7 +41,7 @@ curl -fsSL https://raw.githubusercontent.com/dynamous-community/remote-coding-ag
 
 **Option B: Run PostgreSQL locally**
 - Uncomment the postgres service in docker-compose.yml
-- Use: `postgresql://postgres:postgres@postgres:5432/remote_coding_agent`
+- Use: `postgresql://postgres:postgres@postgres:5432/lugh`
 
 #### AI Assistant
 
