@@ -47,10 +47,10 @@
 
 ---
 
-### FEAT-004: Knowledge Layer (Archon MCP)
+### FEAT-004: Knowledge Layer (Lugh MCP)
 **Status:** Not Started
-**Description:** Integrate Cole Medin's Archon as MCP server
-- Deploy Archon alongside Lugh
+**Description:** Integrate Cole Medin's Lugh as MCP server
+- Deploy Lugh alongside Lugh
 - Per-project knowledge silos
 - Document ingestion (PDF, MD, code)
 - RAG retrieval in agent prompts

@@ -1,13 +1,13 @@
 # Configuration Guide
 
-Archon supports a layered configuration system with sensible defaults, optional YAML config files, and environment variable overrides.
+Lugh supports a layered configuration system with sensible defaults, optional YAML config files, and environment variable overrides.
 
 ## Directory Structure
 
-### User-Level (~/.archon/)
+### User-Level (~/.lugh/)
 
 ```
-~/.archon/
+~/.lugh/
 ├── workspaces/     # Cloned repositories
 │   └── owner/repo/
 ├── worktrees/      # Git worktrees for isolation
@@ -16,10 +16,10 @@ Archon supports a layered configuration system with sensible defaults, optional 
 └── config.yaml     # Global configuration (optional)
 ```
 
-### Repository-Level (.archon/)
+### Repository-Level (.lugh/)
 
 ```
-.archon/
+.lugh/
 ├── commands/       # Custom command templates
 │   └── plan.md
 ├── workflows/      # Future: workflow definitions
@@ -31,13 +31,13 @@ Archon supports a layered configuration system with sensible defaults, optional 
 Settings are loaded in this order (later overrides earlier):
 
 1. **Defaults** - Sensible built-in defaults
-2. **Global Config** - `~/.archon/config.yaml`
-3. **Repo Config** - `.archon/config.yaml` in repository
+2. **Global Config** - `~/.lugh/config.yaml`
+3. **Repo Config** - `.lugh/config.yaml` in repository
 4. **Environment Variables** - Always highest priority
 
 ## Global Configuration
 
-Create `~/.archon/config.yaml` for user-wide preferences:
+Create `~/.lugh/config.yaml` for user-wide preferences:
 
 ```yaml
 # Default AI assistant
@@ -52,8 +52,8 @@ streaming:
 
 # Custom paths (usually not needed)
 paths:
-  workspaces: ~/.archon/workspaces
-  worktrees: ~/.archon/worktrees
+  workspaces: ~/.lugh/workspaces
+  worktrees: ~/.lugh/worktrees
 
 # Concurrency limits
 concurrency:
@@ -62,7 +62,7 @@ concurrency:
 
 ## Repository Configuration
 
-Create `.archon/config.yaml` in any repository for project-specific settings:
+Create `.lugh/config.yaml` in any repository for project-specific settings:
 
 ```yaml
 # AI assistant for this project
@@ -70,7 +70,7 @@ assistant: claude
 
 # Commands configuration
 commands:
-  folder: .archon/commands
+  folder: .lugh/commands
   autoLoad: true
 
 # Worktree settings
@@ -84,7 +84,7 @@ Environment variables override all other configuration:
 
 | Variable                       | Description                | Default       |
 | ------------------------------ | -------------------------- | ------------- |
-| `ARCHON_HOME`                  | Base directory for Archon  | `~/.archon`   |
+| `LUGH_HOME`                  | Base directory for Lugh  | `~/.lugh`   |
 | `DEFAULT_AI_ASSISTANT`         | Default AI assistant       | `claude`      |
 | `TELEGRAM_STREAMING_MODE`      | Telegram streaming         | `stream`      |
 | `DISCORD_STREAMING_MODE`       | Discord streaming          | `batch`       |
@@ -97,7 +97,7 @@ Environment variables override all other configuration:
 In Docker containers, paths are automatically set:
 
 ```
-/.archon/
+/.lugh/
 ├── workspaces/
 └── worktrees/
 ```
@@ -106,9 +106,9 @@ Environment variables still work and override defaults.
 
 ## Command Folder Detection
 
-When cloning or switching repositories, Archon looks for commands in this priority order:
+When cloning or switching repositories, Lugh looks for commands in this priority order:
 
-1. `.archon/commands/` - Archon-specific commands
+1. `.lugh/commands/` - Lugh-specific commands
 2. `.claude/commands/` - Claude Code standard location
 3. `.agents/commands/` - Alternative location
 
@@ -118,23 +118,23 @@ First found folder is used.
 
 ### Minimal Setup (Using Defaults)
 
-No configuration needed! Archon works out of the box with:
+No configuration needed! Lugh works out of the box with:
 
-- `~/.archon/` for all managed files
+- `~/.lugh/` for all managed files
 - Claude as default AI assistant
 - Platform-appropriate streaming modes
 
 ### Custom AI Preference
 
 ```yaml
-# ~/.archon/config.yaml
+# ~/.lugh/config.yaml
 defaultAssistant: codex
 ```
 
 ### Project-Specific Settings
 
 ```yaml
-# .archon/config.yaml in your repo
+# .lugh/config.yaml in your repo
 assistant: claude
 commands:
   autoLoad: true
@@ -143,5 +143,5 @@ commands:
 ### Docker with Custom Volume
 
 ```bash
-docker run -v /my/data:/.archon ghcr.io/dynamous-community/remote-coding-agent
+docker run -v /my/data:/.lugh ghcr.io/dynamous-community/remote-coding-agent
 ```

@@ -25,8 +25,8 @@ V1/
 │       ├── electron/              [Desktop app]
 │       └── public/                [Web dashboard]
 │
-├── Archon-main/                   ← SEPARATE SYSTEM (keep separate)
-│   ├── archon-ui-main/            [React dashboard]
+├── Lugh-main/                   ← SEPARATE SYSTEM (keep separate)
+│   ├── lugh-ui-main/            [React dashboard]
 │   └── python/                    [Python orchestrator]
 │
 └── auto-claude-research/          ← RESEARCH (keep separate)
@@ -44,7 +44,7 @@ V1/
 | LLM config API | `V1.1/orchestrator/llm-config-api.ts` | Experimental | Merge with feature flag |
 | Swarm coordination | `V1.1/orchestrator/swarm/` | Experimental | Merge with feature flag |
 | Electron app | `V1.1/electron/` | Experimental | Keep separate, link via feature flag |
-| Archon | `Archon-main/` | Independent | Keep as separate project |
+| Lugh | `Lugh-main/` | Independent | Keep as separate project |
 
 ---
 
@@ -314,6 +314,6 @@ No code changes or deployments needed for rollback.
 
 ## Notes
 
-- **Archon-main**: Kept as a separate project - it's an orchestration layer above Agent Command
+- **Lugh-main**: Kept as a separate project - it's an orchestration layer above Agent Command
 - **auto-claude-research**: Research project, not part of consolidation
 - **V1.1/electron**: Built separately, enabled via `FEATURE_ELECTRON_APP`

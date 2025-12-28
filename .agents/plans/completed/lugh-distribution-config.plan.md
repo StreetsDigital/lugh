@@ -1,4 +1,4 @@
-# Feature: Archon Distribution & Configuration System
+# Feature: Lugh Distribution & Configuration System
 
 The following plan should be complete, but it's important that you validate documentation and codebase patterns and task sanity before you start implementing.
 
@@ -7,10 +7,10 @@ Pay special attention to naming of existing utils types and models. Import from 
 ## Feature Description
 
 A comprehensive distribution and configuration system for the remote-coding-agent that establishes:
-1. **Unified directory structure** under `~/.archon/` for all managed files (workspaces, worktrees, config)
+1. **Unified directory structure** under `~/.lugh/` for all managed files (workspaces, worktrees, config)
 2. **Docker image publishing** to GitHub Container Registry (GHCR) for easy distribution
 3. **YAML-based configuration** using Bun's native YAML support for non-secret settings
-4. **Config precedence chain**: Environment variables > `~/.archon/config.yaml` > `.archon/config.yaml` > defaults
+4. **Config precedence chain**: Environment variables > `~/.lugh/config.yaml` > `.lugh/config.yaml` > defaults
 
 This foundation enables future workflow engine development, where workflows will be defined in YAML and orchestrated by the system.
 
@@ -34,7 +34,7 @@ So that workflows can be version-controlled and composed from reusable definitio
 
 ## Solution Statement
 
-1. Introduce unified `~/.archon/` directory structure with centralized path resolution
+1. Introduce unified `~/.lugh/` directory structure with centralized path resolution
 2. Publish multi-arch Docker images to GHCR via GitHub Actions
 3. Add YAML configuration support using Bun's native `Bun.YAML.parse()` for non-secret settings
 4. Establish clear config precedence: secrets in `.env`, structured config in YAML files
@@ -64,8 +64,8 @@ So that workflows can be version-controlled and composed from reusable definitio
 
 ### New Files to Create
 
-- `src/utils/archon-paths.ts` - Centralized path resolution for all Archon directories
-- `src/utils/archon-paths.test.ts` - Tests for path resolution
+- `src/utils/lugh-paths.ts` - Centralized path resolution for all Lugh directories
+- `src/utils/lugh-paths.test.ts` - Tests for path resolution
 - `src/config/loader.ts` - YAML configuration loading with precedence chain
 - `src/config/loader.test.ts` - Tests for config loading
 - `src/config/types.ts` - Configuration type definitions
@@ -75,7 +75,7 @@ So that workflows can be version-controlled and composed from reusable definitio
 - `scripts/validate-setup.sh` - Setup validation script
 - `docs/configuration.md` - Comprehensive configuration reference
 - `docs/getting-started.md` - Step-by-step setup guide for new users
-- `docs/archon-architecture.md` - Technical architecture documentation for developers
+- `docs/lugh-architecture.md` - Technical architecture documentation for developers
 
 ### Relevant Documentation YOU SHOULD READ THESE BEFORE IMPLEMENTING!
 
@@ -178,13 +178,13 @@ describe('path resolution', () => {
 
 ## IMPLEMENTATION PLAN
 
-### Phase 1: Archon Directory Structure (Foundation)
+### Phase 1: Lugh Directory Structure (Foundation)
 
-Introduce unified `~/.archon/` directory structure with centralized path resolution.
+Introduce unified `~/.lugh/` directory structure with centralized path resolution.
 
 **Directory Structure:**
 ```
-~/.archon/                    # User-level (ARCHON_HOME)
+~/.lugh/                    # User-level (LUGH_HOME)
 ├── workspaces/               # Cloned repositories (via /clone)
 │   └── owner/repo/
 ├── worktrees/                # Git worktrees for isolation
@@ -192,12 +192,12 @@ Introduce unified `~/.archon/` directory structure with centralized path resolut
 │       └── branch-name/
 └── config.yaml               # Global user configuration (non-secrets)
 
-/.archon/                     # Docker container
+/.lugh/                     # Docker container
 ├── workspaces/
 ├── worktrees/
 └── config.yaml
 
-.archon/                      # Per-repo (checked into repo)
+.lugh/                      # Per-repo (checked into repo)
 ├── commands/                 # Custom command templates
 ├── workflows/                # Future: workflow definitions
 └── config.yaml               # Repo-specific configuration
@@ -225,8 +225,8 @@ Add YAML-based configuration using Bun native support.
 
 **Config Precedence Chain:**
 1. Environment variables (secrets, highest priority)
-2. `~/.archon/config.yaml` (global user preferences)
-3. `.archon/config.yaml` (per-repo settings)
+2. `~/.lugh/config.yaml` (global user preferences)
+3. `.lugh/config.yaml` (per-repo settings)
 4. Built-in defaults (lowest priority)
 
 **Tasks:**
@@ -252,25 +252,25 @@ IMPORTANT: Execute every task in order, top to bottom. Each task is atomic and i
 
 ---
 
-### Phase 1: Archon Directory Structure
+### Phase 1: Lugh Directory Structure
 
 ---
 
-#### Task 1.1: CREATE `src/utils/archon-paths.ts`
+#### Task 1.1: CREATE `src/utils/lugh-paths.ts`
 
-**IMPLEMENT**: Centralized path resolution for all Archon directories
+**IMPLEMENT**: Centralized path resolution for all Lugh directories
 
 ```typescript
 /**
- * Archon path resolution utilities
+ * Lugh path resolution utilities
  *
  * Directory structure:
- * ~/.archon/              # User-level (ARCHON_HOME)
+ * ~/.lugh/              # User-level (LUGH_HOME)
  * ├── workspaces/         # Cloned repositories
  * ├── worktrees/          # Git worktrees
  * └── config.yaml         # Global config
  *
- * For Docker: /.archon/
+ * For Docker: /.lugh/
  */
 
 import { join } from 'path';
@@ -294,61 +294,61 @@ export function isDocker(): boolean {
   return (
     process.env.WORKSPACE_PATH === '/workspace' ||
     (process.env.HOME === '/root' && Boolean(process.env.WORKSPACE_PATH)) ||
-    process.env.ARCHON_DOCKER === 'true'
+    process.env.LUGH_DOCKER === 'true'
   );
 }
 
 /**
- * Get the Archon home directory
- * - Docker: /.archon
- * - Local: ~/.archon (or ARCHON_HOME env var)
+ * Get the Lugh home directory
+ * - Docker: /.lugh
+ * - Local: ~/.lugh (or LUGH_HOME env var)
  */
-export function getArchonHome(): string {
+export function getLughHome(): string {
   if (isDocker()) {
-    return '/.archon';
+    return '/.lugh';
   }
 
-  const envHome = process.env.ARCHON_HOME;
+  const envHome = process.env.LUGH_HOME;
   if (envHome) {
     return expandTilde(envHome);
   }
 
-  return join(homedir(), '.archon');
+  return join(homedir(), '.lugh');
 }
 
 /**
  * Get the workspaces directory (where repos are cloned)
  * Replaces WORKSPACE_PATH
  */
-export function getArchonWorkspacesPath(): string {
+export function getLughWorkspacesPath(): string {
   // Legacy support: if WORKSPACE_PATH is explicitly set to a custom path, use it
   const legacyPath = process.env.WORKSPACE_PATH;
   if (legacyPath && legacyPath !== './workspace' && !isDocker()) {
     return expandTilde(legacyPath);
   }
 
-  return join(getArchonHome(), 'workspaces');
+  return join(getLughHome(), 'workspaces');
 }
 
 /**
  * Get the worktrees directory (where git worktrees are created)
  * Replaces WORKTREE_BASE
  */
-export function getArchonWorktreesPath(): string {
+export function getLughWorktreesPath(): string {
   // Legacy support: if WORKTREE_BASE is explicitly set, use it
   const legacyPath = process.env.WORKTREE_BASE;
   if (legacyPath && !isDocker()) {
     return expandTilde(legacyPath);
   }
 
-  return join(getArchonHome(), 'worktrees');
+  return join(getLughHome(), 'worktrees');
 }
 
 /**
  * Get the global config file path
  */
-export function getArchonConfigPath(): string {
-  return join(getArchonHome(), 'config.yaml');
+export function getLughConfigPath(): string {
+  return join(getLughHome(), 'config.yaml');
 }
 
 /**
@@ -356,26 +356,26 @@ export function getArchonConfigPath(): string {
  * Returns folders in priority order (first match wins)
  */
 export function getCommandFolderSearchPaths(): string[] {
-  return ['.archon/commands', '.claude/commands', '.agents/commands'];
+  return ['.lugh/commands', '.claude/commands', '.agents/commands'];
 }
 
 /**
  * Get workflow folder search paths for a repository (future)
  */
 export function getWorkflowFolderSearchPaths(): string[] {
-  return ['.archon/workflows', '.claude/workflows', '.agents/workflows'];
+  return ['.lugh/workflows', '.claude/workflows', '.agents/workflows'];
 }
 
 /**
- * Log the Archon paths configuration (for startup)
+ * Log the Lugh paths configuration (for startup)
  */
-export function logArchonPaths(): void {
-  const home = getArchonHome();
-  const workspaces = getArchonWorkspacesPath();
-  const worktrees = getArchonWorktreesPath();
-  const config = getArchonConfigPath();
+export function logLughPaths(): void {
+  const home = getLughHome();
+  const workspaces = getLughWorkspacesPath();
+  const worktrees = getLughWorktreesPath();
+  const config = getLughConfigPath();
 
-  console.log('[Archon] Paths configured:');
+  console.log('[Lugh] Paths configured:');
   console.log(`  Home: ${home}`);
   console.log(`  Workspaces: ${workspaces}`);
   console.log(`  Worktrees: ${worktrees}`);
@@ -390,7 +390,7 @@ export function logArchonPaths(): void {
 
 ---
 
-#### Task 1.2: CREATE `src/utils/archon-paths.test.ts`
+#### Task 1.2: CREATE `src/utils/lugh-paths.test.ts`
 
 **IMPLEMENT**: Comprehensive tests for path resolution
 
@@ -401,17 +401,17 @@ import { join } from 'path';
 
 import {
   isDocker,
-  getArchonHome,
-  getArchonWorkspacesPath,
-  getArchonWorktreesPath,
-  getArchonConfigPath,
+  getLughHome,
+  getLughWorkspacesPath,
+  getLughWorktreesPath,
+  getLughConfigPath,
   getCommandFolderSearchPaths,
   expandTilde,
-} from './archon-paths';
+} from './lugh-paths';
 
-describe('archon-paths', () => {
+describe('lugh-paths', () => {
   const originalEnv: Record<string, string | undefined> = {};
-  const envVars = ['WORKSPACE_PATH', 'WORKTREE_BASE', 'ARCHON_HOME', 'ARCHON_DOCKER', 'HOME'];
+  const envVars = ['WORKSPACE_PATH', 'WORKTREE_BASE', 'LUGH_HOME', 'LUGH_DOCKER', 'HOME'];
 
   beforeEach(() => {
     envVars.forEach(key => {
@@ -451,143 +451,143 @@ describe('archon-paths', () => {
       expect(isDocker()).toBe(true);
     });
 
-    test('returns true when ARCHON_DOCKER=true', () => {
+    test('returns true when LUGH_DOCKER=true', () => {
       delete process.env.WORKSPACE_PATH;
-      process.env.ARCHON_DOCKER = 'true';
+      process.env.LUGH_DOCKER = 'true';
       expect(isDocker()).toBe(true);
     });
 
     test('returns false for local development', () => {
       delete process.env.WORKSPACE_PATH;
-      delete process.env.ARCHON_DOCKER;
+      delete process.env.LUGH_DOCKER;
       process.env.HOME = homedir();
       expect(isDocker()).toBe(false);
     });
   });
 
-  describe('getArchonHome', () => {
-    test('returns /.archon in Docker', () => {
+  describe('getLughHome', () => {
+    test('returns /.lugh in Docker', () => {
       process.env.WORKSPACE_PATH = '/workspace';
-      expect(getArchonHome()).toBe('/.archon');
+      expect(getLughHome()).toBe('/.lugh');
     });
 
-    test('returns ARCHON_HOME when set (local)', () => {
+    test('returns LUGH_HOME when set (local)', () => {
       delete process.env.WORKSPACE_PATH;
-      delete process.env.ARCHON_DOCKER;
-      process.env.ARCHON_HOME = '/custom/archon';
-      expect(getArchonHome()).toBe('/custom/archon');
+      delete process.env.LUGH_DOCKER;
+      process.env.LUGH_HOME = '/custom/lugh';
+      expect(getLughHome()).toBe('/custom/lugh');
     });
 
-    test('expands tilde in ARCHON_HOME', () => {
+    test('expands tilde in LUGH_HOME', () => {
       delete process.env.WORKSPACE_PATH;
-      delete process.env.ARCHON_DOCKER;
-      process.env.ARCHON_HOME = '~/my-archon';
-      expect(getArchonHome()).toBe(join(homedir(), 'my-archon'));
+      delete process.env.LUGH_DOCKER;
+      process.env.LUGH_HOME = '~/my-lugh';
+      expect(getLughHome()).toBe(join(homedir(), 'my-lugh'));
     });
 
-    test('returns ~/.archon by default (local)', () => {
+    test('returns ~/.lugh by default (local)', () => {
       delete process.env.WORKSPACE_PATH;
-      delete process.env.ARCHON_HOME;
-      delete process.env.ARCHON_DOCKER;
-      expect(getArchonHome()).toBe(join(homedir(), '.archon'));
+      delete process.env.LUGH_HOME;
+      delete process.env.LUGH_DOCKER;
+      expect(getLughHome()).toBe(join(homedir(), '.lugh'));
     });
   });
 
-  describe('getArchonWorkspacesPath', () => {
+  describe('getLughWorkspacesPath', () => {
     test('uses legacy WORKSPACE_PATH if explicitly set (non-default)', () => {
-      delete process.env.ARCHON_HOME;
-      delete process.env.ARCHON_DOCKER;
+      delete process.env.LUGH_HOME;
+      delete process.env.LUGH_DOCKER;
       process.env.WORKSPACE_PATH = '/my/custom/workspace';
-      expect(getArchonWorkspacesPath()).toBe('/my/custom/workspace');
+      expect(getLughWorkspacesPath()).toBe('/my/custom/workspace');
     });
 
     test('ignores default ./workspace WORKSPACE_PATH', () => {
-      delete process.env.ARCHON_HOME;
-      delete process.env.ARCHON_DOCKER;
+      delete process.env.LUGH_HOME;
+      delete process.env.LUGH_DOCKER;
       process.env.WORKSPACE_PATH = './workspace';
-      expect(getArchonWorkspacesPath()).toBe(join(homedir(), '.archon', 'workspaces'));
+      expect(getLughWorkspacesPath()).toBe(join(homedir(), '.lugh', 'workspaces'));
     });
 
-    test('returns ~/.archon/workspaces by default', () => {
+    test('returns ~/.lugh/workspaces by default', () => {
       delete process.env.WORKSPACE_PATH;
-      delete process.env.ARCHON_HOME;
-      delete process.env.ARCHON_DOCKER;
-      expect(getArchonWorkspacesPath()).toBe(join(homedir(), '.archon', 'workspaces'));
+      delete process.env.LUGH_HOME;
+      delete process.env.LUGH_DOCKER;
+      expect(getLughWorkspacesPath()).toBe(join(homedir(), '.lugh', 'workspaces'));
     });
 
-    test('returns /.archon/workspaces in Docker', () => {
+    test('returns /.lugh/workspaces in Docker', () => {
       process.env.WORKSPACE_PATH = '/workspace';
-      expect(getArchonWorkspacesPath()).toBe('/.archon/workspaces');
+      expect(getLughWorkspacesPath()).toBe('/.lugh/workspaces');
     });
   });
 
-  describe('getArchonWorktreesPath', () => {
+  describe('getLughWorktreesPath', () => {
     test('uses legacy WORKTREE_BASE if set (local only)', () => {
       delete process.env.WORKSPACE_PATH;
-      delete process.env.ARCHON_DOCKER;
+      delete process.env.LUGH_DOCKER;
       process.env.WORKTREE_BASE = '/custom/worktrees';
-      expect(getArchonWorktreesPath()).toBe('/custom/worktrees');
+      expect(getLughWorktreesPath()).toBe('/custom/worktrees');
     });
 
     test('ignores WORKTREE_BASE in Docker', () => {
       process.env.WORKSPACE_PATH = '/workspace';
       process.env.WORKTREE_BASE = '/custom/worktrees';
-      expect(getArchonWorktreesPath()).toBe('/.archon/worktrees');
+      expect(getLughWorktreesPath()).toBe('/.lugh/worktrees');
     });
 
-    test('returns ~/.archon/worktrees by default (local)', () => {
+    test('returns ~/.lugh/worktrees by default (local)', () => {
       delete process.env.WORKSPACE_PATH;
       delete process.env.WORKTREE_BASE;
-      delete process.env.ARCHON_DOCKER;
-      expect(getArchonWorktreesPath()).toBe(join(homedir(), '.archon', 'worktrees'));
+      delete process.env.LUGH_DOCKER;
+      expect(getLughWorktreesPath()).toBe(join(homedir(), '.lugh', 'worktrees'));
     });
   });
 
   describe('getCommandFolderSearchPaths', () => {
     test('returns folders in priority order', () => {
       const paths = getCommandFolderSearchPaths();
-      expect(paths).toEqual(['.archon/commands', '.claude/commands', '.agents/commands']);
+      expect(paths).toEqual(['.lugh/commands', '.claude/commands', '.agents/commands']);
     });
 
-    test('.archon/commands has highest priority', () => {
+    test('.lugh/commands has highest priority', () => {
       const paths = getCommandFolderSearchPaths();
-      expect(paths[0]).toBe('.archon/commands');
+      expect(paths[0]).toBe('.lugh/commands');
     });
   });
 
-  describe('getArchonConfigPath', () => {
+  describe('getLughConfigPath', () => {
     test('returns path to config.yaml', () => {
       delete process.env.WORKSPACE_PATH;
-      delete process.env.ARCHON_HOME;
-      delete process.env.ARCHON_DOCKER;
-      expect(getArchonConfigPath()).toBe(join(homedir(), '.archon', 'config.yaml'));
+      delete process.env.LUGH_HOME;
+      delete process.env.LUGH_DOCKER;
+      expect(getLughConfigPath()).toBe(join(homedir(), '.lugh', 'config.yaml'));
     });
   });
 });
 ```
 
 - **PATTERN**: Mirror `src/utils/git.test.ts` environment mocking pattern
-- **VALIDATE**: `bun test src/utils/archon-paths.test.ts`
+- **VALIDATE**: `bun test src/utils/lugh-paths.test.ts`
 
 ---
 
 #### Task 1.3: UPDATE `src/utils/git.ts`
 
-**IMPLEMENT**: Replace hardcoded path logic with archon-paths module
+**IMPLEMENT**: Replace hardcoded path logic with lugh-paths module
 
 - **ADD** import at top:
 ```typescript
-import { getArchonWorktreesPath } from './archon-paths';
+import { getLughWorktreesPath } from './lugh-paths';
 ```
 
 - **REPLACE** `getWorktreeBase()` function (lines 28-51):
 ```typescript
 /**
  * Get the base directory for worktrees
- * Now delegates to archon-paths module for consistency
+ * Now delegates to lugh-paths module for consistency
  */
 export function getWorktreeBase(_repoPath: string): string {
-  return getArchonWorktreesPath();
+  return getLughWorktreesPath();
 }
 ```
 
@@ -604,7 +604,7 @@ export function getWorktreeBase(_repoPath: string): string {
 
 - **ADD** import at top:
 ```typescript
-import { getArchonWorkspacesPath } from './archon-paths';
+import { getLughWorkspacesPath } from './lugh-paths';
 ```
 
 - **REPLACE** constant with function (line 7):
@@ -615,7 +615,7 @@ const WORKSPACE_ROOT = resolve(process.env.WORKSPACE_PATH ?? '/workspace');
 // After:
 // Lazy evaluation to allow tests to modify env vars
 function getWorkspaceRoot(): string {
-  return resolve(getArchonWorkspacesPath());
+  return resolve(getLughWorkspacesPath());
 }
 ```
 
@@ -662,10 +662,10 @@ export function validateAndResolvePath(
 
 - **ADD** imports at top:
 ```typescript
-import { getArchonWorkspacesPath, getCommandFolderSearchPaths } from '../utils/archon-paths';
+import { getLughWorkspacesPath, getCommandFolderSearchPaths } from '../utils/lugh-paths';
 ```
 
-- **REPLACE** all `resolve(process.env.WORKSPACE_PATH ?? '/workspace')` with `getArchonWorkspacesPath()`:
+- **REPLACE** all `resolve(process.env.WORKSPACE_PATH ?? '/workspace')` with `getLughWorkspacesPath()`:
   - Line 31 in `shortenPath()`
   - Line 198 in `setcwd` case
   - Line 255 in `clone` case
@@ -688,9 +688,9 @@ for (const folder of ['.claude/commands', '.agents/commands']) {
 for (const folder of getCommandFolderSearchPaths()) {
 ```
 
-- **UPDATE** help text (line 118) to mention `.archon/commands`:
+- **UPDATE** help text (line 118) to mention `.lugh/commands`:
 ```typescript
-Note: Commands use relative paths (e.g., .archon/commands)
+Note: Commands use relative paths (e.g., .lugh/commands)
 ```
 
 - **PATTERN**: `src/handlers/command-handler.ts:287-295`
@@ -705,7 +705,7 @@ Note: Commands use relative paths (e.g., .archon/commands)
 
 - **ADD** imports:
 ```typescript
-import { getArchonWorkspacesPath, getCommandFolderSearchPaths } from '../utils/archon-paths';
+import { getLughWorkspacesPath, getCommandFolderSearchPaths } from '../utils/lugh-paths';
 ```
 
 - **REPLACE** line 411:
@@ -714,7 +714,7 @@ import { getArchonWorkspacesPath, getCommandFolderSearchPaths } from '../utils/a
 const canonicalPath = join(resolve(process.env.WORKSPACE_PATH ?? '/workspace'), owner, repo);
 
 // After:
-const canonicalPath = join(getArchonWorkspacesPath(), owner, repo);
+const canonicalPath = join(getLughWorkspacesPath(), owner, repo);
 ```
 
 - **UPDATE** `autoLoadCommands()` (around line 362) to use `getCommandFolderSearchPaths()`:
@@ -734,23 +734,23 @@ const commandFolders = getCommandFolderSearchPaths();
 
 - **ADD** import:
 ```typescript
-import { getArchonWorkspacesPath, logArchonPaths } from './utils/archon-paths';
+import { getLughWorkspacesPath, logLughPaths } from './utils/lugh-paths';
 ```
 
 - **REPLACE** lines 67-76 with:
 ```typescript
-// Log Archon paths configuration
-logArchonPaths();
+// Log Lugh paths configuration
+logLughPaths();
 
 // Warn if workspaces path is inside project directory (legacy config)
-const workspacePath = getArchonWorkspacesPath();
+const workspacePath = getLughWorkspacesPath();
 const projectRoot = resolve(__dirname, '..');
 if (workspacePath.startsWith(projectRoot + '/') || workspacePath === projectRoot) {
   console.warn('');
-  console.warn('[Archon] WARNING: Workspaces path is inside project directory');
+  console.warn('[Lugh] WARNING: Workspaces path is inside project directory');
   console.warn('   This can cause nested repository issues when working on this repo.');
   console.warn(`   Current: ${workspacePath}`);
-  console.warn('   The new default is: ~/.archon/workspaces');
+  console.warn('   The new default is: ~/.lugh/workspaces');
   console.warn('   To use the new default, remove WORKSPACE_PATH from .env');
   console.warn('');
 }
@@ -763,13 +763,13 @@ if (workspacePath.startsWith(projectRoot + '/') || workspacePath === projectRoot
 
 #### Task 1.8: UPDATE `Dockerfile`
 
-**IMPLEMENT**: Update paths for new Archon structure
+**IMPLEMENT**: Update paths for new Lugh structure
 
 - **ADD** after line 30 (after creating appuser):
 ```dockerfile
-# Create Archon directories
-RUN mkdir -p /.archon/workspaces /.archon/worktrees \
-    && chown -R appuser:appuser /.archon
+# Create Lugh directories
+RUN mkdir -p /.lugh/workspaces /.lugh/worktrees \
+    && chown -R appuser:appuser /.lugh
 ```
 
 - **UPDATE** line 29 to remove /workspace creation:
@@ -791,10 +791,10 @@ RUN git config --global --add safe.directory /workspace && \
     git config --global --add safe.directory '/workspace/*'
 
 # After:
-RUN git config --global --add safe.directory '/.archon/workspaces' && \
-    git config --global --add safe.directory '/.archon/workspaces/*' && \
-    git config --global --add safe.directory '/.archon/worktrees' && \
-    git config --global --add safe.directory '/.archon/worktrees/*'
+RUN git config --global --add safe.directory '/.lugh/workspaces' && \
+    git config --global --add safe.directory '/.lugh/workspaces/*' && \
+    git config --global --add safe.directory '/.lugh/worktrees' && \
+    git config --global --add safe.directory '/.lugh/worktrees/*'
 ```
 
 - **ADD** OCI labels after FROM line:
@@ -818,14 +818,14 @@ LABEL org.opencontainers.image.licenses="MIT"
 # Add after existing volumes
 volumes:
   - ${WORKSPACE_PATH:-./workspace}:/workspace  # Legacy support
-  - archon_data:/.archon  # New Archon directory
+  - lugh_data:/.lugh  # New Lugh directory
 ```
 
 - **ADD** named volume:
 ```yaml
 volumes:
   postgres_data:
-  archon_data:  # Persistent Archon data
+  lugh_data:  # Persistent Lugh data
 ```
 
 - **GOTCHA**: Keep legacy `/workspace` mount for backwards compatibility
@@ -840,17 +840,17 @@ volumes:
 - **ADD** after existing WORKSPACE_PATH documentation:
 ```bash
 # ============================================
-# Archon Directory Configuration (NEW)
+# Lugh Directory Configuration (NEW)
 # ============================================
-# All Archon-managed files go in ~/.archon/ by default
-# Override with ARCHON_HOME to use a custom location
-# ARCHON_HOME=~/.archon
+# All Lugh-managed files go in ~/.lugh/ by default
+# Override with LUGH_HOME to use a custom location
+# LUGH_HOME=~/.lugh
 
 # Legacy Configuration (still supported)
-# WORKSPACE_PATH - Override workspaces location (default: ~/.archon/workspaces)
-# WORKTREE_BASE - Override worktrees location (default: ~/.archon/worktrees)
+# WORKSPACE_PATH - Override workspaces location (default: ~/.lugh/workspaces)
+# WORKTREE_BASE - Override worktrees location (default: ~/.lugh/worktrees)
 
-# For Docker, paths are automatically set to /.archon/
+# For Docker, paths are automatically set to /.lugh/
 ```
 
 - **VALIDATE**: Manual review
@@ -863,13 +863,13 @@ volumes:
 
 - **ADD** new section after "Worktree Symbiosis":
 ```markdown
-### Archon Directory Structure
+### Lugh Directory Structure
 
-All Archon-managed files are organized under a dedicated namespace:
+All Lugh-managed files are organized under a dedicated namespace:
 
-**User-level (`~/.archon/`):**
+**User-level (`~/.lugh/`):**
 ```
-~/.archon/
+~/.lugh/
 ├── workspaces/     # Cloned repositories (via /clone)
 │   └── owner/repo/
 ├── worktrees/      # Git worktrees for isolation
@@ -878,22 +878,22 @@ All Archon-managed files are organized under a dedicated namespace:
 └── config.yaml     # Global configuration (non-secrets)
 ```
 
-**Repo-level (`.archon/` in any repository):**
+**Repo-level (`.lugh/` in any repository):**
 ```
-.archon/
+.lugh/
 ├── commands/       # Custom command templates
 ├── workflows/      # Future: workflow definitions
 └── config.yaml     # Repo-specific configuration
 ```
 
-**For Docker:** Paths are automatically set to `/.archon/`.
+**For Docker:** Paths are automatically set to `/.lugh/`.
 
 **Configuration:**
-- `ARCHON_HOME` - Override the base directory (default: `~/.archon`)
+- `LUGH_HOME` - Override the base directory (default: `~/.lugh`)
 - Legacy `WORKSPACE_PATH` and `WORKTREE_BASE` are still supported
 
 **Command folder detection priority:**
-1. `.archon/commands/` (new)
+1. `.lugh/commands/` (new)
 2. `.claude/commands/` (legacy)
 3. `.agents/commands/` (legacy)
 ```
@@ -1003,7 +1003,7 @@ services:
     ports:
       - "${PORT:-3000}:3000"
     volumes:
-      - archon_data:/.archon
+      - lugh_data:/.lugh
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
@@ -1028,7 +1028,7 @@ services:
   #     retries: 5
 
 volumes:
-  archon_data:
+  lugh_data:
   # postgres_data:
 ```
 
@@ -1146,12 +1146,12 @@ For detailed setup including platform configuration, continue to [Setup Guide](#
 
 ```typescript
 /**
- * Configuration type definitions for Archon
+ * Configuration type definitions for Lugh
  *
  * Config precedence:
  * 1. Environment variables (secrets, highest priority)
- * 2. ~/.archon/config.yaml (global user preferences)
- * 3. .archon/config.yaml (per-repo settings)
+ * 2. ~/.lugh/config.yaml (global user preferences)
+ * 3. .lugh/config.yaml (per-repo settings)
  * 4. Built-in defaults (lowest priority)
  */
 
@@ -1211,9 +1211,9 @@ export interface WorkflowConfig {
 }
 
 /**
- * Complete Archon configuration
+ * Complete Lugh configuration
  */
-export interface ArchonConfig {
+export interface LughConfig {
   // Paths (usually resolved from env/defaults, can be overridden)
   paths?: PathConfig;
 
@@ -1241,7 +1241,7 @@ export interface ArchonConfig {
 /**
  * Default configuration values
  */
-export const DEFAULT_CONFIG: ArchonConfig = {
+export const DEFAULT_CONFIG: LughConfig = {
   ai: {
     default: 'claude',
   },
@@ -1273,18 +1273,18 @@ export const DEFAULT_CONFIG: ArchonConfig = {
  *
  * Precedence (highest to lowest):
  * 1. Environment variables (for secrets)
- * 2. ~/.archon/config.yaml (global user preferences)
- * 3. .archon/config.yaml (per-repo settings)
+ * 2. ~/.lugh/config.yaml (global user preferences)
+ * 3. .lugh/config.yaml (per-repo settings)
  * 4. Built-in defaults
  */
 
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { getArchonHome, getArchonConfigPath } from '../utils/archon-paths';
-import { ArchonConfig, DEFAULT_CONFIG } from './types';
+import { getLughHome, getLughConfigPath } from '../utils/lugh-paths';
+import { LughConfig, DEFAULT_CONFIG } from './types';
 
 // Cache for loaded configs
-let globalConfigCache: ArchonConfig | null = null;
+let globalConfigCache: LughConfig | null = null;
 let globalConfigMtime: number = 0;
 
 /**
@@ -1320,14 +1320,14 @@ function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial
 /**
  * Load and parse a YAML config file
  */
-async function loadYamlFile(filePath: string): Promise<ArchonConfig | null> {
+async function loadYamlFile(filePath: string): Promise<LughConfig | null> {
   try {
     if (!existsSync(filePath)) {
       return null;
     }
 
     const content = await Bun.file(filePath).text();
-    const parsed = Bun.YAML.parse(content) as ArchonConfig;
+    const parsed = Bun.YAML.parse(content) as LughConfig;
     return parsed;
   } catch (error) {
     console.warn(`[Config] Failed to load ${filePath}:`, error);
@@ -1336,11 +1336,11 @@ async function loadYamlFile(filePath: string): Promise<ArchonConfig | null> {
 }
 
 /**
- * Load global config from ~/.archon/config.yaml
+ * Load global config from ~/.lugh/config.yaml
  * Uses caching with mtime check for hot reload support
  */
-export async function loadGlobalConfig(): Promise<ArchonConfig> {
-  const configPath = getArchonConfigPath();
+export async function loadGlobalConfig(): Promise<LughConfig> {
+  const configPath = getLughConfigPath();
 
   try {
     if (existsSync(configPath)) {
@@ -1367,10 +1367,10 @@ export async function loadGlobalConfig(): Promise<ArchonConfig> {
 }
 
 /**
- * Load repo-specific config from .archon/config.yaml
+ * Load repo-specific config from .lugh/config.yaml
  */
-export async function loadRepoConfig(repoPath: string): Promise<ArchonConfig | null> {
-  const configPath = join(repoPath, '.archon', 'config.yaml');
+export async function loadRepoConfig(repoPath: string): Promise<LughConfig | null> {
+  const configPath = join(repoPath, '.lugh', 'config.yaml');
   return loadYamlFile(configPath);
 }
 
@@ -1378,7 +1378,7 @@ export async function loadRepoConfig(repoPath: string): Promise<ArchonConfig | n
  * Load merged config for a specific repo
  * Merges: defaults < global < repo
  */
-export async function loadConfig(repoPath?: string): Promise<ArchonConfig> {
+export async function loadConfig(repoPath?: string): Promise<LughConfig> {
   // Start with defaults
   let config = { ...DEFAULT_CONFIG };
 
@@ -1401,7 +1401,7 @@ export async function loadConfig(repoPath?: string): Promise<ArchonConfig> {
  * Get a specific config value with type safety
  */
 export function getConfigValue<T>(
-  config: ArchonConfig,
+  config: LughConfig,
   path: string,
   defaultValue: T
 ): T {
@@ -1429,7 +1429,7 @@ export function clearConfigCache(): void {
 /**
  * Log loaded configuration (for debugging)
  */
-export function logConfig(config: ArchonConfig): void {
+export function logConfig(config: LughConfig): void {
   console.log('[Config] Loaded configuration:');
   console.log(`  AI Default: ${config.ai?.default ?? 'claude'}`);
   console.log(`  Telegram Streaming: ${config.platforms?.telegram?.streaming ?? 'stream'}`);
@@ -1466,16 +1466,16 @@ import {
 import { DEFAULT_CONFIG } from './types';
 
 describe('config/loader', () => {
-  const testDir = join(tmpdir(), 'archon-config-test-' + Date.now());
+  const testDir = join(tmpdir(), 'lugh-config-test-' + Date.now());
   const originalEnv: Record<string, string | undefined> = {};
 
   beforeEach(() => {
     // Save env
-    originalEnv.ARCHON_HOME = process.env.ARCHON_HOME;
+    originalEnv.LUGH_HOME = process.env.LUGH_HOME;
 
     // Create test directory
     mkdirSync(testDir, { recursive: true });
-    process.env.ARCHON_HOME = testDir;
+    process.env.LUGH_HOME = testDir;
 
     // Clear cache
     clearConfigCache();
@@ -1483,10 +1483,10 @@ describe('config/loader', () => {
 
   afterEach(() => {
     // Restore env
-    if (originalEnv.ARCHON_HOME === undefined) {
-      delete process.env.ARCHON_HOME;
+    if (originalEnv.LUGH_HOME === undefined) {
+      delete process.env.LUGH_HOME;
     } else {
-      process.env.ARCHON_HOME = originalEnv.ARCHON_HOME;
+      process.env.LUGH_HOME = originalEnv.LUGH_HOME;
     }
 
     // Cleanup
@@ -1531,9 +1531,9 @@ platforms:
 
     test('loads repo config', async () => {
       const repoPath = join(testDir, 'test-repo');
-      const archonDir = join(repoPath, '.archon');
-      mkdirSync(archonDir, { recursive: true });
-      writeFileSync(join(archonDir, 'config.yaml'), `
+      const lughDir = join(repoPath, '.lugh');
+      mkdirSync(lughDir, { recursive: true });
+      writeFileSync(join(lughDir, 'config.yaml'), `
 ai:
   default: codex
 `);
@@ -1556,9 +1556,9 @@ platforms:
 
       // Create repo config
       const repoPath = join(testDir, 'test-repo');
-      const archonDir = join(repoPath, '.archon');
-      mkdirSync(archonDir, { recursive: true });
-      writeFileSync(join(archonDir, 'config.yaml'), `
+      const lughDir = join(repoPath, '.lugh');
+      mkdirSync(lughDir, { recursive: true });
+      writeFileSync(join(lughDir, 'config.yaml'), `
 platforms:
   telegram:
     streaming: batch
@@ -1587,7 +1587,7 @@ platforms:
 });
 ```
 
-- **PATTERN**: `src/utils/archon-paths.test.ts` for env mocking
+- **PATTERN**: `src/utils/lugh-paths.test.ts` for env mocking
 - **VALIDATE**: `bun test src/config/loader.test.ts`
 
 ---
@@ -1617,7 +1617,7 @@ export * from './loader';
 import { loadGlobalConfig, logConfig } from './config';
 ```
 
-- **ADD** after `logArchonPaths()`:
+- **ADD** after `logLughPaths()`:
 ```typescript
 // Load and log configuration
 const config = await loadGlobalConfig();
@@ -1776,20 +1776,20 @@ else
   check_warn "Docker not installed (required for containerized deployment)"
 fi
 
-# Archon paths
+# Lugh paths
 echo ""
-echo "📁 Archon Paths"
+echo "📁 Lugh Paths"
 echo "---------------"
 
-ARCHON_HOME="${ARCHON_HOME:-$HOME/.archon}"
-echo "  Home: $ARCHON_HOME"
-echo "  Workspaces: $ARCHON_HOME/workspaces"
-echo "  Worktrees: $ARCHON_HOME/worktrees"
+LUGH_HOME="${LUGH_HOME:-$HOME/.lugh}"
+echo "  Home: $LUGH_HOME"
+echo "  Workspaces: $LUGH_HOME/workspaces"
+echo "  Worktrees: $LUGH_HOME/worktrees"
 
-if [ -d "$ARCHON_HOME" ]; then
-  check_pass "Archon home directory exists"
+if [ -d "$LUGH_HOME" ]; then
+  check_pass "Lugh home directory exists"
 else
-  check_warn "Archon home directory will be created on first run"
+  check_warn "Lugh home directory will be created on first run"
 fi
 
 # Summary
@@ -1902,17 +1902,17 @@ See [Cloud Deployment Guide](docs/cloud-deployment.md) for deploying to:
 
 ## Directory Structure
 
-The app uses `~/.archon/` for all managed files:
+The app uses `~/.lugh/` for all managed files:
 
 ```
-~/.archon/
+~/.lugh/
 ├── workspaces/     # Cloned repositories
 ├── worktrees/      # Git worktrees for isolation
 └── config.yaml     # Optional: global configuration
 ```
 
-On Windows: `C:\Users\<username>\.archon\`
-In Docker: `/.archon/`
+On Windows: `C:\Users\<username>\.lugh\`
+In Docker: `/.lugh/`
 
 See [Configuration Guide](docs/configuration.md) for customization options.
 ```
@@ -1935,8 +1935,8 @@ This guide covers all configuration options for the Remote Coding Agent.
 Configuration can be set via three methods (in order of precedence):
 
 1. **Environment Variables** (highest priority) - For secrets and deployment-specific settings
-2. **Global Config** (`~/.archon/config.yaml`) - For user preferences
-3. **Repo Config** (`.archon/config.yaml` in each repo) - For project-specific settings
+2. **Global Config** (`~/.lugh/config.yaml`) - For user preferences
+3. **Repo Config** (`.lugh/config.yaml` in each repo) - For project-specific settings
 
 ## Environment Variables
 
@@ -1974,9 +1974,9 @@ Configuration can be set via three methods (in order of precedence):
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `PORT` | HTTP server port | `3000` |
-| `ARCHON_HOME` | Override Archon directory | `~/.archon` |
-| `WORKSPACE_PATH` | Legacy: override workspaces path | `~/.archon/workspaces` |
-| `WORKTREE_BASE` | Legacy: override worktrees path | `~/.archon/worktrees` |
+| `LUGH_HOME` | Override Lugh directory | `~/.lugh` |
+| `WORKSPACE_PATH` | Legacy: override workspaces path | `~/.lugh/workspaces` |
+| `WORKTREE_BASE` | Legacy: override worktrees path | `~/.lugh/worktrees` |
 | `DEFAULT_AI_ASSISTANT` | Default AI assistant | `claude` |
 | `TELEGRAM_STREAMING_MODE` | Telegram streaming mode | `stream` |
 | `DISCORD_STREAMING_MODE` | Discord streaming mode | `batch` |
@@ -1987,7 +1987,7 @@ Configuration can be set via three methods (in order of precedence):
 
 For non-secret settings, you can use YAML configuration files.
 
-### Global Config: `~/.archon/config.yaml`
+### Global Config: `~/.lugh/config.yaml`
 
 ```yaml
 # AI assistant preferences
@@ -2014,7 +2014,7 @@ defaults:
   aiAssistant: claude
 ```
 
-### Repo Config: `.archon/config.yaml`
+### Repo Config: `.lugh/config.yaml`
 
 Place this in any repository to override settings for that repo:
 
@@ -2031,38 +2031,38 @@ platforms:
 
 ## Directory Structure
 
-### Archon Home (`~/.archon/`)
+### Lugh Home (`~/.lugh/`)
 
 | Path | Purpose |
 |------|---------|
-| `~/.archon/workspaces/` | Cloned repositories |
-| `~/.archon/worktrees/` | Git worktrees for isolation |
-| `~/.archon/config.yaml` | Global configuration |
+| `~/.lugh/workspaces/` | Cloned repositories |
+| `~/.lugh/worktrees/` | Git worktrees for isolation |
+| `~/.lugh/config.yaml` | Global configuration |
 
-### Per-Repo (`.archon/`)
+### Per-Repo (`.lugh/`)
 
 | Path | Purpose |
 |------|---------|
-| `.archon/commands/` | Custom command templates |
-| `.archon/workflows/` | Future: workflow definitions |
-| `.archon/config.yaml` | Repo-specific configuration |
+| `.lugh/commands/` | Custom command templates |
+| `.lugh/workflows/` | Future: workflow definitions |
+| `.lugh/config.yaml` | Repo-specific configuration |
 
 ### Platform-Specific Paths
 
 | Platform | Default Path |
 |----------|--------------|
-| macOS | `~/.archon/` → `/Users/<username>/.archon/` |
-| Linux | `~/.archon/` → `/home/<username>/.archon/` |
-| Windows | `~/.archon/` → `C:\Users\<username>\.archon\` |
-| Docker | `/.archon/` (fixed) |
+| macOS | `~/.lugh/` → `/Users/<username>/.lugh/` |
+| Linux | `~/.lugh/` → `/home/<username>/.lugh/` |
+| Windows | `~/.lugh/` → `C:\Users\<username>\.lugh\` |
+| Docker | `/.lugh/` (fixed) |
 
 ### Custom Paths
 
 Override with environment variables:
 
 ```bash
-# Change entire Archon home
-export ARCHON_HOME=/custom/path
+# Change entire Lugh home
+export LUGH_HOME=/custom/path
 
 # Or change specific directories (legacy support)
 export WORKSPACE_PATH=/custom/workspaces
@@ -2099,19 +2099,19 @@ This checks:
 
 - **UPDATE** Section 4 (Environment Configuration) to reference new paths:
 ```markdown
-### Archon Directory
+### Lugh Directory
 
-The app stores cloned repositories and worktrees in `/.archon/` inside the container.
+The app stores cloned repositories and worktrees in `/.lugh/` inside the container.
 
-This is automatically configured. If you need to persist data between container restarts, the `docker-compose.yml` mounts a volume to `/.archon/`.
+This is automatically configured. If you need to persist data between container restarts, the `docker-compose.yml` mounts a volume to `/.lugh/`.
 
-For custom paths, set `ARCHON_HOME` in your `.env`:
+For custom paths, set `LUGH_HOME` in your `.env`:
 ```env
 # Default (recommended)
-# ARCHON_HOME=/.archon
+# LUGH_HOME=/.lugh
 
 # Custom location
-ARCHON_HOME=/data/archon
+LUGH_HOME=/data/lugh
 ```
 ```
 
@@ -2137,13 +2137,13 @@ docker compose -f docker-compose.yml -f docker-compose.cloud.yml up -d --build
 ```
 ```
 
-- **ADD** troubleshooting section for Archon paths:
+- **ADD** troubleshooting section for Lugh paths:
 ```markdown
-### Archon Directory Issues
+### Lugh Directory Issues
 
 **Check directory exists:**
 ```bash
-docker compose exec app ls -la /.archon/
+docker compose exec app ls -la /.lugh/
 ```
 
 **Check permissions:**
@@ -2154,7 +2154,7 @@ docker compose exec app id
 
 **Manual directory creation (if needed):**
 ```bash
-docker compose exec app mkdir -p /.archon/workspaces /.archon/worktrees
+docker compose exec app mkdir -p /.lugh/workspaces /.lugh/worktrees
 ```
 ```
 
@@ -2350,12 +2350,12 @@ Set at least one of:
 3. For Discord: Ensure MESSAGE CONTENT INTENT is enabled
 4. For Slack: Ensure Socket Mode is enabled
 
-### Archon Directory Not Created
+### Lugh Directory Not Created
 
-The `~/.archon/` directory is created automatically on first use. To create manually:
+The `~/.lugh/` directory is created automatically on first use. To create manually:
 
 ```bash
-mkdir -p ~/.archon/workspaces ~/.archon/worktrees
+mkdir -p ~/.lugh/workspaces ~/.lugh/worktrees
 ```
 ```
 
@@ -2363,18 +2363,18 @@ mkdir -p ~/.archon/workspaces ~/.archon/worktrees
 
 ---
 
-#### Task 5.5: CREATE `docs/archon-architecture.md`
+#### Task 5.5: CREATE `docs/lugh-architecture.md`
 
-**IMPLEMENT**: Technical documentation explaining the Archon directory architecture for developers
+**IMPLEMENT**: Technical documentation explaining the Lugh directory architecture for developers
 
 ```markdown
-# Archon Architecture
+# Lugh Architecture
 
-This document explains the Archon directory structure and configuration system for developers contributing to or extending the remote-coding-agent.
+This document explains the Lugh directory structure and configuration system for developers contributing to or extending the remote-coding-agent.
 
 ## Overview
 
-Archon is the unified directory and configuration system for the remote-coding-agent. It provides:
+Lugh is the unified directory and configuration system for the remote-coding-agent. It provides:
 
 1. **Consistent paths** across all platforms (Mac, Linux, Windows, Docker)
 2. **Configuration precedence** chain (env → global → repo → defaults)
@@ -2382,10 +2382,10 @@ Archon is the unified directory and configuration system for the remote-coding-a
 
 ## Directory Structure
 
-### User-Level: `~/.archon/`
+### User-Level: `~/.lugh/`
 
 ```
-~/.archon/                    # ARCHON_HOME
+~/.lugh/                    # LUGH_HOME
 ├── workspaces/               # Cloned repositories
 │   └── owner/
 │       └── repo/
@@ -2400,10 +2400,10 @@ Archon is the unified directory and configuration system for the remote-coding-a
 - `worktrees/` - Isolated git worktrees created per conversation/issue/PR
 - `config.yaml` - Non-secret user preferences
 
-### Repo-Level: `.archon/`
+### Repo-Level: `.lugh/`
 
 ```
-any-repo/.archon/
+any-repo/.lugh/
 ├── commands/                 # Custom command templates
 │   ├── plan.md
 │   └── execute.md
@@ -2417,38 +2417,38 @@ any-repo/.archon/
 - `workflows/` - Future workflow engine definitions
 - `config.yaml` - Project-specific settings
 
-### Docker: `/.archon/`
+### Docker: `/.lugh/`
 
-In Docker containers, the Archon home is fixed at `/.archon/` (root level). This is:
+In Docker containers, the Lugh home is fixed at `/.lugh/` (root level). This is:
 - Mounted as a named volume for persistence
 - Not overridable by end users (simplifies container setup)
 
 ## Path Resolution
 
-All path resolution is centralized in `src/utils/archon-paths.ts`.
+All path resolution is centralized in `src/utils/lugh-paths.ts`.
 
 ### Core Functions
 
 ```typescript
-// Get the Archon home directory
-getArchonHome(): string
-// Returns: ~/.archon (local) or /.archon (Docker)
+// Get the Lugh home directory
+getLughHome(): string
+// Returns: ~/.lugh (local) or /.lugh (Docker)
 
 // Get workspaces directory
-getArchonWorkspacesPath(): string
-// Returns: ~/.archon/workspaces or legacy WORKSPACE_PATH
+getLughWorkspacesPath(): string
+// Returns: ~/.lugh/workspaces or legacy WORKSPACE_PATH
 
 // Get worktrees directory
-getArchonWorktreesPath(): string
-// Returns: ~/.archon/worktrees or legacy WORKTREE_BASE
+getLughWorktreesPath(): string
+// Returns: ~/.lugh/worktrees or legacy WORKTREE_BASE
 
 // Get global config path
-getArchonConfigPath(): string
-// Returns: ~/.archon/config.yaml
+getLughConfigPath(): string
+// Returns: ~/.lugh/config.yaml
 
 // Get command folder search paths (priority order)
 getCommandFolderSearchPaths(): string[]
-// Returns: ['.archon/commands', '.claude/commands', '.agents/commands']
+// Returns: ['.lugh/commands', '.claude/commands', '.agents/commands']
 ```
 
 ### Docker Detection
@@ -2458,19 +2458,19 @@ function isDocker(): boolean {
   return (
     process.env.WORKSPACE_PATH === '/workspace' ||
     (process.env.HOME === '/root' && Boolean(process.env.WORKSPACE_PATH)) ||
-    process.env.ARCHON_DOCKER === 'true'
+    process.env.LUGH_DOCKER === 'true'
   );
 }
 ```
 
 ### Platform-Specific Paths
 
-| Platform | `getArchonHome()` |
+| Platform | `getLughHome()` |
 |----------|-------------------|
-| macOS | `/Users/<username>/.archon` |
-| Linux | `/home/<username>/.archon` |
-| Windows | `C:\Users\<username>\.archon` |
-| Docker | `/.archon` |
+| macOS | `/Users/<username>/.lugh` |
+| Linux | `/home/<username>/.lugh` |
+| Windows | `C:\Users\<username>\.lugh` |
+| Docker | `/.lugh` |
 
 ## Configuration System
 
@@ -2479,8 +2479,8 @@ function isDocker(): boolean {
 Configuration is resolved in this order (highest to lowest priority):
 
 1. **Environment Variables** - Secrets, deployment-specific
-2. **Global Config** (`~/.archon/config.yaml`) - User preferences
-3. **Repo Config** (`.archon/config.yaml`) - Project-specific
+2. **Global Config** (`~/.lugh/config.yaml`) - User preferences
+3. **Repo Config** (`.lugh/config.yaml`) - Project-specific
 4. **Built-in Defaults** - Hardcoded in `src/config/types.ts`
 
 ### Config Loading
@@ -2512,13 +2512,13 @@ These legacy variables are still supported:
 
 | Legacy | New Default | Behavior |
 |--------|-------------|----------|
-| `WORKSPACE_PATH` | `~/.archon/workspaces` | Custom path respected if not `./workspace` |
-| `WORKTREE_BASE` | `~/.archon/worktrees` | Custom path respected |
+| `WORKSPACE_PATH` | `~/.lugh/workspaces` | Custom path respected if not `./workspace` |
+| `WORKTREE_BASE` | `~/.lugh/worktrees` | Custom path respected |
 
 ### Command Folders
 
 Command detection searches in priority order:
-1. `.archon/commands/` (new)
+1. `.lugh/commands/` (new)
 2. `.claude/commands/` (legacy)
 3. `.agents/commands/` (legacy)
 
@@ -2530,16 +2530,16 @@ First match wins. No migration required.
 
 To add a new managed directory:
 
-1. Add function to `src/utils/archon-paths.ts`:
+1. Add function to `src/utils/lugh-paths.ts`:
 ```typescript
-export function getArchonNewPath(): string {
-  return join(getArchonHome(), 'new-directory');
+export function getLughNewPath(): string {
+  return join(getLughHome(), 'new-directory');
 }
 ```
 
 2. Update Docker setup in `Dockerfile`
 3. Update volume mounts in `docker-compose.yml`
-4. Add tests in `src/utils/archon-paths.test.ts`
+4. Add tests in `src/utils/lugh-paths.test.ts`
 
 ### Adding Config Options
 
@@ -2547,7 +2547,7 @@ To add new configuration options:
 
 1. Add type to `src/config/types.ts`:
 ```typescript
-export interface ArchonConfig {
+export interface LughConfig {
   // ...existing
   newFeature?: {
     enabled?: boolean;
@@ -2561,7 +2561,7 @@ export interface ArchonConfig {
 
 ## Design Decisions
 
-### Why `~/.archon/` instead of `~/.config/archon/`?
+### Why `~/.lugh/` instead of `~/.config/lugh/`?
 
 - Simpler path (fewer nested directories)
 - Follows Claude Code pattern (`~/.claude/`)
@@ -2593,7 +2593,7 @@ export interface ArchonConfig {
 
 ### Workflow Engine
 
-The `.archon/workflows/` directory is reserved for:
+The `.lugh/workflows/` directory is reserved for:
 - YAML workflow definitions
 - Multi-step automated processes
 - Agent orchestration rules
@@ -2625,7 +2625,7 @@ Path structure supports future scenarios:
 ```markdown
 - `docs/configuration.md` - Comprehensive configuration reference
 - `docs/getting-started.md` - Step-by-step setup guide for new users
-- `docs/archon-architecture.md` - Technical architecture docs for developers
+- `docs/lugh-architecture.md` - Technical architecture docs for developers
 ```
 
 - **VALIDATE**: Manual review of plan coherence
@@ -2638,7 +2638,7 @@ Path structure supports future scenarios:
 
 Based on Bun's test framework with mock.module() for isolation:
 
-- `src/utils/archon-paths.test.ts` - Path resolution with env mocking
+- `src/utils/lugh-paths.test.ts` - Path resolution with env mocking
 - `src/config/loader.test.ts` - Config loading with file system mocking
 
 ### Integration Tests
@@ -2684,7 +2684,7 @@ bun run format:check
 bun test
 
 # Run specific test files
-bun test src/utils/archon-paths.test.ts
+bun test src/utils/lugh-paths.test.ts
 bun test src/config/loader.test.ts
 
 # Run with coverage
@@ -2715,11 +2715,11 @@ docker inspect remote-coding-agent-test | grep -A10 Labels
 bun run dev
 
 # Expected logs:
-# [Archon] Paths configured:
-#   Home: /Users/you/.archon
-#   Workspaces: /Users/you/.archon/workspaces
-#   Worktrees: /Users/you/.archon/worktrees
-#   Config: /Users/you/.archon/config.yaml
+# [Lugh] Paths configured:
+#   Home: /Users/you/.lugh
+#   Workspaces: /Users/you/.lugh/workspaces
+#   Worktrees: /Users/you/.lugh/worktrees
+#   Config: /Users/you/.lugh/config.yaml
 # [Config] Loaded configuration:
 #   AI Default: claude
 #   ...
@@ -2727,10 +2727,10 @@ bun run dev
 # 2. Test via test adapter
 curl -X POST http://localhost:3000/test/message \
   -H "Content-Type: application/json" \
-  -d '{"conversationId":"test-archon","message":"/status"}'
+  -d '{"conversationId":"test-lugh","message":"/status"}'
 
 # 3. Verify paths in status output
-curl http://localhost:3000/test/messages/test-archon | jq
+curl http://localhost:3000/test/messages/test-lugh | jq
 
 # 4. Run validation script
 ./scripts/validate-setup.sh
@@ -2746,7 +2746,7 @@ docker compose --profile with-db up -d --build
 docker compose logs -f app-with-db
 
 # Verify paths inside container
-docker compose exec app-with-db ls -la /.archon/
+docker compose exec app-with-db ls -la /.lugh/
 
 # Test health endpoint
 curl http://localhost:3000/health
@@ -2759,7 +2759,7 @@ docker compose --profile with-db down
 
 ## ACCEPTANCE CRITERIA
 
-- [ ] All path references use centralized `archon-paths` module
+- [ ] All path references use centralized `lugh-paths` module
 - [ ] Docker images publish to GHCR on release
 - [ ] Multi-arch builds work (amd64, arm64)
 - [ ] YAML config loads with correct precedence
@@ -2767,19 +2767,19 @@ docker compose --profile with-db down
 - [ ] All validation commands pass with zero errors
 - [ ] Unit test coverage maintained (no regression)
 - [ ] Documentation updated with new directory structure
-- [ ] Startup logs show Archon paths and config
+- [ ] Startup logs show Lugh paths and config
 - [ ] README has clear Quick Start for Docker and Local Development
 - [ ] `docs/configuration.md` covers all config options
 - [ ] `docs/getting-started.md` provides step-by-step guide
 - [ ] `docs/cloud-deployment.md` updated for new paths
-- [ ] `docs/archon-architecture.md` explains system to developers
+- [ ] `docs/lugh-architecture.md` explains system to developers
 - [ ] Windows/Mac/Linux paths documented
 
 ---
 
 ## COMPLETION CHECKLIST
 
-- [ ] All Phase 1 tasks completed (Archon Directory Structure)
+- [ ] All Phase 1 tasks completed (Lugh Directory Structure)
 - [ ] All Phase 2 tasks completed (Docker Distribution)
 - [ ] All Phase 3 tasks completed (YAML Configuration)
 - [ ] All Phase 4 tasks completed (Developer Experience)
@@ -2811,7 +2811,7 @@ docker compose --profile with-db down
 
 ### Future Considerations
 
-1. **Workflow Engine**: `.archon/workflows/` directory ready for workflow definitions
+1. **Workflow Engine**: `.lugh/workflows/` directory ready for workflow definitions
 2. **UI Integration**: Config types designed for future web UI consumption
 3. **SaaS Mode**: Path structure supports future multi-tenant scenarios
 4. **Per-Workflow Config**: Type system extensible for workflow-specific settings

@@ -1,10 +1,10 @@
-# Archon Architecture
+# Lugh Architecture
 
-This document explains the Archon directory structure and configuration system for developers contributing to or extending the remote-coding-agent.
+This document explains the Lugh directory structure and configuration system for developers contributing to or extending the remote-coding-agent.
 
 ## Overview
 
-Archon is the unified directory and configuration system for the remote-coding-agent. It provides:
+Lugh is the unified directory and configuration system for the remote-coding-agent. It provides:
 
 1. **Consistent paths** across all platforms (Mac, Linux, Windows, Docker)
 2. **Configuration precedence** chain (env > global > repo > defaults)
@@ -12,10 +12,10 @@ Archon is the unified directory and configuration system for the remote-coding-a
 
 ## Directory Structure
 
-### User-Level: `~/.archon/`
+### User-Level: `~/.lugh/`
 
 ```
-~/.archon/                    # ARCHON_HOME
+~/.lugh/                    # LUGH_HOME
 ├── workspaces/               # Cloned repositories
 │   └── owner/
 │       └── repo/
@@ -30,10 +30,10 @@ Archon is the unified directory and configuration system for the remote-coding-a
 - `worktrees/` - Isolated git worktrees created per conversation/issue/PR
 - `config.yaml` - Non-secret user preferences
 
-### Repo-Level: `.archon/`
+### Repo-Level: `.lugh/`
 
 ```
-any-repo/.archon/
+any-repo/.lugh/
 ├── commands/                 # Custom command templates
 │   ├── plan.md
 │   └── execute.md
@@ -47,38 +47,38 @@ any-repo/.archon/
 - `workflows/` - Future workflow engine definitions
 - `config.yaml` - Project-specific settings
 
-### Docker: `/.archon/`
+### Docker: `/.lugh/`
 
-In Docker containers, the Archon home is fixed at `/.archon/` (root level). This is:
+In Docker containers, the Lugh home is fixed at `/.lugh/` (root level). This is:
 - Mounted as a named volume for persistence
 - Not overridable by end users (simplifies container setup)
 
 ## Path Resolution
 
-All path resolution is centralized in `src/utils/archon-paths.ts`.
+All path resolution is centralized in `src/utils/lugh-paths.ts`.
 
 ### Core Functions
 
 ```typescript
-// Get the Archon home directory
-getArchonHome(): string
-// Returns: ~/.archon (local) or /.archon (Docker)
+// Get the Lugh home directory
+getLughHome(): string
+// Returns: ~/.lugh (local) or /.lugh (Docker)
 
 // Get workspaces directory
-getArchonWorkspacesPath(): string
-// Returns: ${ARCHON_HOME}/workspaces
+getLughWorkspacesPath(): string
+// Returns: ${LUGH_HOME}/workspaces
 
 // Get worktrees directory
-getArchonWorktreesPath(): string
-// Returns: ${ARCHON_HOME}/worktrees
+getLughWorktreesPath(): string
+// Returns: ${LUGH_HOME}/worktrees
 
 // Get global config path
-getArchonConfigPath(): string
-// Returns: ${ARCHON_HOME}/config.yaml
+getLughConfigPath(): string
+// Returns: ${LUGH_HOME}/config.yaml
 
 // Get command folder search paths (priority order)
 getCommandFolderSearchPaths(): string[]
-// Returns: ['.archon/commands', '.claude/commands', '.agents/commands']
+// Returns: ['.lugh/commands', '.claude/commands', '.agents/commands']
 ```
 
 ### Docker Detection
@@ -88,19 +88,19 @@ function isDocker(): boolean {
   return (
     process.env.WORKSPACE_PATH === '/workspace' ||
     (process.env.HOME === '/root' && Boolean(process.env.WORKSPACE_PATH)) ||
-    process.env.ARCHON_DOCKER === 'true'
+    process.env.LUGH_DOCKER === 'true'
   );
 }
 ```
 
 ### Platform-Specific Paths
 
-| Platform | `getArchonHome()` |
+| Platform | `getLughHome()` |
 |----------|-------------------|
-| macOS | `/Users/<username>/.archon` |
-| Linux | `/home/<username>/.archon` |
-| Windows | `C:\Users\<username>\.archon` |
-| Docker | `/.archon` |
+| macOS | `/Users/<username>/.lugh` |
+| Linux | `/home/<username>/.lugh` |
+| Windows | `C:\Users\<username>\.lugh` |
+| Docker | `/.lugh` |
 
 ## Configuration System
 
@@ -109,8 +109,8 @@ function isDocker(): boolean {
 Configuration is resolved in this order (highest to lowest priority):
 
 1. **Environment Variables** - Secrets, deployment-specific
-2. **Global Config** (`~/.archon/config.yaml`) - User preferences
-3. **Repo Config** (`.archon/config.yaml`) - Project-specific
+2. **Global Config** (`~/.lugh/config.yaml`) - User preferences
+3. **Repo Config** (`.lugh/config.yaml`) - Project-specific
 4. **Built-in Defaults** - Hardcoded in `src/config/config-types.ts`
 
 ### Config Loading
@@ -132,7 +132,7 @@ Key configuration options:
 
 | Option | Env Override | Default |
 |--------|--------------|---------|
-| `ARCHON_HOME` | `ARCHON_HOME` | `~/.archon` |
+| `LUGH_HOME` | `LUGH_HOME` | `~/.lugh` |
 | Default AI Assistant | `DEFAULT_AI_ASSISTANT` | `claude` |
 | Telegram Streaming | `TELEGRAM_STREAMING_MODE` | `stream` |
 | Discord Streaming | `DISCORD_STREAMING_MODE` | `batch` |
@@ -143,7 +143,7 @@ Key configuration options:
 
 Command detection searches in priority order:
 
-1. `.archon/commands/` - Archon-specific commands
+1. `.lugh/commands/` - Lugh-specific commands
 2. `.claude/commands/` - Claude Code standard location
 3. `.agents/commands/` - Alternative location
 
@@ -155,16 +155,16 @@ First match wins. No migration required.
 
 To add a new managed directory:
 
-1. Add function to `src/utils/archon-paths.ts`:
+1. Add function to `src/utils/lugh-paths.ts`:
 ```typescript
-export function getArchonNewPath(): string {
-  return join(getArchonHome(), 'new-directory');
+export function getLughNewPath(): string {
+  return join(getLughHome(), 'new-directory');
 }
 ```
 
 2. Update Docker setup in `Dockerfile`
 3. Update volume mounts in `docker-compose.yml`
-4. Add tests in `src/utils/archon-paths.test.ts`
+4. Add tests in `src/utils/lugh-paths.test.ts`
 
 ### Adding Config Options
 
@@ -186,7 +186,7 @@ export interface GlobalConfig {
 
 ## Design Decisions
 
-### Why `~/.archon/` instead of `~/.config/archon/`?
+### Why `~/.lugh/` instead of `~/.config/lugh/`?
 
 - Simpler path (fewer nested directories)
 - Follows Claude Code pattern (`~/.claude/`)
@@ -218,7 +218,7 @@ export interface GlobalConfig {
 
 ### Workflow Engine
 
-The `.archon/workflows/` directory is reserved for:
+The `.lugh/workflows/` directory is reserved for:
 - YAML workflow definitions
 - Multi-step automated processes
 - Agent orchestration rules

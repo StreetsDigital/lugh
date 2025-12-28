@@ -260,7 +260,7 @@ GITHUB_TOKEN=ghp_your_token_here
 
 # Server settings
 PORT=3000
-ARCHON_HOME=/tmp/archon  # Override base directory (optional)
+LUGH_HOME=/tmp/lugh  # Override base directory (optional)
 ```
 
 **GitHub Token Setup:**

@@ -35,7 +35,7 @@
 ## HIGH PRIORITY
 
 ### Rename Completion
-- [x] **RENAME-001**: Rename archon → lugh in src/ *(completed 2024-12-27)*
+- [x] **RENAME-001**: Rename lugh → lugh in src/ *(completed 2024-12-27)*
 - [ ] **RENAME-002**: Rename in Dockerfile
 - [ ] **RENAME-003**: Rename in docker-compose.yml
 - [ ] **RENAME-004**: Rename in .env.example
@@ -66,10 +66,10 @@
 ## MEDIUM PRIORITY
 
 ### Knowledge Layer
-- [ ] **KNOW-001**: Fork/clone Archon repo
-- [ ] **KNOW-002**: Deploy Archon as Docker service
+- [ ] **KNOW-001**: Fork/clone Lugh repo
+- [ ] **KNOW-002**: Deploy Lugh as Docker service
 - [ ] **KNOW-003**: Configure Supabase for vector storage
-- [ ] **KNOW-004**: Create MCP client in Lugh to call Archon
+- [ ] **KNOW-004**: Create MCP client in Lugh to call Lugh
 - [ ] **KNOW-005**: Add /knowledge command for document upload
 - [ ] **KNOW-006**: Inject RAG results into agent prompts
 - [ ] **KNOW-007**: Test per-project knowledge isolation
@@ -122,7 +122,7 @@
 
 ## COMPLETED
 
-- [x] **RENAME-001**: Rename archon → lugh in src/ *(2024-12-27)*
+- [x] **RENAME-001**: Rename lugh → lugh in src/ *(2024-12-27)*
 
 ---
 

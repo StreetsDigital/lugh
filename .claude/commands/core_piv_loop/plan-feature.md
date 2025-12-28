@@ -110,10 +110,10 @@ So that <benefit/value>
 - Identify performance optimization patterns
 - Document security considerations
 
-**If Archon RAG is available and relevant:**
-- Use `mcp__archon__rag_get_available_sources()` to see available documentation
-- Search for relevant patterns: `mcp__archon__rag_search_knowledge_base(query="...")`
-- Find code examples: `mcp__archon__rag_search_code_examples(query="...")`
+**If Lugh RAG is available and relevant:**
+- Use `mcp__lugh__rag_get_available_sources()` to see available documentation
+- Search for relevant patterns: `mcp__lugh__rag_search_knowledge_base(query="...")`
+- Find code examples: `mcp__lugh__rag_search_code_examples(query="...")`
 - Focus on implementation patterns, best practices, and similar features
 
 **Compile Research References:**

@@ -1,15 +1,15 @@
 ---
-description: Execute a development plan with full Archon task management integration
+description: Execute a development plan with full Lugh task management integration
 argument-hint: [plan-file-path]
 ---
 
-# Execute Development Plan with Archon Task Management
+# Execute Development Plan with Lugh Task Management
 
-You are about to execute a comprehensive development plan with integrated Archon task management. This workflow ensures systematic task tracking and implementation throughout the entire development process.
+You are about to execute a comprehensive development plan with integrated Lugh task management. This workflow ensures systematic task tracking and implementation throughout the entire development process.
 
 ## Critical Requirements
 
-**MANDATORY**: Throughout the ENTIRE execution of this plan, you MUST maintain continuous usage of Archon for task management. DO NOT drop or skip Archon integration at any point. Every task from the plan must be tracked in Archon from creation to completion.
+**MANDATORY**: Throughout the ENTIRE execution of this plan, you MUST maintain continuous usage of Lugh for task management. DO NOT drop or skip Lugh integration at any point. Every task from the plan must be tracked in Lugh from creation to completion.
 
 ## Step 1: Read and Parse the Plan
 
@@ -20,26 +20,26 @@ The plan file will contain:
 - References to existing codebase components and integration points
 - Context about where to look in the codebase for implementation
 
-## Step 2: Project Setup in Archon
+## Step 2: Project Setup in Lugh
 
 1. Check if a project ID is specified in CLAUDE.md for this feature
-   - Look for any Archon project references in CLAUDE.md
+   - Look for any Lugh project references in CLAUDE.md
    - If found, use that project ID
 
 2. If no project exists:
-   - Create a new project in Archon using `mcp__archon__manage_project`
+   - Create a new project in Lugh using `mcp__lugh__manage_project`
    - Use a descriptive title based on the plan's objectives
    - Store the project ID for use throughout execution
 
-## Step 3: Create All Tasks in Archon
+## Step 3: Create All Tasks in Lugh
 
 For EACH task identified in the plan:
-1. Create a corresponding task in Archon using `mcp__archon__manage_task("create", ...)`
+1. Create a corresponding task in Lugh using `mcp__lugh__manage_task("create", ...)`
 2. Set initial status as "todo"
 3. Include detailed descriptions from the plan
 4. Maintain the task order/priority from the plan
 
-**IMPORTANT**: Create ALL tasks in Archon upfront before starting implementation. This ensures complete visibility of the work scope.
+**IMPORTANT**: Create ALL tasks in Lugh upfront before starting implementation. This ensures complete visibility of the work scope.
 
 ## Step 4: Codebase Analysis
 
@@ -57,7 +57,7 @@ Before implementation begins:
 For EACH task in sequence:
 
 ### 5.1 Start Task
-- Move the current task to "doing" status in Archon: `mcp__archon__manage_task("update", task_id=..., status="doing")`
+- Move the current task to "doing" status in Lugh: `mcp__lugh__manage_task("update", task_id=..., status="doing")`
 - Use TodoWrite to track local subtasks if needed
 
 ### 5.2 Implement
@@ -69,7 +69,7 @@ For EACH task in sequence:
 - Ensure code quality and consistency
 
 ### 5.3 Complete Task
-- Once implementation is complete, move task to "review" status: `mcp__archon__manage_task("update", task_id=..., status="review")`
+- Once implementation is complete, move task to "review" status: `mcp__lugh__manage_task("update", task_id=..., status="review")`
 - DO NOT mark as "done" yet - this comes after validation
 
 ### 5.4 Proceed to Next
@@ -99,12 +99,12 @@ Additional validation you should perform:
 - Check for integration issues between components
 - Ensure all acceptance criteria from the plan are met
 
-## Step 7: Finalize Tasks in Archon
+## Step 7: Finalize Tasks in Lugh
 
 After successful validation:
 
 1. For each task that has corresponding unit test coverage:
-   - Move from "review" to "done" status: `mcp__archon__manage_task("update", task_id=..., status="done")`
+   - Move from "review" to "done" status: `mcp__lugh__manage_task("update", task_id=..., status="done")`
 
 2. For any tasks without test coverage:
    - Leave in "review" status for future attention
@@ -121,22 +121,22 @@ Provide a summary including:
 
 ## Workflow Rules
 
-1. **NEVER** skip Archon task management at any point
-2. **ALWAYS** create all tasks in Archon before starting implementation
+1. **NEVER** skip Lugh task management at any point
+2. **ALWAYS** create all tasks in Lugh before starting implementation
 3. **MAINTAIN** one task in "doing" status at a time
 4. **VALIDATE** all work before marking tasks as "done"
-5. **TRACK** progress continuously through Archon status updates
+5. **TRACK** progress continuously through Lugh status updates
 6. **ANALYZE** the codebase thoroughly before implementation
 7. **TEST** everything before final completion
 
 ## Error Handling
 
-If at any point Archon operations fail:
+If at any point Lugh operations fail:
 1. Retry the operation
 2. If persistent failures, document the issue but continue tracking locally
-3. Never abandon the Archon integration - find workarounds if needed
+3. Never abandon the Lugh integration - find workarounds if needed
 
-Remember: The success of this execution depends on maintaining systematic task management through Archon throughout the entire process. This ensures accountability, progress tracking, and quality delivery.
+Remember: The success of this execution depends on maintaining systematic task management through Lugh throughout the entire process. This ensures accountability, progress tracking, and quality delivery.
 
 ## Notes
 

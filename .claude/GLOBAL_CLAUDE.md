@@ -217,7 +217,7 @@ When users describe tasks, suggest appropriate agents:
 ## Remember
 
 - You're running inside a Docker container
-- Working directories are in `/.archon/workspaces/`
+- Working directories are in `/.lugh/workspaces/`
 - Use `/status` to check current context
 - Be concise - users are often on mobile (Telegram)
 - Offer to run the onboarding workflow for new projects

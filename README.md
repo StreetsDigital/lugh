@@ -80,17 +80,17 @@ See [Cloud Deployment Guide](docs/cloud-deployment.md) for deploying to:
 
 ## Directory Structure
 
-The app uses `~/.archon/` for all managed files:
+The app uses `~/.lugh/` for all managed files:
 
 ```
-~/.archon/
+~/.lugh/
 ├── workspaces/     # Cloned repositories
 ├── worktrees/      # Git worktrees for isolation
 └── config.yaml     # Optional: global configuration
 ```
 
-On Windows: `C:\Users\<username>\.archon\`
-In Docker: `/.archon/`
+On Windows: `C:\Users\<username>\.lugh\`
+In Docker: `/.lugh/`
 
 See [Configuration Guide](docs/configuration.md) for customization options.
 
@@ -119,7 +119,7 @@ cp .env.example .env
 | `GH_TOKEN` | Repository cloning | [Generate token](https://github.com/settings/tokens) with `repo` scope |
 | `GITHUB_TOKEN` | Same as `GH_TOKEN` | Use same token value |
 | `PORT` | HTTP server port | Default: `3000` (optional) |
-| `ARCHON_HOME` | (Optional) Override base directory | Default: `~/.archon` |
+| `LUGH_HOME` | (Optional) Override base directory | Default: `~/.lugh` |
 
 **GitHub Personal Access Token Setup:**
 
@@ -133,7 +133,7 @@ GH_TOKEN=ghp_your_token_here
 GITHUB_TOKEN=ghp_your_token_here  # Same value
 ```
 
-**Note:** Repository clones are stored in `~/.archon/workspaces/` by default (or `/.archon/workspaces/` in Docker). Set `ARCHON_HOME` to override the base directory.
+**Note:** Repository clones are stored in `~/.lugh/workspaces/` by default (or `/.lugh/workspaces/` in Docker). Set `LUGH_HOME` to override the base directory.
 
 **Database Setup - Choose One:**
 
@@ -488,7 +488,7 @@ Interact by @mentioning `@remote-agent` in issues or PRs:
 ```
 
 **First mention behavior:**
-- Automatically clones the repository to `/.archon/workspaces/`
+- Automatically clones the repository to `/.lugh/workspaces/`
 - Detects and loads commands from `.claude/commands/` or `.agents/commands/`
 - Injects full issue/PR context for the AI assistant
 
@@ -632,7 +632,7 @@ Once your platform adapter is running, you can use these commands:
 | `/repos` | List cloned repositories | `/repos` |
 | `/status` | Show conversation state | `/status` |
 | `/getcwd` | Show current working directory | `/getcwd` |
-| `/setcwd <path>` | Change working directory | `/setcwd ~/.archon/workspaces/repo` |
+| `/setcwd <path>` | Change working directory | `/setcwd ~/.lugh/workspaces/repo` |
 | `/command-set <name> <path>` | Register a custom command | `/command-set analyze .claude/commands/analyze.md` |
 | `/load-commands <folder>` | Bulk load commands from folder | `/load-commands .claude/commands` |
 | `/command-invoke <name> [args]` | Execute custom command | `/command-invoke plan "Add dark mode"` |
@@ -648,7 +648,7 @@ You: /clone https://github.com/anthropics/anthropic-sdk-typescript
 Bot: ✅ Repository cloned successfully!
 
      📁 Codebase: anthropic-sdk-typescript
-     📂 Path: ~/.archon/workspaces/anthropics/anthropic-sdk-typescript
+     📂 Path: ~/.lugh/workspaces/anthropics/anthropic-sdk-typescript
 
      🔍 Detected .claude/commands/ folder
 
@@ -697,7 +697,7 @@ Bot: 📊 Conversation Status
 
      📦 Codebase: anthropic-sdk-typescript
      🔗 Repository: https://github.com/anthropics/anthropic-sdk-typescript
-     📂 Working Directory: ~/.archon/workspaces/anthropics/anthropic-sdk-typescript
+     📂 Working Directory: ~/.lugh/workspaces/anthropics/anthropic-sdk-typescript
 
      🔄 Active Session: a1b2c3d4...
 
@@ -1054,13 +1054,13 @@ curl -H "Authorization: token $GH_TOKEN" https://api.github.com/user
 **Check workspace permissions:**
 ```bash
 # Use the service name matching your profile
-docker compose exec app ls -la /.archon/workspaces          # --profile external-db
-docker compose exec app-with-db ls -la /.archon/workspaces  # --profile with-db
+docker compose exec app ls -la /.lugh/workspaces          # --profile external-db
+docker compose exec app-with-db ls -la /.lugh/workspaces  # --profile with-db
 ```
 
 **Try manual clone:**
 ```bash
-docker compose exec app git clone https://github.com/user/repo /.archon/workspaces/test-repo
+docker compose exec app git clone https://github.com/user/repo /.lugh/workspaces/test-repo
 # Or app-with-db if using --profile with-db
 ```
 

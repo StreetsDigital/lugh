@@ -195,7 +195,7 @@ Git worktrees let you work on multiple features simultaneously without conflicts
 /worktree cleanup merged
 ```
 
-Each conversation gets isolated workspace under `~/.archon/worktrees/`. No conflicts between sessions.
+Each conversation gets isolated workspace under `~/.lugh/worktrees/`. No conflicts between sessions.
 
 **Recommended for codebases where features are independent.** Avoid for tightly coupled code where changes frequently conflict.
 
