@@ -19,6 +19,11 @@ services:
       - 8.8.4.4
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
 
   # Use this for local Docker database
   # Command: docker-compose --profile with-db up
@@ -29,12 +34,12 @@ services:
     environment:
       # Override DATABASE_URL to use Docker service name
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/lugh
-      # Signal Docker environment for Archon path detection
-      ARCHON_DOCKER: "true"
+      # Signal Docker environment for Lugh path detection
+      LUGH_DOCKER: "true"
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
     volumes:
-      - archon_data:/.archon  # All Archon-managed data (workspaces, worktrees, config)
+      - lugh_data:/.lugh  # All Lugh-managed data (workspaces, worktrees, config)
       - claude_data:/home/appuser/.claude  # Claude Code config, agents, settings
     restart: unless-stopped
     dns:
@@ -42,6 +47,11 @@ services:
       - 8.8.4.4
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
     depends_on:
       postgres:
         condition: service_healthy
@@ -66,6 +76,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
 
 volumes:
   postgres_data:
