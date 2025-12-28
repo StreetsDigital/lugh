@@ -191,14 +191,22 @@ export async function handleCommand(
 ## 🔧 CODEBASE COMMANDS
 
 \`/clone <repo-url>\` - Clone repository
-\`/repos\` - List repositories (numbered)
-\`/repo <#|name> [pull]\` - Switch repo (auto-loads commands)
+\`/repos\` - List local repositories
+\`/repos github\` - List your GitHub repos
+\`/repo <#|name|owner/repo> [pull]\` - Switch repo (auto-clones from GitHub)
 \`/repo-remove <#|name>\` - Remove repo and codebase record
 \`/getcwd\` - Show working directory
 \`/setcwd <path>\` - Set directory
 \`/status\` - Show current state
 \`/reset\` - Clear session
 \`/reset-context\` - Reset AI context, keep worktree
+
+## 🌿 BRANCHES
+
+\`/branches\` - List all branches
+\`/branch switch <name>\` - Switch to branch
+\`/branch create <name>\` - Create new branch
+\`/branch pull\` - Pull latest changes
 
 ## 🌳 WORKTREES
 
@@ -324,12 +332,18 @@ Codebase Commands (per-project):
 
 Codebase:
   /clone <repo-url> - Clone repository
-  /repos - List repositories (numbered)
-  /repo <#|name> [pull] - Switch repo (auto-loads commands)
+  /repos - List local repositories
+  /repos github - List your GitHub repos
+  /repo <#|name|owner/repo> [pull] - Switch repo (auto-clones)
   /repo-remove <#|name> - Remove repo and codebase record
   /getcwd - Show working directory
   /setcwd <path> - Set directory
-  Note: Use /repo for quick switching, /setcwd for manual paths
+
+Branches:
+  /branches - List branches
+  /branch switch <name> - Switch branch
+  /branch create <name> - Create new branch
+  /branch pull - Pull latest changes
 
 Worktrees:
   /worktree create <branch> - Create isolated worktree
@@ -409,15 +423,29 @@ Setup:
       }
 
       if (codebase?.name) {
-        msg += `\n\nCodebase: ${codebase.name}`;
+        msg += `\n\n**Repository:** ${codebase.name}`;
         if (codebase.repository_url) {
-          msg += `\nRepository: ${codebase.repository_url}`;
+          msg += `\n  URL: ${codebase.repository_url}`;
+        }
+
+        // Get current branch
+        try {
+          const { stdout: currentBranch } = await execFileAsync('git', [
+            '-C',
+            conversation.cwd ?? codebase.default_cwd,
+            'rev-parse',
+            '--abbrev-ref',
+            'HEAD',
+          ]);
+          msg += `\n  Branch: ${currentBranch.trim()}`;
+        } catch {
+          // Not a git repo or git not available
         }
       } else {
         msg += '\n\nNo codebase configured. Use /clone <repo-url> to get started.';
       }
 
-      msg += `\n\nCurrent Working Directory: ${conversation.cwd ?? 'Not set'}`;
+      msg += `\n\n**Working Directory:** ${conversation.cwd ?? 'Not set'}`;
 
       const activeIsolation = conversation.isolation_env_id;
       if (activeIsolation) {
@@ -817,44 +845,152 @@ Setup:
     }
 
     case 'repos': {
+      const subcommand = args[0]?.toLowerCase();
       const workspacePath = getLughWorkspacesPath();
 
-      try {
-        const entries = await readdir(workspacePath, { withFileTypes: true });
-        const folders = entries
-          .filter(entry => entry.isDirectory())
-          .map(entry => entry.name)
-          .sort();
-
-        if (!folders.length) {
+      // /repos github - List GitHub repos
+      if (subcommand === 'github' || subcommand === 'gh') {
+        const ghToken = process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN;
+        if (!ghToken) {
           return {
-            success: true,
-            message: 'No repositories found in /workspace\n\nUse /clone <repo-url> to add one.',
+            success: false,
+            message: 'GitHub token not configured.\n\nSet GH_TOKEN or GITHUB_TOKEN in environment.',
           };
         }
 
-        // Get current codebase to check for active repo (consistent with /status)
+        try {
+          // Get list of repos from GitHub using gh CLI
+          const { stdout } = await execFileAsync('gh', [
+            'repo',
+            'list',
+            '--limit',
+            '30',
+            '--json',
+            'name,owner,description,updatedAt,isPrivate',
+          ]);
+
+          const ghRepos = JSON.parse(stdout) as Array<{
+            name: string;
+            owner: { login: string };
+            description: string | null;
+            updatedAt: string;
+            isPrivate: boolean;
+          }>;
+
+          if (!ghRepos.length) {
+            return {
+              success: true,
+              message: 'No GitHub repositories found.\n\nCreate one at github.com or check your token permissions.',
+            };
+          }
+
+          // Get local repos for comparison
+          let localFolders: string[] = [];
+          try {
+            const entries = await readdir(workspacePath, { withFileTypes: true });
+            // Get all repos including nested owner/repo structure
+            for (const entry of entries) {
+              if (entry.isDirectory()) {
+                const subPath = join(workspacePath, entry.name);
+                const subEntries = await readdir(subPath, { withFileTypes: true }).catch(() => []);
+                for (const subEntry of subEntries) {
+                  if (subEntry.isDirectory()) {
+                    localFolders.push(`${entry.name}/${subEntry.name}`);
+                  }
+                }
+                // Also check if this is a repo directly (not nested)
+                localFolders.push(entry.name);
+              }
+            }
+          } catch {
+            // No local repos yet
+          }
+
+          let msg = '**GitHub Repositories:**\n\n';
+
+          for (let i = 0; i < ghRepos.length; i++) {
+            const repo = ghRepos[i];
+            const fullName = `${repo.owner.login}/${repo.name}`;
+            const isLocal = localFolders.includes(fullName) || localFolders.includes(repo.name);
+            const localMarker = isLocal ? ' ✓' : '';
+            const privateMarker = repo.isPrivate ? ' 🔒' : '';
+            msg += `${String(i + 1)}. ${fullName}${privateMarker}${localMarker}\n`;
+          }
+
+          msg += '\n✓ = cloned locally\n';
+          msg += '\nUse `/repo owner/name` to switch (auto-clones if needed)';
+
+          return { success: true, message: msg };
+        } catch (error) {
+          const err = error as Error;
+          console.error('[Command] repos github failed:', err);
+          return {
+            success: false,
+            message: `Failed to list GitHub repos: ${err.message}\n\nMake sure 'gh' CLI is installed and authenticated.`,
+          };
+        }
+      }
+
+      // Default: list local repos
+      try {
+        // List repos with owner/repo structure
+        const entries = await readdir(workspacePath, { withFileTypes: true });
+        const repos: Array<{ display: string; path: string }> = [];
+
+        for (const entry of entries) {
+          if (!entry.isDirectory()) continue;
+          const ownerPath = join(workspacePath, entry.name);
+
+          // Check if this is an owner directory with repos inside
+          const subEntries = await readdir(ownerPath, { withFileTypes: true }).catch(() => []);
+          const subDirs = subEntries.filter(e => e.isDirectory());
+
+          if (subDirs.length > 0) {
+            // This is an owner directory - list repos inside
+            for (const subDir of subDirs) {
+              repos.push({
+                display: `${entry.name}/${subDir.name}`,
+                path: join(ownerPath, subDir.name),
+              });
+            }
+          } else {
+            // This is a direct repo (legacy structure)
+            repos.push({
+              display: entry.name,
+              path: ownerPath,
+            });
+          }
+        }
+
+        repos.sort((a, b) => a.display.localeCompare(b.display));
+
+        if (!repos.length) {
+          return {
+            success: true,
+            message: 'No local repositories.\n\nUse `/repos github` to see your GitHub repos\nUse `/clone <url>` to clone one',
+          };
+        }
+
+        // Get current codebase to check for active repo
         let currentCodebase = conversation.codebase_id
           ? await codebaseDb.getCodebase(conversation.codebase_id)
           : null;
 
-        // Auto-detect codebase from cwd if not explicitly linked (same as /status)
         if (!currentCodebase && conversation.cwd) {
           currentCodebase = await codebaseDb.findCodebaseByDefaultCwd(conversation.cwd);
         }
 
-        let msg = 'Repositories:\n\n';
+        let msg = '**Local Repositories:**\n\n';
 
-        for (let i = 0; i < folders.length; i++) {
-          const folder = folders[i];
-          const folderPath = join(workspacePath, folder);
-          // Mark as active only if current codebase's default_cwd matches this folder
-          const isActive = currentCodebase?.default_cwd === folderPath;
+        for (let i = 0; i < repos.length; i++) {
+          const repo = repos[i];
+          const isActive = currentCodebase?.default_cwd === repo.path;
           const marker = isActive ? ' ← active' : '';
-          msg += `${String(i + 1)}. ${folder}${marker}\n`;
+          msg += `${String(i + 1)}. ${repo.display}${marker}\n`;
         }
 
-        msg += '\nUse /repo <number|name> to switch';
+        msg += '\nUse `/repo <#|name>` to switch';
+        msg += '\nUse `/repos github` to see your GitHub repos';
 
         return { success: true, message: msg };
       } catch (error) {
@@ -938,7 +1074,7 @@ Keep your response concise and helpful. The user stopped you for a reason - find
 
     case 'repo': {
       if (args.length === 0) {
-        return { success: false, message: 'Usage: /repo <number|name> [pull]' };
+        return { success: false, message: 'Usage: /repo <number|name|owner/repo> [pull]' };
       }
 
       const workspacePath = getLughWorkspacesPath();
@@ -946,39 +1082,112 @@ Keep your response concise and helpful. The user stopped you for a reason - find
       const shouldPull = args[1]?.toLowerCase() === 'pull';
 
       try {
-        // Get sorted list of repos (same as /repos)
-        const entries = await readdir(workspacePath, { withFileTypes: true });
-        const folders = entries
-          .filter(entry => entry.isDirectory())
-          .map(entry => entry.name)
-          .sort();
+        // Build list of local repos (including owner/repo structure)
+        const entries = await readdir(workspacePath, { withFileTypes: true }).catch(() => []);
+        const repos: Array<{ display: string; path: string }> = [];
 
-        if (!folders.length) {
-          return {
-            success: false,
-            message: 'No repositories found. Use /clone <repo-url> first.',
-          };
+        for (const entry of entries) {
+          if (!entry.isDirectory()) continue;
+          const ownerPath = join(workspacePath, entry.name);
+
+          // Check if this is an owner directory with repos inside
+          const subEntries = await readdir(ownerPath, { withFileTypes: true }).catch(() => []);
+          const subDirs = subEntries.filter(e => e.isDirectory());
+
+          if (subDirs.length > 0) {
+            for (const subDir of subDirs) {
+              repos.push({
+                display: `${entry.name}/${subDir.name}`,
+                path: join(ownerPath, subDir.name),
+              });
+            }
+          } else {
+            repos.push({
+              display: entry.name,
+              path: ownerPath,
+            });
+          }
         }
 
-        // Find the target folder by number or name
-        let targetFolder: string | undefined;
+        repos.sort((a, b) => a.display.localeCompare(b.display));
+
+        // Find the target repo by number, name, or owner/repo
+        let targetRepo: { display: string; path: string } | undefined;
         const num = parseInt(identifier, 10);
-        if (!isNaN(num) && num >= 1 && num <= folders.length) {
-          targetFolder = folders[num - 1];
+
+        if (!isNaN(num) && num >= 1 && num <= repos.length) {
+          targetRepo = repos[num - 1];
         } else {
-          // Try exact match first, then prefix match
-          targetFolder =
-            folders.find(f => f === identifier) ?? folders.find(f => f.startsWith(identifier));
+          // Try exact match, then partial match
+          targetRepo =
+            repos.find(r => r.display === identifier) ??
+            repos.find(r => r.display.endsWith(`/${identifier}`)) ??
+            repos.find(r => r.display.startsWith(identifier));
         }
 
-        if (!targetFolder) {
+        // If not found locally and looks like owner/repo, try to clone from GitHub
+        if (!targetRepo && identifier.includes('/')) {
+          const ghToken = process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN;
+          if (!ghToken) {
+            return {
+              success: false,
+              message: `Repository not found locally: ${identifier}\n\nSet GH_TOKEN to enable auto-clone from GitHub.`,
+            };
+          }
+
+          // Parse owner/repo
+          const [owner, repoName] = identifier.split('/');
+          if (!owner || !repoName) {
+            return {
+              success: false,
+              message: `Invalid repository format: ${identifier}\n\nUse owner/repo format.`,
+            };
+          }
+
+          const targetPath = join(workspacePath, owner, repoName);
+          const cloneUrl = `https://github.com/${owner}/${repoName}.git`;
+
+          console.log(`[Command] Auto-cloning ${identifier} from GitHub...`);
+
+          try {
+            // Clone with authentication
+            const authenticatedUrl = cloneUrl.replace(
+              'https://github.com',
+              `https://${ghToken}@github.com`
+            );
+            await execFileAsync('git', ['clone', authenticatedUrl, targetPath]);
+
+            // Add to git safe.directory
+            await execFileAsync('git', [
+              'config',
+              '--global',
+              '--add',
+              'safe.directory',
+              targetPath,
+            ]).catch(() => {});
+
+            console.log(`[Command] Cloned ${identifier} to ${targetPath}`);
+
+            targetRepo = { display: identifier, path: targetPath };
+          } catch (cloneError) {
+            const err = cloneError as Error;
+            console.error('[Command] Auto-clone failed:', err);
+            return {
+              success: false,
+              message: `Failed to clone ${identifier} from GitHub: ${err.message}`,
+            };
+          }
+        }
+
+        if (!targetRepo) {
           return {
             success: false,
-            message: `Repository not found: ${identifier}\n\nUse /repos to see available repositories.`,
+            message: `Repository not found: ${identifier}\n\nUse /repos to see local repos\nUse /repos github to see your GitHub repos`,
           };
         }
 
-        const targetPath = join(workspacePath, targetFolder);
+        const targetPath = targetRepo.path;
+        const targetFolder = targetRepo.display;
 
         // Git pull if requested
         if (shouldPull) {
@@ -1229,6 +1438,147 @@ Keep your response concise and helpful. The user stopped you for a reason - find
         return { success: true, message: `Template '${args[0]}' deleted.` };
       }
       return { success: false, message: `Template '${args[0]}' not found.` };
+    }
+
+    case 'branches':
+    case 'branch': {
+      if (!conversation.cwd) {
+        return { success: false, message: 'No working directory set. Use /clone or /repo first.' };
+      }
+
+      const subcommand = args[0]?.toLowerCase();
+      const branchArg = args[1];
+
+      try {
+        // Get current branch
+        const { stdout: currentBranch } = await execFileAsync('git', [
+          '-C',
+          conversation.cwd,
+          'rev-parse',
+          '--abbrev-ref',
+          'HEAD',
+        ]);
+
+        // Handle subcommands
+        if (subcommand === 'switch' || subcommand === 'checkout') {
+          if (!branchArg) {
+            return { success: false, message: 'Usage: /branch switch <branch-name>' };
+          }
+
+          try {
+            await execFileAsync('git', ['-C', conversation.cwd, 'checkout', branchArg]);
+
+            // Reset session when switching branches
+            const session = await sessionDb.getActiveSession(conversation.id);
+            if (session) {
+              await sessionDb.deactivateSession(session.id);
+            }
+
+            return {
+              success: true,
+              message: `Switched to branch: ${branchArg}\n\nSession reset for fresh context.`,
+              modified: true,
+            };
+          } catch (switchError) {
+            const err = switchError as Error;
+            return { success: false, message: `Failed to switch branch: ${err.message}` };
+          }
+        }
+
+        if (subcommand === 'create' || subcommand === 'new') {
+          if (!branchArg) {
+            return { success: false, message: 'Usage: /branch create <branch-name>' };
+          }
+
+          try {
+            await execFileAsync('git', ['-C', conversation.cwd, 'checkout', '-b', branchArg]);
+
+            // Reset session when creating new branch
+            const session = await sessionDb.getActiveSession(conversation.id);
+            if (session) {
+              await sessionDb.deactivateSession(session.id);
+            }
+
+            return {
+              success: true,
+              message: `Created and switched to branch: ${branchArg}\n\nSession reset for fresh context.`,
+              modified: true,
+            };
+          } catch (createError) {
+            const err = createError as Error;
+            return { success: false, message: `Failed to create branch: ${err.message}` };
+          }
+        }
+
+        if (subcommand === 'pull') {
+          try {
+            const { stdout: pullOutput } = await execFileAsync('git', [
+              '-C',
+              conversation.cwd,
+              'pull',
+            ]);
+            return {
+              success: true,
+              message: `Pulled latest changes:\n\n${pullOutput.trim() || 'Already up to date.'}`,
+            };
+          } catch (pullError) {
+            const err = pullError as Error;
+            return { success: false, message: `Failed to pull: ${err.message}` };
+          }
+        }
+
+        // Default: list branches
+        const { stdout: branchList } = await execFileAsync('git', [
+          '-C',
+          conversation.cwd,
+          'branch',
+          '-a',
+          '--format=%(refname:short)',
+        ]);
+
+        const branches = branchList
+          .trim()
+          .split('\n')
+          .filter(b => b && !b.includes('HEAD'));
+
+        // Separate local and remote branches
+        const localBranches = branches.filter(b => !b.startsWith('origin/'));
+        const remoteBranches = branches
+          .filter(b => b.startsWith('origin/'))
+          .map(b => b.replace('origin/', ''))
+          .filter(b => !localBranches.includes(b)); // Only show remote-only branches
+
+        let msg = `**Current branch:** ${currentBranch.trim()}\n\n`;
+
+        if (localBranches.length > 0) {
+          msg += '**Local branches:**\n';
+          for (const branch of localBranches.sort()) {
+            const marker = branch === currentBranch.trim() ? ' ← current' : '';
+            msg += `  • ${branch}${marker}\n`;
+          }
+        }
+
+        if (remoteBranches.length > 0) {
+          msg += '\n**Remote-only branches:**\n';
+          for (const branch of remoteBranches.slice(0, 10).sort()) {
+            msg += `  • ${branch}\n`;
+          }
+          if (remoteBranches.length > 10) {
+            msg += `  ... and ${String(remoteBranches.length - 10)} more\n`;
+          }
+        }
+
+        msg += '\n**Commands:**\n';
+        msg += '  `/branch switch <name>` - Switch to branch\n';
+        msg += '  `/branch create <name>` - Create new branch\n';
+        msg += '  `/branch pull` - Pull latest changes';
+
+        return { success: true, message: msg };
+      } catch (error) {
+        const err = error as Error;
+        console.error('[Command] branches failed:', err);
+        return { success: false, message: `Failed to get branches: ${err.message}` };
+      }
     }
 
     case 'worktree': {
