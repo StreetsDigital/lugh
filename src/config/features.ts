@@ -129,9 +129,9 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
 
   REDIS_MESSAGING: {
     key: 'REDIS_MESSAGING',
-    name: 'Redis Pub/Sub Messaging (Legacy)',
-    description: 'DEPRECATED: Use PostgreSQL NOTIFY/LISTEN instead (see AGENT_POOL)',
-    maturity: 'deprecated',
+    name: 'Redis Pub/Sub Messaging (Optional)',
+    description: 'Optional: Redis-based pub/sub for 50+ agents. PostgreSQL handles 3-12 agents fine. See FEAT-019 for upgrade path.',
+    maturity: 'experimental',
     defaultEnabled: false,
   },
 

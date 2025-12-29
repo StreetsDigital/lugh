@@ -1,6 +1,12 @@
 /**
- * Agent Worker
- * ============
+ * Agent Worker (Redis-based - Optional, Preserved for Future)
+ * ============================================================
+ *
+ * NOTE: This is the Redis-based agent worker, preserved for FEAT-019.
+ * For current PostgreSQL-based implementation, see src/pool/agent-worker.ts
+ *
+ * This worker is only used when FEATURE_REDIS_MESSAGING=true (50+ agents).
+ * By default, the pool uses PostgreSQL NOTIFY/LISTEN (see src/pool/).
  *
  * Main entry point for agent containers.
  *
