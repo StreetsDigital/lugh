@@ -380,3 +380,17 @@ SELECT id, status, priority, assigned_agent_id FROM pool_tasks;
 - Agent specialization/routing (all agents equal initially)
 - Dynamic pool scaling (fixed size for MVP)
 - Cross-conversation task sharing (1 conversation = 1 pool session)
+
+---
+
+## Future: Redis Upgrade Path
+
+If PostgreSQL pub/sub becomes a bottleneck, see **FEAT-019: Redis Upgrade Path** (P2).
+
+**Trigger conditions:**
+- Scaling to 50+ agents
+- Distributed agents across machines
+- PostgreSQL NOTIFY latency > 100ms
+- Connection pool exhaustion
+
+Until then, PostgreSQL handles 3-12 agents easily.
