@@ -122,6 +122,17 @@
 
 ## P2 - Later (Nice to Have)
 
+### FEAT-019: Redis Upgrade Path
+**Status:** Not Started
+**Description:** Migrate to Redis if PostgreSQL pub/sub becomes a bottleneck
+- Only needed if scaling to 50+ agents or distributed across machines
+- Replace `PgPubSub` with Redis pub/sub
+- Add Redis Streams for message replay/persistence
+- Enables sub-millisecond task assignment
+- **Trigger:** When PostgreSQL NOTIFY latency > 100ms or connection pool exhaustion
+
+---
+
 ### FEAT-020: Business Templates
 **Status:** Not Started
 **Description:** Pre-built agent configurations
