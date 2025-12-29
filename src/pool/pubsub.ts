@@ -29,20 +29,22 @@ export class PgPubSub {
       return;
     }
 
+    const sanitizedChannel = this.sanitizeChannel(channel);
+
     try {
       const json = JSON.stringify(payload);
 
       // Check payload size (NOTIFY limit is 8000 bytes)
       if (Buffer.byteLength(json, 'utf8') > 7900) {
         console.warn(
-          `[PgPubSub] Payload for channel '${channel}' is large (${Buffer.byteLength(json)} bytes). ` +
+          `[PgPubSub] Payload for channel '${sanitizedChannel}' is large (${Buffer.byteLength(json)} bytes). ` +
           'Consider sending only IDs and fetching full data from database.'
         );
       }
 
-      await this.pool.query('SELECT pg_notify($1, $2)', [channel, json]);
+      await this.pool.query('SELECT pg_notify($1, $2)', [sanitizedChannel, json]);
     } catch (error) {
-      console.error(`[PgPubSub] Failed to publish to channel '${channel}':`, error);
+      console.error(`[PgPubSub] Failed to publish to channel '${sanitizedChannel}':`, error);
       throw error;
     }
   }
@@ -58,28 +60,31 @@ export class PgPubSub {
       throw new Error('[PgPubSub] Cannot subscribe during shutdown');
     }
 
+    // Sanitize channel name for PostgreSQL (use consistently everywhere)
+    const sanitizedChannel = this.sanitizeChannel(channel);
+
     try {
       // Get or create client for this channel
-      let client = this.subscriptions.get(channel);
+      let client = this.subscriptions.get(sanitizedChannel);
 
       if (!client) {
         // Create dedicated connection for LISTEN
         client = await this.pool.connect();
-        await client.query(`LISTEN ${this.sanitizeChannel(channel)}`);
+        await client.query(`LISTEN ${sanitizedChannel}`);
 
         // Set up notification handler
         client.on('notification', (msg) => {
-          if (msg.channel === channel && msg.payload) {
+          if (msg.channel === sanitizedChannel && msg.payload) {
             try {
               const payload = JSON.parse(msg.payload);
-              const handlers = this.handlers.get(channel);
+              const handlers = this.handlers.get(sanitizedChannel);
 
               if (handlers) {
                 // Call all handlers for this channel
                 for (const h of handlers) {
                   Promise.resolve(h(payload)).catch((err) => {
                     console.error(
-                      `[PgPubSub] Handler error for channel '${channel}':`,
+                      `[PgPubSub] Handler error for channel '${sanitizedChannel}':`,
                       err
                     );
                   });
@@ -87,7 +92,7 @@ export class PgPubSub {
               }
             } catch (error) {
               console.error(
-                `[PgPubSub] Failed to parse notification from channel '${channel}':`,
+                `[PgPubSub] Failed to parse notification from channel '${sanitizedChannel}':`,
                 error
               );
             }
@@ -95,21 +100,21 @@ export class PgPubSub {
         });
 
         client.on('error', (err) => {
-          console.error(`[PgPubSub] Client error for channel '${channel}':`, err);
+          console.error(`[PgPubSub] Client error for channel '${sanitizedChannel}':`, err);
           // Attempt to reconnect
-          this.handleClientError(channel);
+          this.handleClientError(sanitizedChannel);
         });
 
-        this.subscriptions.set(channel, client);
+        this.subscriptions.set(sanitizedChannel, client);
       }
 
       // Add handler to set
-      if (!this.handlers.has(channel)) {
-        this.handlers.set(channel, new Set());
+      if (!this.handlers.has(sanitizedChannel)) {
+        this.handlers.set(sanitizedChannel, new Set());
       }
-      this.handlers.get(channel)!.add(handler);
+      this.handlers.get(sanitizedChannel)!.add(handler);
 
-      console.log(`[PgPubSub] Subscribed to channel '${channel}'`);
+      console.log(`[PgPubSub] Subscribed to channel '${sanitizedChannel}'`);
     } catch (error) {
       console.error(`[PgPubSub] Failed to subscribe to channel '${channel}':`, error);
       throw error;
@@ -120,37 +125,39 @@ export class PgPubSub {
    * Unsubscribe a specific handler from a channel
    */
   async unsubscribe(channel: string, handler?: MessageHandler): Promise<void> {
-    const handlers = this.handlers.get(channel);
+    const sanitizedChannel = this.sanitizeChannel(channel);
+    const handlers = this.handlers.get(sanitizedChannel);
 
     if (handler && handlers) {
       handlers.delete(handler);
 
       // If no more handlers, close the connection
       if (handlers.size === 0) {
-        await this.closeChannel(channel);
+        await this.closeChannel(sanitizedChannel);
       }
     } else {
       // No specific handler provided, close entire channel
-      await this.closeChannel(channel);
+      await this.closeChannel(sanitizedChannel);
     }
   }
 
   /**
    * Close a channel and release its connection
+   * Note: Expects already-sanitized channel name
    */
-  private async closeChannel(channel: string): Promise<void> {
-    const client = this.subscriptions.get(channel);
+  private async closeChannel(sanitizedChannel: string): Promise<void> {
+    const client = this.subscriptions.get(sanitizedChannel);
 
     if (client) {
       try {
-        await client.query(`UNLISTEN ${this.sanitizeChannel(channel)}`);
+        await client.query(`UNLISTEN ${sanitizedChannel}`);
         client.removeAllListeners();
         client.release();
-        this.subscriptions.delete(channel);
-        this.handlers.delete(channel);
-        console.log(`[PgPubSub] Unsubscribed from channel '${channel}'`);
+        this.subscriptions.delete(sanitizedChannel);
+        this.handlers.delete(sanitizedChannel);
+        console.log(`[PgPubSub] Unsubscribed from channel '${sanitizedChannel}'`);
       } catch (error) {
-        console.error(`[PgPubSub] Error closing channel '${channel}':`, error);
+        console.error(`[PgPubSub] Error closing channel '${sanitizedChannel}':`, error);
       }
     }
   }
@@ -188,11 +195,13 @@ export class PgPubSub {
   }
 
   /**
-   * Sanitize channel name to prevent SQL injection
+   * Sanitize channel name for PostgreSQL LISTEN/NOTIFY
+   * PostgreSQL identifiers don't allow hyphens without quoting
    */
   private sanitizeChannel(channel: string): string {
-    // Only allow alphanumeric characters, underscores, and hyphens
-    return channel.replace(/[^a-zA-Z0-9_-]/g, '_');
+    // Only allow alphanumeric characters and underscores
+    // Hyphens are NOT allowed in unquoted PostgreSQL identifiers
+    return channel.replace(/[^a-zA-Z0-9_]/g, '_');
   }
 
   /**
@@ -206,7 +215,8 @@ export class PgPubSub {
    * Get subscription count for a channel
    */
   getHandlerCount(channel: string): number {
-    return this.handlers.get(channel)?.size || 0;
+    const sanitizedChannel = this.sanitizeChannel(channel);
+    return this.handlers.get(sanitizedChannel)?.size || 0;
   }
 
   /**

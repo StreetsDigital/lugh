@@ -3,6 +3,7 @@
  */
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
 import { Pool } from 'pg';
+import { v4 as uuid } from 'uuid';
 import { AgentRegistry } from './agent-registry';
 
 describe('AgentRegistry', () => {
@@ -100,7 +101,7 @@ describe('AgentRegistry', () => {
 
     test('should update current task ID', async () => {
       const agentId = 'test-agent-task';
-      const taskId = 'task-123';
+      const taskId = uuid(); // Use proper UUID
 
       await registry.register(agentId);
       await registry.setStatus(agentId, 'busy', taskId);
@@ -111,9 +112,10 @@ describe('AgentRegistry', () => {
 
     test('should clear task ID when going idle', async () => {
       const agentId = 'test-agent-idle';
+      const taskId = uuid(); // Use proper UUID
 
       await registry.register(agentId);
-      await registry.setStatus(agentId, 'busy', 'task-456');
+      await registry.setStatus(agentId, 'busy', taskId);
       await registry.setStatus(agentId, 'idle');
 
       const agent = await registry.getAgent(agentId);
@@ -199,9 +201,10 @@ describe('AgentRegistry', () => {
   describe('unregister', () => {
     test('should mark agent as offline', async () => {
       const agentId = 'unregister-test';
+      const taskId = uuid(); // Use proper UUID
 
       await registry.register(agentId);
-      await registry.setStatus(agentId, 'busy', 'task-789');
+      await registry.setStatus(agentId, 'busy', taskId);
 
       await registry.unregister(agentId);
 

@@ -34,14 +34,14 @@ describe('PgPubSub', () => {
       await expect(pubsub.publish(channel, payload)).resolves.toBeUndefined();
     });
 
-    test('should handle large payloads gracefully', async () => {
+    test('should reject payloads exceeding PostgreSQL 8KB limit', async () => {
       const channel = 'test_large';
       const largePayload = {
-        data: 'x'.repeat(10000), // 10KB payload
+        data: 'x'.repeat(10000), // 10KB payload exceeds 8KB limit
       };
 
-      // Should warn but still work
-      await expect(pubsub.publish(channel, largePayload)).resolves.toBeUndefined();
+      // PostgreSQL NOTIFY has an 8KB limit - should reject
+      await expect(pubsub.publish(channel, largePayload)).rejects.toThrow();
     });
 
     test('should handle empty payloads', async () => {

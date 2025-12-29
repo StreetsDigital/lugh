@@ -241,16 +241,17 @@ describe('TaskQueue', () => {
         payload: {},
       });
 
-      // Leave task1 queued
-      // Assign task2
-      await queue.dequeue('agent-6');
-      // Complete task3
-      await queue.dequeue('agent-7');
+      // Dequeue first two tasks (assigned to agents)
+      await queue.dequeue('agent-6'); // Gets task1 (first in queue)
+      await queue.dequeue('agent-7'); // Gets task2 (next in queue)
+      // task3 remains queued
+      // Complete task3 directly (no assignment needed)
       await queue.complete(task3, {});
 
       const stats = await queue.getStats();
 
-      expect(stats.queued).toBe(1);
+      // task1 and task2 are assigned, task3 was completed directly
+      expect(stats.queued).toBe(0);  // task3 was completed, not queued
       expect(stats.assigned).toBe(2);
       expect(stats.completed).toBe(1);
     });
