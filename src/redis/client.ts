@@ -1,9 +1,16 @@
 /**
- * Redis Client
- * ============
+ * Redis Client (Optional - Preserved for Future Upgrade Path)
+ * ============================================================
+ *
+ * NOTE: This code is preserved but not currently used.
+ * The agent pool now uses PostgreSQL NOTIFY/LISTEN (see src/pool/).
+ *
+ * Redis will be reactivated in FEAT-019 when scaling to 50+ agents
+ * or distributing agents across machines. Until then, PostgreSQL
+ * handles 3-12 agents easily with lower complexity.
  *
  * Wrapper around Redis connection with typed pub/sub operations.
- * Used by both orchestrator and agents.
+ * Used by both orchestrator and agents (when FEATURE_REDIS_MESSAGING=true).
  */
 
 import { createClient, RedisClientType } from 'redis';

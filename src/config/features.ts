@@ -115,22 +115,22 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
   },
 
   // ---------------------------------------------------------------------------
-  // MULTI-AGENT POOL (Experimental)
+  // MULTI-AGENT POOL (Experimental - PostgreSQL-based, no Redis)
   // ---------------------------------------------------------------------------
   AGENT_POOL: {
     key: 'AGENT_POOL',
     name: 'Multi-Agent Pool Manager',
-    description: 'Manage 1-12 parallel Claude Code agents via Redis',
+    description: 'Manage 3-12 parallel agents via PostgreSQL (no Redis required)',
     maturity: 'experimental',
     defaultEnabled: false,
-    dependencies: ['REDIS_MESSAGING'],
-    endpoints: ['/api/agents', '/api/agents/:id'],
+    migrations: ['010_agent_pool.sql'],
+    endpoints: ['/api/pool/status', '/api/pool/tasks/:id'],
   },
 
   REDIS_MESSAGING: {
     key: 'REDIS_MESSAGING',
-    name: 'Redis Pub/Sub Messaging',
-    description: 'Event-driven architecture for agent coordination',
+    name: 'Redis Pub/Sub Messaging (Optional)',
+    description: 'Optional: Redis-based pub/sub for 50+ agents. PostgreSQL handles 3-12 agents fine. See FEAT-019 for upgrade path.',
     maturity: 'experimental',
     defaultEnabled: false,
   },
@@ -138,10 +138,10 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
   AGENT_HEARTBEAT: {
     key: 'AGENT_HEARTBEAT',
     name: 'Agent Heartbeat System',
-    description: 'Health monitoring via 5-second heartbeat pings',
+    description: 'Health monitoring via PostgreSQL heartbeat table',
     maturity: 'experimental',
     defaultEnabled: false,
-    dependencies: ['AGENT_POOL', 'REDIS_MESSAGING'],
+    dependencies: ['AGENT_POOL'],
   },
 
   // ---------------------------------------------------------------------------

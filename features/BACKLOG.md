@@ -37,13 +37,22 @@
 
 ---
 
-### FEAT-003: Multi-Agent Pool Activation
-**Status:** Partial (code exists in src/agent/, src/swarm/, src/redis/)
-**Description:** Enable 3-12 parallel agents
-- Enable feature flags for multi-agent pool
-- Redis task distribution
-- Agent health monitoring
-- Feature flag: `FEATURE_AGENT_POOL=true`
+### FEAT-003: Multi-Agent Pool (No Redis)
+**Status:** Core Implementation Complete ✅
+**Description:** Enable 3-12 parallel agents using PostgreSQL only
+- [x] PostgreSQL `NOTIFY/LISTEN` for pub/sub (no Redis needed) *(2024-12-29)*
+- [x] Database migration with 3 tables (agent_pool, pool_tasks, pool_task_results) *(2024-12-29)*
+- [x] PgPubSub wrapper for NOTIFY/LISTEN *(2024-12-29)*
+- [x] AgentRegistry for agent tracking and heartbeats *(2024-12-29)*
+- [x] TaskQueue with priority ordering *(2024-12-29)*
+- [x] PoolCoordinator for orchestration *(2024-12-29)*
+- [x] AgentWorker base implementation *(2024-12-29)*
+- [x] Feature flags updated (no Redis dependency) *(2024-12-29)*
+- [ ] Integration with orchestrator
+- [ ] Claude Code session execution in workers
+- [ ] `/pool-status` command
+- [ ] End-to-end testing
+- **See:** `features/FEAT-003-multi-agent-no-redis.md` for full spec
 
 ---
 
@@ -120,6 +129,17 @@
 ---
 
 ## P2 - Later (Nice to Have)
+
+### FEAT-019: Redis Upgrade Path
+**Status:** Not Started
+**Description:** Migrate to Redis if PostgreSQL pub/sub becomes a bottleneck
+- Only needed if scaling to 50+ agents or distributed across machines
+- Replace `PgPubSub` with Redis pub/sub
+- Add Redis Streams for message replay/persistence
+- Enables sub-millisecond task assignment
+- **Trigger:** When PostgreSQL NOTIFY latency > 100ms or connection pool exhaustion
+
+---
 
 ### FEAT-020: Business Templates
 **Status:** Not Started
