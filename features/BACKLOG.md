@@ -38,12 +38,20 @@
 ---
 
 ### FEAT-003: Multi-Agent Pool (No Redis)
-**Status:** Ready for Implementation
+**Status:** Core Implementation Complete ✅
 **Description:** Enable 3-12 parallel agents using PostgreSQL only
-- PostgreSQL `NOTIFY/LISTEN` for pub/sub (no Redis needed)
-- Simple tables for task queue with priority ordering
-- Agent registry with heartbeat tracking
-- Feature flag: `FEATURE_AGENT_POOL=true`
+- [x] PostgreSQL `NOTIFY/LISTEN` for pub/sub (no Redis needed) *(2024-12-29)*
+- [x] Database migration with 3 tables (agent_pool, pool_tasks, pool_task_results) *(2024-12-29)*
+- [x] PgPubSub wrapper for NOTIFY/LISTEN *(2024-12-29)*
+- [x] AgentRegistry for agent tracking and heartbeats *(2024-12-29)*
+- [x] TaskQueue with priority ordering *(2024-12-29)*
+- [x] PoolCoordinator for orchestration *(2024-12-29)*
+- [x] AgentWorker base implementation *(2024-12-29)*
+- [x] Feature flags updated (no Redis dependency) *(2024-12-29)*
+- [ ] Integration with orchestrator
+- [ ] Claude Code session execution in workers
+- [ ] `/pool-status` command
+- [ ] End-to-end testing
 - **See:** `features/FEAT-003-multi-agent-no-redis.md` for full spec
 
 ---
