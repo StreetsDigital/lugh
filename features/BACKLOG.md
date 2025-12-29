@@ -37,13 +37,14 @@
 
 ---
 
-### FEAT-003: Multi-Agent Pool Activation
-**Status:** Partial (code exists in src/agent/, src/swarm/, src/redis/)
-**Description:** Enable 3-12 parallel agents
-- Enable feature flags for multi-agent pool
-- Redis task distribution
-- Agent health monitoring
+### FEAT-003: Multi-Agent Pool (No Redis)
+**Status:** Ready for Implementation
+**Description:** Enable 3-12 parallel agents using PostgreSQL only
+- PostgreSQL `NOTIFY/LISTEN` for pub/sub (no Redis needed)
+- Simple tables for task queue with priority ordering
+- Agent registry with heartbeat tracking
 - Feature flag: `FEATURE_AGENT_POOL=true`
+- **See:** `features/FEAT-003-multi-agent-no-redis.md` for full spec
 
 ---
 
