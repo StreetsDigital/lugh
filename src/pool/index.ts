@@ -10,6 +10,8 @@ export { AgentRegistry } from './agent-registry.js';
 export { TaskQueue } from './task-queue.js';
 export { PoolCoordinator } from './pool-coordinator.js';
 export type { PoolCoordinatorConfig } from './pool-coordinator.js';
+export { AgentWorker } from './agent-worker.js';
+export type { AgentWorkerConfig } from './agent-worker.js';
 
 export type {
   Agent,
