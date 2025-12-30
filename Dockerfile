@@ -89,5 +89,9 @@ RUN git config --global --add safe.directory '/.lugh/workspaces' && \
 # Expose port
 EXPOSE 3000
 
-# Setup Codex authentication from environment variables, then start app
-CMD ["sh", "-c", "bun run setup-auth && bun run start"]
+# Copy and make startup script executable
+COPY --chown=appuser:appuser scripts/start-with-workers.sh /app/scripts/
+RUN chmod +x /app/scripts/start-with-workers.sh
+
+# Start app with agent workers (if FEATURE_AGENT_POOL=true)
+CMD ["/app/scripts/start-with-workers.sh"]
