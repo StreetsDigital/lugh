@@ -25,6 +25,7 @@ yarn-error.log*
 # Environment files
 .env
 .env.local
+.env.deploy
 
 # Caddy configuration (keep Caddyfile.example)
 Caddyfile
