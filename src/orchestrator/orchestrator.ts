@@ -43,6 +43,9 @@ import {
   formatFileOperationsSummary,
   getBriefFileOperationsSummary,
 } from '../utils/file-operations-tracker';
+import { swarmCoordinator } from '../swarm/swarm-coordinator';
+import { createTelegramSwarmCoordinator } from '../swarm/telegram-swarm-coordinator';
+import { isEnabled } from '../config/features';
 
 /**
  * Format the worktree limit reached message
@@ -528,6 +531,126 @@ ${content}
 Remember: The user already decided to run this command. Take action now.`;
 }
 
+/**
+ * Handle swarm execution for parallel agent coordination
+ */
+async function handleSwarmExecution(
+  conversation: Conversation,
+  userRequest: string,
+  platform: IPlatformAdapter,
+  conversationId: string
+): Promise<void> {
+  console.log('[Orchestrator] Starting swarm execution');
+
+  // Check if swarm coordination is enabled
+  if (!isEnabled('SWARM_COORDINATION')) {
+    await platform.sendMessage(
+      conversationId,
+      '❌ Swarm coordination is not enabled.\n\n' +
+        'Add to your .env file:\n' +
+        '```\n' +
+        'FEATURE_SWARM_COORDINATION=true\n' +
+        'FEATURE_MULTI_LLM=true\n' +
+        'FEATURE_AGENT_POOL=true\n' +
+        '```'
+    );
+    return;
+  }
+
+  try {
+    // For Telegram, use the approval workflow
+    if (platform.getPlatformType() === 'telegram') {
+      const telegramBot = (platform as unknown as { bot?: unknown }).bot;
+      if (telegramBot) {
+        const chatId = parseInt(conversationId, 10);
+        const telegramCoordinator = createTelegramSwarmCoordinator(
+          telegramBot as Parameters<typeof createTelegramSwarmCoordinator>[0],
+          chatId,
+          { approvalTimeoutMs: 300000 }
+        );
+
+        // Announce swarm start
+        await telegramCoordinator.announceSwarmStart(userRequest, 0);
+
+        // Set up event handlers
+        swarmCoordinator.onEvent(async (event) => {
+          switch (event.type) {
+            case 'task_decomposed':
+              await platform.sendMessage(
+                conversationId,
+                `📋 **Task Decomposed**\n\n` +
+                  `• Project: ${event.data.projectName}\n` +
+                  `• Sub-tasks: ${event.data.subTaskCount}\n` +
+                  `• Strategy: ${event.data.strategy}`
+              );
+              break;
+
+            case 'agent_spawned':
+              await platform.sendMessage(
+                conversationId,
+                `🚀 **Agent Spawned**\n\n` +
+                  `• Agent: \`${event.data.agentId}\`\n` +
+                  `• Role: ${event.data.role}\n` +
+                  `• Task: ${event.data.title}`
+              );
+              break;
+
+            case 'agent_completed':
+              await telegramCoordinator.announceAgentComplete(
+                event.data.agentId,
+                event.data.role,
+                true,
+                `Completed in ${Math.round(event.data.duration / 1000)}s`
+              );
+              break;
+
+            case 'agent_failed':
+              await telegramCoordinator.announceAgentComplete(
+                event.data.agentId,
+                event.data.role,
+                false,
+                `Failed: ${event.data.error}`
+              );
+              break;
+
+            case 'swarm_completed': {
+              const progress = swarmCoordinator.getProgress(event.swarmId);
+              if (progress) {
+                await telegramCoordinator.announceSwarmComplete(
+                  progress.total,
+                  progress.completed,
+                  progress.failed,
+                  0,
+                  event.data.duration
+                );
+              }
+              break;
+            }
+          }
+        });
+      }
+    }
+
+    // Execute the swarm
+    const session = await swarmCoordinator.execute(userRequest, conversationId);
+
+    // Send final result
+    if (session.synthesizedResult) {
+      await platform.sendMessage(
+        conversationId,
+        `✨ **Swarm Complete**\n\n${session.synthesizedResult.summary}`
+      );
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Orchestrator] Swarm execution failed:', errorMessage);
+    await platform.sendMessage(
+      conversationId,
+      `❌ **Swarm Failed**\n\n${errorMessage}`
+    );
+  }
+}
+
 export async function handleMessage(
   platform: IPlatformAdapter,
   conversationId: string,
@@ -617,6 +740,19 @@ export async function handleMessage(
             platform.getPlatformType(),
             conversationId
           );
+        }
+
+        // If command has a swarmRequest, route to swarm coordinator
+        // This is used by /swarm to trigger parallel agent execution
+        if (result.swarmRequest) {
+          console.log('[Orchestrator] Routing to swarm coordinator');
+          await handleSwarmExecution(
+            conversation,
+            result.swarmRequest,
+            platform,
+            conversationId
+          );
+          return;
         }
 
         // If command has a followUpPrompt, send it to Claude instead of returning

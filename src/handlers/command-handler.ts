@@ -1073,6 +1073,28 @@ Keep your response concise and helpful. The user stopped you for a reason - find
       };
     }
 
+    case 'swarm': {
+      // Swarm execution - decompose task and spawn parallel agents
+      // This is a special command that signals orchestrator to use swarm coordination
+      if (args.length === 0) {
+        return {
+          success: false,
+          message:
+            'Usage: /swarm <task description>\n\n' +
+            'Example: /swarm Build a todo app with React and Firebase\n\n' +
+            'This will decompose your request into specialized sub-tasks and execute them in parallel.',
+        };
+      }
+
+      // Return success with special swarmRequest flag
+      // Orchestrator will detect this and route to swarm coordinator
+      return {
+        success: true,
+        message: '🐝 Initializing swarm coordination...',
+        swarmRequest: args.join(' '),
+      };
+    }
+
     case 'repo': {
       if (args.length === 0) {
         return { success: false, message: 'Usage: /repo <number|name|owner/repo> [pull]' };

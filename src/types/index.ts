@@ -90,6 +90,7 @@ export interface CommandResult {
   message: string;
   modified?: boolean; // Indicates if conversation state was modified
   followUpPrompt?: string; // Optional prompt to send to AI after command completes (e.g., /stop asking "why?")
+  swarmRequest?: string; // Signals orchestrator to route to swarm coordinator (from /swarm command)
 }
 
 /**
