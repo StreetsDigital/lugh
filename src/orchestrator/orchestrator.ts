@@ -551,7 +551,6 @@ async function handleSwarmExecution(
         '```\n' +
         'FEATURE_SWARM_COORDINATION=true\n' +
         'FEATURE_MULTI_LLM=true\n' +
-        'FEATURE_AGENT_POOL=true\n' +
         '```'
     );
     return;

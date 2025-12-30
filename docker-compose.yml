@@ -8,8 +8,6 @@ services:
     environment:
       # Signal Docker environment for Lugh path detection
       LUGH_DOCKER: "true"
-      # Agent Pool (PostgreSQL-based, no Redis required)
-      FEATURE_AGENT_POOL: "${FEATURE_AGENT_POOL:-false}"
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
     volumes:
@@ -38,8 +36,6 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/lugh
       # Signal Docker environment for Lugh path detection
       LUGH_DOCKER: "true"
-      # Agent Pool (PostgreSQL-based, no Redis required)
-      FEATURE_AGENT_POOL: "${FEATURE_AGENT_POOL:-false}"
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
     volumes:

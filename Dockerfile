@@ -89,9 +89,5 @@ RUN git config --global --add safe.directory '/.lugh/workspaces' && \
 # Expose port
 EXPOSE 3000
 
-# Copy and make startup script executable
-COPY --chown=appuser:appuser scripts/start-with-workers.sh /app/scripts/
-RUN chmod +x /app/scripts/start-with-workers.sh
-
-# Start app with agent workers (if FEATURE_AGENT_POOL=true)
-CMD ["/app/scripts/start-with-workers.sh"]
+# Start app (swarm coordination uses direct Claude API/CLI spawning)
+CMD ["sh", "-c", "bun run setup-auth && bun run start"]

@@ -7,12 +7,12 @@
  * Usage:
  *   import { features, isEnabled } from './config/features';
  *
- *   if (isEnabled('AGENT_POOL')) {
- *     // Use agent pool functionality
+ *   if (isEnabled('SWARM_COORDINATION')) {
+ *     // Use swarm coordination functionality
  *   }
  *
  * Environment variable override:
- *   FEATURE_AGENT_POOL=true
+ *   FEATURE_SWARM_COORDINATION=true
  *   FEATURE_PHONE_APPROVALS=false
  */
 
@@ -115,36 +115,6 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
   },
 
   // ---------------------------------------------------------------------------
-  // MULTI-AGENT POOL (Experimental - PostgreSQL-based, no Redis)
-  // ---------------------------------------------------------------------------
-  AGENT_POOL: {
-    key: 'AGENT_POOL',
-    name: 'Multi-Agent Pool Manager',
-    description: 'Manage 3-12 parallel agents via PostgreSQL (no Redis required)',
-    maturity: 'experimental',
-    defaultEnabled: false,
-    migrations: ['010_agent_pool.sql'],
-    endpoints: ['/api/pool/status', '/api/pool/tasks/:id'],
-  },
-
-  REDIS_MESSAGING: {
-    key: 'REDIS_MESSAGING',
-    name: 'Redis Pub/Sub Messaging (Optional)',
-    description: 'Optional: Redis-based pub/sub for 50+ agents. PostgreSQL handles 3-12 agents fine. See FEAT-019 for upgrade path.',
-    maturity: 'experimental',
-    defaultEnabled: false,
-  },
-
-  AGENT_HEARTBEAT: {
-    key: 'AGENT_HEARTBEAT',
-    name: 'Agent Heartbeat System',
-    description: 'Health monitoring via PostgreSQL heartbeat table',
-    maturity: 'experimental',
-    defaultEnabled: false,
-    dependencies: ['AGENT_POOL'],
-  },
-
-  // ---------------------------------------------------------------------------
   // MULTI-LLM SUPPORT (Experimental)
   // ---------------------------------------------------------------------------
   MULTI_LLM: {
@@ -180,7 +150,7 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
     description: 'Distribute tasks across agent swarm with role-based assignment',
     maturity: 'experimental',
     defaultEnabled: false,
-    dependencies: ['AGENT_POOL', 'MULTI_LLM'],
+    dependencies: ['MULTI_LLM'],
     endpoints: [
       '/api/swarm/execute',
       '/api/swarm/decompose',
@@ -208,7 +178,6 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
     description: 'Verify agent claims via git and test execution',
     maturity: 'experimental',
     defaultEnabled: false,
-    dependencies: ['AGENT_POOL'],
   },
 
   RECOVERY_SYSTEM: {
@@ -217,7 +186,7 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
     description: '3-attempt retry with systematic human escalation',
     maturity: 'experimental',
     defaultEnabled: false,
-    dependencies: ['AGENT_POOL', 'EXTERNAL_VERIFICATION'],
+    dependencies: ['EXTERNAL_VERIFICATION'],
   },
 
   // ---------------------------------------------------------------------------

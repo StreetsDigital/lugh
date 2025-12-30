@@ -23,7 +23,6 @@ import { startCleanupScheduler, stopCleanupScheduler } from './services/cleanup-
 import { logLughPaths } from './utils/lugh-paths';
 import { loadConfig, logConfig } from './config';
 import { isEnabled } from './config/features';
-import { PoolCoordinator } from './pool';
 
 async function main(): Promise<void> {
   console.log('[App] Starting Remote Coding Agent');
@@ -63,23 +62,6 @@ async function main(): Promise<void> {
   } catch (error) {
     console.error('[Database] Connection failed:', error);
     process.exit(1);
-  }
-
-  // Initialize Agent Pool Coordinator (if enabled)
-  let poolCoordinator: PoolCoordinator | null = null;
-  if (isEnabled('AGENT_POOL')) {
-    try {
-      poolCoordinator = new PoolCoordinator(pool);
-      await poolCoordinator.initialize();
-
-      const status = await poolCoordinator.getPoolStatus();
-      console.log('[AgentPool] Coordinator initialized');
-      console.log(`[AgentPool] Status: ${status.totalAgents} agents, ${status.queuedTasks} queued tasks`);
-    } catch (error) {
-      console.error('[AgentPool] Failed to initialize coordinator:', error);
-      // Non-fatal: continue without agent pool
-      poolCoordinator = null;
-    }
   }
 
   // Start cleanup scheduler
@@ -455,14 +437,7 @@ async function main(): Promise<void> {
     discord?.stop();
     slack?.stop();
 
-    // Shutdown agent pool coordinator
-    const shutdownPool = poolCoordinator
-      ? poolCoordinator.shutdown()
-      : Promise.resolve();
-
-    void shutdownPool.then(() => {
-      return pool.end();
-    }).then(() => {
+    void pool.end().then(() => {
       console.log('[Database] Connection pool closed');
       process.exit(0);
     });

@@ -37,25 +37,6 @@
 
 ---
 
-### FEAT-003: Multi-Agent Pool (No Redis)
-**Status:** Core Implementation Complete ✅
-**Description:** Enable 3-12 parallel agents using PostgreSQL only
-- [x] PostgreSQL `NOTIFY/LISTEN` for pub/sub (no Redis needed) *(2024-12-29)*
-- [x] Database migration with 3 tables (agent_pool, pool_tasks, pool_task_results) *(2024-12-29)*
-- [x] PgPubSub wrapper for NOTIFY/LISTEN *(2024-12-29)*
-- [x] AgentRegistry for agent tracking and heartbeats *(2024-12-29)*
-- [x] TaskQueue with priority ordering *(2024-12-29)*
-- [x] PoolCoordinator for orchestration *(2024-12-29)*
-- [x] AgentWorker base implementation *(2024-12-29)*
-- [x] Feature flags updated (no Redis dependency) *(2024-12-29)*
-- [ ] Integration with orchestrator
-- [ ] Claude Code session execution in workers
-- [ ] `/pool-status` command
-- [ ] End-to-end testing
-- **See:** `features/FEAT-003-multi-agent-no-redis.md` for full spec
-
----
-
 ### FEAT-004: Knowledge Layer (Lugh MCP)
 **Status:** Not Started
 **Description:** Integrate Cole Medin's Lugh as MCP server
@@ -73,6 +54,23 @@
 - `lugh/assign_task` tool
 - `lugh/query_knowledge` tool
 - Resources for projects, agents, sessions
+
+---
+
+### FEAT-006: Phone Vibecoding V2 🎤📱
+**Status:** Ready for Implementation ✅
+**Description:** Next-gen mobile coding UX with voice, vision, and rich interactions
+- [x] Full specification written *(2024-12-30)*
+- [x] Database migration created *(2024-12-30)*
+- [x] Implementation checklist created *(2024-12-30)*
+- [ ] Voice commands (Whisper transcription)
+- [ ] Inline quick actions (Telegram keyboards)
+- [ ] Rich code previews (diffs with syntax highlighting)
+- [ ] Photo-to-task (Claude Vision integration)
+- [ ] Reaction shortcuts (emoji responses)
+- [ ] Smart notifications (context-rich, priority-based)
+- **See:** `features/FEAT-006-phone-vibecoding-v2.md` for full spec
+- **Checklist:** `features/FEAT-006-CHECKLIST.md` for implementation tracking
 
 ---
 
