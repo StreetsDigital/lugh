@@ -214,7 +214,7 @@ class TestRouting:
 
     def test_route_deterministic_command(self):
         """Test routing to deterministic command execution."""
-        from app.nodes.routing import get_routing_decision
+        from app.nodes.routing_nodes import get_routing_decision
 
         state = create_conversation_state(
             conversation_id="test-123",
@@ -229,7 +229,7 @@ class TestRouting:
 
     def test_route_ai_query(self):
         """Test routing to AI execution."""
-        from app.nodes.routing import get_routing_decision
+        from app.nodes.routing_nodes import get_routing_decision
 
         state = create_conversation_state(
             conversation_id="test-123",
@@ -239,11 +239,11 @@ class TestRouting:
         state.input_type = InputType.AI_QUERY
 
         decision = get_routing_decision(state)
-        assert decision == "execute_ai"
+        assert decision == "build_prompt"  # AI queries go through prompt building
 
     def test_route_swarm(self):
         """Test routing to swarm execution."""
-        from app.nodes.routing import get_routing_decision
+        from app.nodes.routing_nodes import get_routing_decision
 
         state = create_conversation_state(
             conversation_id="test-123",
@@ -254,7 +254,7 @@ class TestRouting:
         state.parsed_command = ParsedCommand(command="swarm", args=["Build", "an", "API"], raw="/swarm Build an API")
 
         decision = get_routing_decision(state)
-        assert decision == "execute_swarm"
+        assert decision == "swarm_subgraph"  # Swarm goes to subgraph
 
 
 class TestRedisPubSub:

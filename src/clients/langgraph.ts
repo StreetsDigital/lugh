@@ -6,7 +6,9 @@
  * Supports both HTTP and Redis pub/sub communication.
  */
 
-import { createClient, RedisClientType } from 'redis';
+// Redis is dynamically imported to avoid hard dependency
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RedisClientType = any;
 
 /**
  * LangGraph service configuration
@@ -122,6 +124,9 @@ export class LangGraphClient {
     if (this.isConnected) return;
 
     try {
+      // Dynamic import to avoid hard dependency
+      const { createClient } = await import('redis');
+
       // Publisher client
       this.redis = createClient({ url: this.config.redisUrl });
       await this.redis.connect();

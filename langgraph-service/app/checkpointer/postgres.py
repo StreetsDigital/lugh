@@ -6,6 +6,9 @@ Integrates LangGraph's PostgreSQL checkpointer with Lugh's database.
 Enables state persistence, resume capability, and conversation history.
 """
 
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
 import structlog
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
@@ -15,6 +18,8 @@ logger = structlog.get_logger()
 
 # Global checkpointer instance
 _checkpointer: AsyncPostgresSaver | None = None
+# Context manager for the checkpointer
+_checkpointer_cm: AsyncGenerator[AsyncPostgresSaver, None] | None = None
 
 
 async def setup_checkpointer() -> AsyncPostgresSaver:
@@ -24,14 +29,17 @@ async def setup_checkpointer() -> AsyncPostgresSaver:
     This creates the necessary tables in the database for
     storing graph checkpoints and state.
     """
-    global _checkpointer
+    global _checkpointer, _checkpointer_cm
 
     settings = get_settings()
 
     logger.info("setting_up_checkpointer", database_url=settings.database_url[:50] + "...")
 
-    # Create checkpointer from connection string
-    _checkpointer = AsyncPostgresSaver.from_conn_string(settings.database_url)
+    # Create checkpointer from connection string (returns async context manager)
+    _checkpointer_cm = AsyncPostgresSaver.from_conn_string(settings.database_url)
+
+    # Enter the context manager to get the actual checkpointer
+    _checkpointer = await _checkpointer_cm.__aenter__()
 
     # Setup creates the checkpoint tables if they don't exist
     await _checkpointer.setup()
@@ -60,9 +68,15 @@ async def get_checkpointer() -> AsyncPostgresSaver | None:
 
 async def cleanup_checkpointer() -> None:
     """Cleanup checkpointer resources."""
-    global _checkpointer
+    global _checkpointer, _checkpointer_cm
 
-    if _checkpointer:
-        # Close any open connections
+    if _checkpointer_cm:
+        # Close any open connections by exiting the context manager
         logger.info("cleaning_up_checkpointer")
-        _checkpointer = None
+        try:
+            await _checkpointer_cm.__aexit__(None, None, None)
+        except Exception as e:
+            logger.warning("checkpointer_cleanup_error", error=str(e))
+        finally:
+            _checkpointer = None
+            _checkpointer_cm = None
