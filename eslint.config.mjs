@@ -10,6 +10,7 @@ export default tseslint.config(
       'dist/**',
       'coverage/**',
       '.agents/examples/**',
+      '.claude/templates/**', // Ignore template files (not part of main project)
       'workspace/**',
       'worktrees/**',
       '**/*.js', // Ignore JS files (like jest.config.js)
