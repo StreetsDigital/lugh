@@ -22,7 +22,7 @@ import { seedDefaultCommands } from './scripts/seed-commands';
 import { startCleanupScheduler, stopCleanupScheduler } from './services/cleanup-service';
 import { logLughPaths } from './utils/lugh-paths';
 import { loadConfig, logConfig } from './config';
-import { isEnabled } from './config/features';
+import { isEnabled as _isEnabled } from './config/features';
 import llmProxyRouter from './api/llm-proxy';
 
 async function main(): Promise<void> {

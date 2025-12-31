@@ -37,7 +37,7 @@ export class PoolCoordinator {
   private config: PoolCoordinatorConfig;
 
   constructor(
-    private pool: Pool,
+    pool: Pool,
     config?: Partial<PoolCoordinatorConfig>
   ) {
     this.pubsub = new PgPubSub(pool);

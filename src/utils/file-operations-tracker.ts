@@ -10,7 +10,6 @@
 import { basename } from 'path';
 import {
   FileOperation,
-  FileOperationType,
   FileOperationsSummary,
 } from '../types';
 
@@ -37,7 +36,7 @@ const SEARCH_TOOLS = ['Glob', 'Grep', 'grep', 'find'];
 /**
  * Tools that delete files
  */
-const DELETE_TOOLS = ['rm', 'delete_file'];
+export const DELETE_TOOLS = ['rm', 'delete_file'];
 
 /**
  * Tracks file operations during an AI response

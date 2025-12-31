@@ -8,7 +8,6 @@
 
 import { execFile } from 'child_process';
 import { promisify } from 'util';
-import { existsSync } from 'fs';
 import { Toolkit } from '../toolkit';
 import { FunctionTool } from '../function-tool';
 import type { ToolResult } from '../types';
@@ -120,7 +119,7 @@ export class GitToolkit extends Toolkit {
 
             const { stdout } = await gitExec(args, input.cwd);
             const clean = stdout.includes('nothing to commit') ||
-                          (input.short && stdout.trim() === '');
+                          (input.short === true && stdout.trim() === '');
 
             return { success: true, data: { status: stdout, clean } };
           } catch (error) {
