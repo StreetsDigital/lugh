@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     redis_channel_prefix: str = "lugh:langgraph:"
     # Callback URL for TypeScript service (optional)
     callback_url: str | None = None
+    # Lugh TypeScript service URL (for LLM proxy)
+    lugh_service_url: str = "http://localhost:3000"
 
 
 @lru_cache

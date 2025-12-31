@@ -3,13 +3,12 @@ Execution Nodes
 ===============
 
 Nodes for executing commands and AI queries.
-Integrates with Claude via LangChain for actual LLM calls.
+Integrates with Claude via Lugh's LLM Proxy (uses Claude Code SDK with OAuth).
 """
 
+import httpx
 import structlog
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_anthropic import ChatAnthropic
-from langchain_openai import ChatOpenAI
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, BaseMessage
 
 from app.graph.state import (
     ConversationState,
@@ -23,57 +22,54 @@ from app.services.redis_pubsub import publish_event, RedisEventType
 logger = structlog.get_logger()
 
 
-# === LLM Factory ===
+# === LLM Proxy Client ===
 
 
-def get_llm(model: str | None = None):
+def _message_to_dict(msg: BaseMessage) -> dict:
+    """Convert LangChain message to dict for API."""
+    if isinstance(msg, SystemMessage):
+        return {"role": "system", "content": str(msg.content)}
+    elif isinstance(msg, HumanMessage):
+        return {"role": "user", "content": str(msg.content)}
+    elif isinstance(msg, AIMessage):
+        return {"role": "assistant", "content": str(msg.content)}
+    else:
+        return {"role": "user", "content": str(msg.content)}
+
+
+async def call_llm_proxy(
+    messages: list[BaseMessage],
+    model: str | None = None,
+) -> dict:
     """
-    Get an LLM instance based on configuration.
+    Call Lugh's LLM proxy endpoint.
 
-    Supports Claude (Anthropic) and OpenAI models.
+    This uses Claude Code SDK on the TypeScript side,
+    which handles OAuth authentication.
     """
     settings = get_settings()
-    model_name = model or settings.default_model
+    base_url = settings.lugh_service_url or "http://localhost:3000"
 
-    # Determine provider from model name
-    if model_name.startswith("claude") or model_name.startswith("anthropic"):
-        if not settings.anthropic_api_key:
-            raise ValueError("ANTHROPIC_API_KEY not configured")
+    endpoint = f"{base_url}/api/llm/completion"
 
-        return ChatAnthropic(
-            model=model_name,
-            api_key=settings.anthropic_api_key,
-            max_tokens=4096,
-            temperature=0.7,
-        )
+    # Convert LangChain messages to dicts
+    message_dicts = [_message_to_dict(m) for m in messages]
 
-    elif model_name.startswith("gpt") or model_name.startswith("o1"):
-        if not settings.openai_api_key:
-            raise ValueError("OPENAI_API_KEY not configured")
+    payload = {
+        "messages": message_dicts,
+        "model": model or settings.default_model,
+    }
 
-        return ChatOpenAI(
-            model=model_name,
-            api_key=settings.openai_api_key,
-            max_tokens=4096,
-            temperature=0.7,
-        )
+    logger.info(
+        "calling_llm_proxy",
+        endpoint=endpoint,
+        message_count=len(message_dicts),
+    )
 
-    else:
-        # Default to Claude
-        if settings.anthropic_api_key:
-            return ChatAnthropic(
-                model="claude-sonnet-4-20250514",
-                api_key=settings.anthropic_api_key,
-                max_tokens=4096,
-            )
-        elif settings.openai_api_key:
-            return ChatOpenAI(
-                model="gpt-4o",
-                api_key=settings.openai_api_key,
-                max_tokens=4096,
-            )
-        else:
-            raise ValueError("No LLM API key configured (need ANTHROPIC_API_KEY or OPENAI_API_KEY)")
+    async with httpx.AsyncClient(timeout=300.0) as client:
+        response = await client.post(endpoint, json=payload)
+        response.raise_for_status()
+        return response.json()
 
 
 # === Command Execution ===
@@ -173,12 +169,12 @@ async def execute_command(state: ConversationState) -> dict:
 
 async def execute_ai(state: ConversationState) -> dict:
     """
-    Execute AI query using LangChain with Claude or OpenAI.
+    Execute AI query via Lugh's LLM Proxy.
 
     This node:
     1. Prepares the prompt with system context
-    2. Calls the LLM (Claude/OpenAI)
-    3. Streams responses via Redis
+    2. Calls Lugh's LLM proxy (which uses Claude Code SDK with OAuth)
+    3. Publishes events via Redis
     4. Tracks token usage
     """
     if not state.prompt_to_send:
@@ -207,7 +203,7 @@ async def execute_ai(state: ConversationState) -> dict:
     )
 
     # Build message list
-    messages = []
+    messages: list[SystemMessage | HumanMessage | AIMessage] = []
 
     # Add system message with context
     system_prompt = _build_system_prompt(state)
@@ -221,32 +217,11 @@ async def execute_ai(state: ConversationState) -> dict:
     messages.append(HumanMessage(content=state.prompt_to_send))
 
     try:
-        # Get LLM instance
-        llm = get_llm(settings.default_model)
+        # Call Lugh's LLM proxy (uses Claude Code SDK with OAuth)
+        llm_response = await call_llm_proxy(messages, settings.default_model)
 
-        # Stream the response
-        full_response = ""
-        chunk_count = 0
-
-        async for chunk in llm.astream(messages):
-            if hasattr(chunk, 'content') and chunk.content:
-                full_response += chunk.content
-                chunk_count += 1
-
-                # Publish streaming chunk every few chunks (avoid flooding)
-                if chunk_count % 5 == 0:
-                    await publish_event(
-                        RedisEventType.AI_CHUNK,
-                        conversation_id=state.conversation_id,
-                        data={
-                            "chunk": chunk.content,
-                            "chunk_count": chunk_count,
-                        },
-                    )
-
-        # Calculate token usage (approximate)
-        input_tokens = len(state.prompt_to_send) // 4  # Rough estimate
-        output_tokens = len(full_response) // 4
+        full_response = llm_response.get("content", "")
+        usage = llm_response.get("usage", {})
 
         # Track result
         result = AIExecutionResult(
@@ -254,9 +229,9 @@ async def execute_ai(state: ConversationState) -> dict:
             session_id=None,
             file_operations=FileOperations(),
             token_usage={
-                "input": input_tokens,
-                "output": output_tokens,
-                "total": input_tokens + output_tokens,
+                "input": usage.get("input_tokens", 0),
+                "output": usage.get("output_tokens", 0),
+                "total": usage.get("input_tokens", 0) + usage.get("output_tokens", 0),
             },
         )
 
@@ -264,7 +239,6 @@ async def execute_ai(state: ConversationState) -> dict:
             "ai_completed",
             response_length=len(full_response),
             tokens=result.token_usage,
-            chunks=chunk_count,
         )
 
         # Publish completion event
