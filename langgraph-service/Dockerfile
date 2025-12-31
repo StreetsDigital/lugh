@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-COPY pyproject.toml ./
+COPY pyproject.toml README.md ./
 RUN pip install --upgrade pip && \
     pip install .
 
@@ -63,7 +63,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 FROM base AS development
 
 # Install all dependencies including dev
-COPY pyproject.toml ./
+COPY pyproject.toml README.md ./
 RUN pip install --upgrade pip && \
     pip install ".[dev]"
 
