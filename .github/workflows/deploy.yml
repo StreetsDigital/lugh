@@ -2,7 +2,7 @@ name: Deploy to Lightsail
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   workflow_dispatch:  # Allow manual trigger
 
 concurrency:
@@ -10,7 +10,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  # ===========================================
+  # TypeScript Tests
+  # ===========================================
+  test-typescript:
+    name: TypeScript Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,10 +38,42 @@ jobs:
           bun test --coverage src/db src/utils src/handlers src/clients src/adapters src/config
           bun test --coverage src/orchestrator
 
-  deploy:
-    needs: test
+  # ===========================================
+  # Python Tests
+  # ===========================================
+  test-python:
+    name: Python Tests
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: langgraph-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-asyncio httpx
+          pip install langgraph langchain-core pydantic pydantic-settings structlog redis
+          pip install -e . || true
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
+
+  # ===========================================
+  # Deploy Full Stack
+  # ===========================================
+  deploy:
+    name: Deploy Full Stack
+    needs: [test-typescript, test-python]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/checkout@v4
@@ -48,14 +84,44 @@ jobs:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script_stop: true
           script: |
+            set -e
+            echo "🚀 Starting deployment..."
+
             cd ~/makewithLugh
-            git fetch origin main
-            git reset --hard origin/main
-            docker compose --profile with-db down
-            docker compose --profile with-db up -d --build
-            sleep 10
-            curl -sf http://localhost:3000/health || exit 1
+
+            # Pull latest code
+            echo "📥 Pulling latest code..."
+            git fetch origin
+            git reset --hard origin/main || git reset --hard origin/master
+
+            # Stop existing services
+            echo "🛑 Stopping existing services..."
+            docker compose -f docker-compose.fullstack.yml down 2>/dev/null || true
+            docker compose --profile with-db down 2>/dev/null || true
+
+            # Build and start full stack
+            echo "🔨 Building and starting services..."
+            if [ -f docker-compose.fullstack.yml ]; then
+              docker compose -f docker-compose.fullstack.yml up -d --build
+            else
+              docker compose --profile with-db up -d --build
+            fi
+
+            # Wait for startup
+            echo "⏳ Waiting for services..."
+            sleep 15
+
+            # Health checks
+            echo "🏥 Running health checks..."
+            curl -sf http://localhost:3000/health || { echo "❌ Lugh health check failed"; exit 1; }
+            echo "✅ Lugh healthy"
+
+            # Check LangGraph if available
+            curl -sf http://localhost:8000/health && echo "✅ LangGraph healthy" || echo "⚠️ LangGraph not running (optional)"
+
+            echo "✅ Deployment complete!"
 
       - name: Notify success via Telegram
         if: success()
@@ -64,11 +130,15 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ✅ *Lugh Deployed Successfully*
+            ✅ *Lugh Full Stack Deployed*
 
             Branch: `${{ github.ref_name }}`
             Commit: `${{ github.sha }}`
             Author: ${{ github.actor }}
+
+            Services:
+            • Lugh (TypeScript): :3000
+            • LangGraph (Python): :8000
 
             [View Commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
 
@@ -87,8 +157,12 @@ jobs:
 
             [View Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
+  # ===========================================
+  # Notify Test Failures
+  # ===========================================
   notify-test-failure:
-    needs: test
+    name: Notify Test Failure
+    needs: [test-typescript, test-python]
     runs-on: ubuntu-latest
     if: failure()
 
@@ -99,10 +173,12 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ❌ *Lugh Tests Failed*
+            ❌ *Lugh Tests Failed - Deploy Blocked*
 
             Branch: `${{ github.ref_name }}`
             Commit: `${{ github.sha }}`
             Author: ${{ github.actor }}
+
+            Tests must pass before deployment!
 
             [View Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
