@@ -4,8 +4,14 @@ FastAPI Application
 
 Main FastAPI app with endpoints for LangGraph orchestration.
 Integrates with TypeScript service via Redis pub/sub and HTTP.
+
+Modes:
+- HTTP mode (default): FastAPI server for synchronous requests
+- Worker mode: Redis pub/sub listener for async processing
+- Hybrid mode: Both HTTP and Redis (recommended for production)
 """
 
+import os
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -29,6 +35,13 @@ from app.graph.state import (
     ConversationState,
     create_conversation_state,
     ExecutionPhase,
+)
+from app.services.redis_pubsub import (
+    get_redis,
+    close_redis,
+    request_handler,
+    publish_event,
+    RedisEventType,
 )
 
 # Configure structured logging
@@ -68,9 +81,29 @@ async def lifespan(app: FastAPI):
         await setup_checkpointer()
         logger.info("checkpointer_initialized")
 
+    # Initialize Redis connection
+    try:
+        await get_redis()
+        logger.info("redis_initialized")
+
+        # Start Redis worker if in hybrid mode
+        enable_worker = os.getenv("ENABLE_REDIS_WORKER", "true").lower() == "true"
+        if enable_worker:
+            await request_handler.start()
+            logger.info("redis_worker_started")
+    except Exception as e:
+        logger.warning("redis_init_failed", error=str(e))
+
     yield
 
+    # Cleanup
     logger.info("shutting_down_langgraph_service")
+
+    # Stop Redis worker
+    await request_handler.stop()
+
+    # Close Redis connection
+    await close_redis()
 
 
 # === App ===
@@ -418,4 +451,36 @@ async def debug_config():
         "default_model": settings.default_model,
         "has_anthropic_key": bool(settings.anthropic_api_key),
         "has_openai_key": bool(settings.openai_api_key),
+        "redis_url": settings.redis_url[:30] + "..." if settings.redis_url else None,
+        "redis_channel_prefix": settings.redis_channel_prefix,
     }
+
+
+@app.get("/debug/redis")
+async def debug_redis():
+    """Check Redis connection status."""
+    try:
+        redis = await get_redis()
+        info = await redis.info("server")
+        return {
+            "status": "connected",
+            "redis_version": info.get("redis_version"),
+            "worker_running": request_handler._running,
+        }
+    except Exception as e:
+        return {
+            "status": "disconnected",
+            "error": str(e),
+            "worker_running": False,
+        }
+
+
+@app.post("/debug/publish")
+async def debug_publish(conversation_id: str, message: str):
+    """Test publishing a message to Redis."""
+    await publish_event(
+        RedisEventType.RESPONSE,
+        conversation_id=conversation_id,
+        data={"message": message, "source": "debug"},
+    )
+    return {"status": "published", "conversation_id": conversation_id}
