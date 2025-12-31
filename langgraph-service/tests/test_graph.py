@@ -175,3 +175,112 @@ class TestPhases:
             SwarmPhase.FAILED,
         ]
         assert len(phases) == 6
+
+
+class TestGraphBuilder:
+    """Test graph construction."""
+
+    def test_build_conversation_graph(self):
+        """Test building conversation graph without checkpointer."""
+        from app.graph.builder import build_conversation_graph
+
+        graph = build_conversation_graph(checkpointer=None)
+        assert graph is not None
+
+    def test_build_swarm_graph(self):
+        """Test building swarm graph without checkpointer."""
+        from app.graph.builder import build_swarm_graph
+
+        graph = build_swarm_graph(checkpointer=None)
+        assert graph is not None
+
+    def test_conversation_graph_mermaid(self):
+        """Test generating Mermaid diagram for conversation graph."""
+        from app.graph.builder import get_conversation_graph_mermaid
+
+        mermaid = get_conversation_graph_mermaid()
+        assert "graph" in mermaid.lower() or "stateDiagram" in mermaid.lower() or "---" in mermaid
+
+    def test_swarm_graph_mermaid(self):
+        """Test generating Mermaid diagram for swarm graph."""
+        from app.graph.builder import get_swarm_graph_mermaid
+
+        mermaid = get_swarm_graph_mermaid()
+        assert "graph" in mermaid.lower() or "stateDiagram" in mermaid.lower() or "---" in mermaid
+
+
+class TestRouting:
+    """Test routing logic."""
+
+    def test_route_deterministic_command(self):
+        """Test routing to deterministic command execution."""
+        from app.nodes.routing import get_routing_decision
+
+        state = create_conversation_state(
+            conversation_id="test-123",
+            platform_type="telegram",
+            message="/help",
+        )
+        state.input_type = InputType.DETERMINISTIC_COMMAND
+        state.parsed_command = ParsedCommand(command="help", args=[], raw="/help")
+
+        decision = get_routing_decision(state)
+        assert decision == "execute_command"
+
+    def test_route_ai_query(self):
+        """Test routing to AI execution."""
+        from app.nodes.routing import get_routing_decision
+
+        state = create_conversation_state(
+            conversation_id="test-123",
+            platform_type="telegram",
+            message="What is Python?",
+        )
+        state.input_type = InputType.AI_QUERY
+
+        decision = get_routing_decision(state)
+        assert decision == "execute_ai"
+
+    def test_route_swarm(self):
+        """Test routing to swarm execution."""
+        from app.nodes.routing import get_routing_decision
+
+        state = create_conversation_state(
+            conversation_id="test-123",
+            platform_type="telegram",
+            message="/swarm Build an API",
+        )
+        state.input_type = InputType.SWARM_REQUEST
+        state.parsed_command = ParsedCommand(command="swarm", args=["Build", "an", "API"], raw="/swarm Build an API")
+
+        decision = get_routing_decision(state)
+        assert decision == "execute_swarm"
+
+
+class TestRedisPubSub:
+    """Test Redis pub/sub utilities."""
+
+    def test_event_types(self):
+        """Test all event types are defined."""
+        from app.services.redis_pubsub import RedisEventType
+
+        assert RedisEventType.REQUEST == "request"
+        assert RedisEventType.RESPONSE == "response"
+        assert RedisEventType.AI_START == "ai_start"
+        assert RedisEventType.AI_CHUNK == "ai_chunk"
+        assert RedisEventType.AI_COMPLETE == "ai_complete"
+        assert RedisEventType.SWARM_START == "swarm_start"
+        assert RedisEventType.SWARM_COMPLETE == "swarm_complete"
+
+    def test_channel_naming(self):
+        """Test channel name generation."""
+        from app.services.redis_pubsub import _get_channel
+
+        # Test with conversation ID
+        channel = _get_channel("response", "test-123")
+        assert "response" in channel
+        assert "test-123" in channel
+
+        # Test without conversation ID
+        channel = _get_channel("request")
+        assert "request" in channel

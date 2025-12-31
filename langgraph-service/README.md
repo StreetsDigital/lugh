@@ -156,39 +156,104 @@ GET /graphs
 
 ## Integration with TypeScript
 
-### Option 1: HTTP Calls
+The main Lugh application includes a full TypeScript client for the LangGraph service.
+
+### TypeScript Client
+
+Located at `src/clients/langgraph.ts`:
 
 ```typescript
-// In your TypeScript orchestrator
-const response = await fetch('http://localhost:8000/conversation', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    conversation_id: conversationId,
-    platform_type: platform.getPlatformType(),
-    message: userMessage,
-  }),
-});
+import { getLangGraphClient, isLangGraphEnabled } from './clients/langgraph';
 
-const result = await response.json();
-for (const message of result.responses) {
-  await platform.sendMessage(conversationId, message);
+// Check if LangGraph is enabled
+if (isLangGraphEnabled()) {
+  const client = getLangGraphClient();
+
+  // Health check
+  const healthy = await client.healthCheck();
+
+  // Process conversation
+  const response = await client.processConversation({
+    conversationId: 'telegram-123',
+    platformType: 'telegram',
+    message: '/help',
+  });
+
+  console.log(response.responses);
 }
 ```
 
-### Option 2: Redis Pub/Sub
+### Orchestrator Adapter
+
+Located at `src/orchestrator/langgraph-adapter.ts`:
 
 ```typescript
-// TypeScript publishes request
-await redis.publish('lugh:langgraph:request', JSON.stringify({
-  conversation_id: conversationId,
-  message: userMessage,
-}));
+import { processWithLangGraph, executeSwarmWithLangGraph } from './orchestrator/langgraph-adapter';
 
-// Subscribe to responses
-redis.subscribe('lugh:langgraph:response:' + conversationId, (message) => {
-  platform.sendMessage(conversationId, message);
+// Process a conversation through LangGraph
+const result = await processWithLangGraph(platform, conversationId, message, {
+  platformType: 'telegram',
+  cwd: '/home/user/project',
 });
+
+// Execute a swarm for complex tasks
+const swarmResult = await executeSwarmWithLangGraph(
+  platform,
+  conversationId,
+  'Build a REST API with authentication',
+  '/home/user/project'
+);
+```
+
+### Three Communication Modes
+
+#### 1. HTTP (Synchronous)
+
+```typescript
+// Simple request/response
+const response = await client.processConversation(request);
+```
+
+#### 2. Redis Pub/Sub (Async with real-time events)
+
+```typescript
+// Subscribe to events
+const unsubscribe = await client.subscribe(conversationId, (event) => {
+  if (event.type === 'ai_chunk') {
+    console.log(event.data.content);
+  }
+});
+
+// Publish request
+await client.publishRequest(request);
+
+// Later, unsubscribe
+await unsubscribe();
+```
+
+#### 3. SSE Streaming
+
+```typescript
+// Stream responses as they arrive
+for await (const event of client.streamConversation(request)) {
+  console.log(event.type, event.data);
+}
+```
+
+### Environment Variables
+
+```bash
+# Enable LangGraph integration
+LANGGRAPH_ENABLED=true
+
+# LangGraph service URL
+LANGGRAPH_URL=http://localhost:8000
+
+# Redis for pub/sub
+REDIS_URL=redis://localhost:6379
+
+# Channel prefix (must match Python service)
+LANGGRAPH_CHANNEL_PREFIX=lugh:langgraph:
 ```
 
 ## Features
@@ -221,24 +286,54 @@ Real-time updates via Server-Sent Events:
 
 ## Development
 
-### Run Tests
+### Run Python Tests
 
 ```bash
+# All tests
 pytest
-pytest --cov=app  # with coverage
+
+# With coverage
+pytest --cov=app
+
+# Specific test file
+pytest tests/test_graph.py
+pytest tests/test_api.py
+
+# Verbose mode
+pytest -v
+```
+
+### Run TypeScript Tests
+
+From the main project root:
+
+```bash
+# Run LangGraph client tests
+bun test src/clients/langgraph.test.ts
+
+# Run all tests
+bun test
 ```
 
 ### Type Checking
 
 ```bash
+# Python
 mypy app
+
+# TypeScript (from project root)
+bun run type-check
 ```
 
 ### Linting
 
 ```bash
+# Python
 ruff check app
 ruff format app
+
+# TypeScript (from project root)
+bun run lint
 ```
 
 ## Project Structure
@@ -247,26 +342,43 @@ ruff format app
 langgraph-service/
 ├── app/
 │   ├── __init__.py
-│   ├── config.py           # Environment configuration
-│   ├── main.py             # FastAPI application
+│   ├── config.py             # Environment configuration
+│   ├── main.py               # FastAPI application
 │   ├── graph/
 │   │   ├── __init__.py
-│   │   ├── state.py        # State definitions
-│   │   └── builder.py      # Graph construction
+│   │   ├── state.py          # State definitions (Pydantic models)
+│   │   └── builder.py        # Graph construction
 │   ├── nodes/
 │   │   ├── __init__.py
-│   │   ├── input_nodes.py  # Parse, classify input
-│   │   ├── routing_nodes.py # Route decisions
-│   │   ├── execution_nodes.py # Execute commands/AI
-│   │   └── swarm_nodes.py  # Multi-agent execution
+│   │   ├── input_nodes.py    # Parse, classify input
+│   │   ├── routing.py        # Route decisions
+│   │   ├── execution_nodes.py # Execute commands/AI with LLM
+│   │   └── swarm_nodes.py    # Multi-agent execution
+│   ├── services/
+│   │   ├── __init__.py
+│   │   └── redis_pubsub.py   # Redis pub/sub for TypeScript integration
 │   └── checkpointer/
 │       ├── __init__.py
-│       └── postgres.py     # PostgreSQL checkpointer
+│       └── postgres.py       # PostgreSQL checkpointer
 ├── tests/
+│   ├── __init__.py
+│   ├── test_graph.py         # State, routing, graph tests
+│   └── test_api.py           # FastAPI endpoint tests
 ├── Dockerfile
 ├── docker-compose.yml
 ├── pyproject.toml
 └── README.md
+```
+
+### TypeScript Integration (in main project)
+
+```
+src/
+├── clients/
+│   ├── langgraph.ts          # LangGraph client (HTTP, Redis, SSE)
+│   └── langgraph.test.ts     # Client tests
+└── orchestrator/
+    └── langgraph-adapter.ts  # Adapter for orchestrator integration
 ```
 
 ## License
