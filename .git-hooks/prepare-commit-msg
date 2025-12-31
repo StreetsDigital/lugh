@@ -1,0 +1,43 @@
+#!/bin/bash
+# .git/hooks/prepare-commit-msg
+# Auto-generates commit messages using Claude Code
+#
+# Note: This requires claude CLI to be available
+# Install: npm install -g @anthropic-ai/claude-code
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+
+# Skip if message already provided (amend, merge, etc.)
+if [ "$COMMIT_SOURCE" != "" ]; then
+    exit 0
+fi
+
+# Get the diff
+DIFF=$(git diff --cached --stat)
+
+if [ -z "$DIFF" ]; then
+    exit 0
+fi
+
+# Check if claude is available
+if ! command -v claude &> /dev/null; then
+    echo "# Claude not available - write your own message" > "$COMMIT_MSG_FILE"
+    exit 0
+fi
+
+# Generate commit message using Claude
+echo "Generating commit message..."
+PROMPT="Generate a concise git commit message for these changes. Use conventional commits format (feat:, fix:, docs:, etc.). Be specific but brief. Just output the message, nothing else.
+
+Changes:
+$DIFF"
+
+# Call claude (non-interactive)
+MESSAGE=$(echo "$PROMPT" | claude --print 2>/dev/null)
+
+if [ -n "$MESSAGE" ]; then
+    echo "$MESSAGE" > "$COMMIT_MSG_FILE"
+else
+    echo "# Auto-generation failed - write your own message" > "$COMMIT_MSG_FILE"
+fi

@@ -23,6 +23,7 @@ import { startCleanupScheduler, stopCleanupScheduler } from './services/cleanup-
 import { logLughPaths } from './utils/lugh-paths';
 import { loadConfig, logConfig } from './config';
 import { isEnabled } from './config/features';
+import llmProxyRouter from './api/llm-proxy';
 
 async function main(): Promise<void> {
   console.log('[App] Starting Remote Coding Agent');
@@ -290,6 +291,10 @@ async function main(): Promise<void> {
 
   // JSON parsing for all other endpoints
   app.use(express.json());
+
+  // LLM Proxy API (for LangGraph Python service)
+  app.use('/api/llm', llmProxyRouter);
+  console.log('[Express] LLM proxy endpoints registered at /api/llm');
 
   // Health check endpoints
   app.get('/health', (_req, res) => {
