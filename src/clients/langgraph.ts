@@ -204,7 +204,14 @@ export class LangGraphClient {
       throw new Error(`LangGraph request failed: ${error}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      conversation_id: string;
+      thread_id: string;
+      phase: string;
+      responses: string[];
+      error?: string;
+      duration_ms: number;
+    };
 
     return {
       conversationId: data.conversation_id,
@@ -236,7 +243,15 @@ export class LangGraphClient {
       throw new Error(`Swarm request failed: ${error}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      swarm_id: string;
+      status: string;
+      summary: string;
+      agent_count: number;
+      completed_count: number;
+      failed_count: number;
+      duration_ms: number;
+    };
 
     return {
       swarmId: data.swarm_id,
@@ -256,7 +271,7 @@ export class LangGraphClient {
     try {
       const response = await fetch(`${this.config.httpUrl}/thread/${threadId}/state`);
       if (!response.ok) return null;
-      const data = await response.json();
+      const data = (await response.json()) as { state: Record<string, unknown> };
       return data.state;
     } catch {
       return null;
@@ -286,7 +301,7 @@ export class LangGraphClient {
     this.eventHandlers.set(conversationId, existing);
 
     // Subscribe to channels
-    const messageHandler = async (message: string, channel: string): Promise<void> => {
+    const messageHandler = async (message: string, _channel: string): Promise<void> => {
       try {
         const event = JSON.parse(message) as LangGraphEvent;
         const handlers = this.eventHandlers.get(conversationId) ?? [];

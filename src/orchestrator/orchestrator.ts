@@ -535,7 +535,7 @@ Remember: The user already decided to run this command. Take action now.`;
  * Handle swarm execution for parallel agent coordination
  */
 async function handleSwarmExecution(
-  conversation: Conversation,
+  _conversation: Conversation,
   userRequest: string,
   platform: IPlatformAdapter,
   conversationId: string
@@ -594,25 +594,30 @@ async function handleSwarmExecution(
               );
               break;
 
-            case 'agent_completed':
+            case 'agent_completed': {
+              const completedData = event.data as { agentId: string; role: string; duration: number };
               await telegramCoordinator.announceAgentComplete(
-                event.data.agentId,
-                event.data.role,
+                completedData.agentId,
+                completedData.role,
                 true,
-                `Completed in ${Math.round(event.data.duration / 1000)}s`
+                `Completed in ${Math.round(completedData.duration / 1000)}s`
               );
               break;
+            }
 
-            case 'agent_failed':
+            case 'agent_failed': {
+              const failedData = event.data as { agentId: string; role: string; error: string };
               await telegramCoordinator.announceAgentComplete(
-                event.data.agentId,
-                event.data.role,
+                failedData.agentId,
+                failedData.role,
                 false,
-                `Failed: ${event.data.error}`
+                `Failed: ${failedData.error}`
               );
               break;
+            }
 
             case 'swarm_completed': {
+              const swarmData = event.data as { duration: number };
               const progress = swarmCoordinator.getProgress(event.swarmId);
               if (progress) {
                 await telegramCoordinator.announceSwarmComplete(
@@ -620,7 +625,7 @@ async function handleSwarmExecution(
                   progress.completed,
                   progress.failed,
                   0,
-                  event.data.duration
+                  swarmData.duration
                 );
               }
               break;

@@ -182,7 +182,7 @@ function extractToolDetails(
 }
 
 // Keep old function name for backward compatibility
-function extractBriefInfo(toolName: string, toolInput: Record<string, unknown>): string | null {
+function _extractBriefInfo(toolName: string, toolInput: Record<string, unknown>): string | null {
   return extractToolDetails(toolName, toolInput, false);
 }
 

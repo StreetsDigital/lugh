@@ -71,15 +71,6 @@ router.post('/completion', async (req: Request, res: Response) => {
         maxTurns: 1,
         permissionMode: 'bypassPermissions',
       },
-      onEvent: (event) => {
-        // Handle streaming events if needed
-        if (event.type === 'content_block_delta') {
-          const delta = event as { delta?: { text?: string } };
-          if (delta.delta?.text) {
-            fullResponse += delta.delta.text;
-          }
-        }
-      },
     });
 
     // Extract response from result
@@ -152,22 +143,25 @@ router.post('/stream', async (req: Request, res: Response) => {
       promptLength: prompt.length,
     });
 
-    await query({
+    const result = await query({
       prompt,
       options: {
         maxTurns: 1,
         permissionMode: 'bypassPermissions',
       },
-      onEvent: (event) => {
-        // Stream content blocks
-        if (event.type === 'content_block_delta') {
-          const delta = event as { delta?: { text?: string } };
-          if (delta.delta?.text) {
-            res.write(`data: ${JSON.stringify({ type: 'chunk', content: delta.delta.text })}\n\n`);
-          }
-        }
-      },
     });
+
+    // Extract and stream the response
+    let content = '';
+    if (typeof result === 'string') {
+      content = result;
+    } else if (result && typeof result === 'object') {
+      const r = result as { content?: string; text?: string };
+      content = r.content || r.text || JSON.stringify(result);
+    }
+
+    // Send content as a single chunk (SDK doesn't support streaming callbacks)
+    res.write(`data: ${JSON.stringify({ type: 'chunk', content })}\n\n`);
 
     // Send done event
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);

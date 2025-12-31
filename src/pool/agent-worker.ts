@@ -33,7 +33,7 @@ export class AgentWorker {
   private heartbeatTimer?: NodeJS.Timeout;
 
   constructor(
-    private pool: Pool,
+    pool: Pool,
     config?: AgentWorkerConfig
   ) {
     this.agentId = config?.agentId || `agent-${uuid().slice(0, 8)}`;
