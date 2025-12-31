@@ -7,7 +7,7 @@
  */
 
 import type { IToolkit, IFunctionTool } from './types';
-import { FunctionTool, extractToolsFromClass } from './function-tool';
+import { extractToolsFromClass } from './function-tool';
 
 /**
  * Abstract base toolkit class

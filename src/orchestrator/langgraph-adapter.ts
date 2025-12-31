@@ -33,7 +33,7 @@ export interface LangGraphRoutingConfig {
 /**
  * Default routing configuration
  */
-const _DEFAULT_ROUTING_CONFIG: LangGraphRoutingConfig = {
+export const DEFAULT_ROUTING_CONFIG: LangGraphRoutingConfig = {
   useForSwarm: true,
   useForAI: false, // Start conservative - only swarm
   useForCommands: false,

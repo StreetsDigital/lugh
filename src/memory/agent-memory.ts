@@ -14,7 +14,7 @@ import type {
   IVectorDBBlock,
   ContextCreatorConfig,
 } from './types';
-import { ChatHistoryBlock, createChatHistoryBlock } from './chat-history-block';
+import { createChatHistoryBlock } from './chat-history-block';
 import { VectorDBBlock, createVectorDBBlock } from './vector-db-block';
 
 const DEFAULT_CONTEXT_CONFIG: ContextCreatorConfig = {

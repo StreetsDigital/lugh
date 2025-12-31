@@ -218,7 +218,7 @@ export class LangGraphClient {
       threadId: data.thread_id,
       phase: data.phase,
       responses: data.responses,
-      error: data.error,
+      error: data.error ?? null,
       durationMs: data.duration_ms,
     };
   }
@@ -245,7 +245,7 @@ export class LangGraphClient {
 
     const data = (await response.json()) as {
       swarm_id: string;
-      status: string;
+      status: 'completed' | 'failed';
       summary: string;
       agent_count: number;
       completed_count: number;
