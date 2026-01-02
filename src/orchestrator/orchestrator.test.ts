@@ -403,6 +403,11 @@ describe('orchestrator', () => {
         ...mockConversation,
         codebase_id: null,
       });
+      // Mock createSession to return a NEW session with no assistant_session_id yet
+      mockCreateSession.mockResolvedValue({
+        ...mockSession,
+        assistant_session_id: null,
+      });
       mockClient.sendQuery.mockImplementation(async function* () {
         yield { type: 'result', sessionId: 'session-id' };
       });
@@ -413,7 +418,7 @@ describe('orchestrator', () => {
       expect(mockClient.sendQuery).toHaveBeenCalledWith(
         'Hello, help me with code',
         expect.any(String),
-        undefined, // No session to resume
+        undefined, // No session to resume (new session has no assistant_session_id yet)
         undefined // No approvalContext
       );
     });
@@ -569,7 +574,7 @@ describe('orchestrator', () => {
       expect(platform.sendMessage).toHaveBeenNthCalledWith(
         2,
         'chat-456',
-        expect.stringContaining('BASH')
+        expect.stringContaining('Bash')
       );
       expect(platform.sendMessage).toHaveBeenNthCalledWith(3, 'chat-456', 'Second chunk');
     });
