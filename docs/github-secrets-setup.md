@@ -23,7 +23,7 @@ Go to: **Settings → Secrets and variables → Actions → New repository secre
 | `TELEGRAM_ALLOWED_USER_IDS` | Comma-separated Telegram user IDs | Your Telegram user ID (send message to @userinfobot)          |
 | `GH_TOKEN`                  | GitHub Personal Access Token      | GitHub Settings → Developer settings → Personal access tokens |
 | `WEBHOOK_SECRET`            | GitHub webhook secret             | Random string (e.g., `openssl rand -hex 32`)                  |
-| `GITHUB_ALLOWED_USERS`      | Comma-separated GitHub usernames  | e.g., `streetsdigital,octocat`                                |
+| `ALLOWED_GITHUB_USERS`      | Comma-separated GitHub usernames  | e.g., `streetsdigital,octocat`                                |
 
 ### Notification Secrets
 

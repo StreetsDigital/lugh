@@ -125,7 +125,7 @@ jobs:
             GH_TOKEN=${{ secrets.GH_TOKEN }}
             GITHUB_TOKEN=${{ secrets.GH_TOKEN }}
             WEBHOOK_SECRET=${{ secrets.WEBHOOK_SECRET }}
-            GITHUB_ALLOWED_USERS=${{ secrets.GITHUB_ALLOWED_USERS }}
+            GITHUB_ALLOWED_USERS=${{ secrets.ALLOWED_GITHUB_USERS }}
 
             # Bot config
             BOT_DISPLAY_NAME=lugh_prod_bot
