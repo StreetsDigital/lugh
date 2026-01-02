@@ -1,4 +1,4 @@
-import { describe, test, expect, mock, beforeEach, spyOn } from 'bun:test';
+import { describe, test, expect, mock, beforeEach, afterEach, spyOn } from 'bun:test';
 
 // Create mock query function
 const mockQuery = mock(async function* () {
@@ -16,8 +16,17 @@ describe('ClaudeClient', () => {
   let client: ClaudeClient;
 
   beforeEach(() => {
+    // Set mock credentials so tests can run
+    process.env.CLAUDE_CODE_OAUTH_TOKEN = 'mock-oauth-token';
     client = new ClaudeClient();
     mockQuery.mockClear();
+  });
+
+  afterEach(() => {
+    // Clean up environment variables
+    delete process.env.CLAUDE_CODE_OAUTH_TOKEN;
+    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.CLAUDE_API_KEY;
   });
 
   describe('getType', () => {
@@ -243,6 +252,23 @@ describe('ClaudeClient', () => {
       // Empty text should be filtered out
       expect(chunks).toHaveLength(1);
       expect(chunks[0]).toEqual({ type: 'assistant', content: 'Real content' });
+    });
+
+    test('throws error when no credentials are provided', async () => {
+      // Remove credentials
+      delete process.env.CLAUDE_CODE_OAUTH_TOKEN;
+      delete process.env.ANTHROPIC_API_KEY;
+      delete process.env.CLAUDE_API_KEY;
+
+      const consumeGenerator = async () => {
+        for await (const _ of client.sendQuery('test', '/workspace')) {
+          // consume
+        }
+      };
+
+      await expect(consumeGenerator()).rejects.toThrow(
+        'No credentials found. Set CLAUDE_CODE_OAUTH_TOKEN (for Max subscription) or ANTHROPIC_API_KEY.'
+      );
     });
   });
 });
