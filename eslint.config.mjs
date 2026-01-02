@@ -20,12 +20,16 @@ export default tseslint.config(
       // Experimental features (disabled in production via feature flags)
       'src/swarm/**', // FEATURE_SWARM_COORDINATION
       'src/api/llm-config.ts', // FEATURE_MULTI_LLM
+      'src/api/llm-proxy.ts', // FEATURE_MULTI_LLM
       'src/api/swarm.ts', // FEATURE_SWARM_COORDINATION
       'src/tools/**', // Experimental function tools
       'src/pool/**', // FEATURE_AGENT_POOL
-      'src/agent/worker.ts', // FEATURE_AGENT_POOL
+      'src/agent/**', // Experimental agent pool features
       'src/adapters/telegram-agent-approvals.ts', // FEATURE_PHONE_APPROVALS
+      'src/clients/langgraph.ts', // LangGraph integration (experimental)
       'langgraph-service/**', // Python service (separate linting)
+      'src/memory/**', // Experimental memory/RAG features
+      'src/redis/**', // Redis pub/sub (experimental)
     ],
   },
 
