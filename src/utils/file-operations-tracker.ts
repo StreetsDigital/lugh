@@ -116,9 +116,9 @@ export class FileOperationsTracker {
     // Delete operations (via Bash)
     if (toolName === 'Bash') {
       const cmd = (toolInput.command as string) || '';
-      if (cmd.match(/^(rm|del|unlink)\s/)) {
+      if (/^(rm|del|unlink)\s/.exec(cmd)) {
         // Extract file path from rm command (simplified)
-        const match = cmd.match(/^(?:rm|del|unlink)\s+(?:-[rf]+\s+)?(.+)/);
+        const match = /^(?:rm|del|unlink)\s+(?:-[rf]+\s+)?(.+)/.exec(cmd);
         if (match) {
           return { type: 'delete', path: match[1].trim(), toolName, timestamp };
         }
@@ -153,7 +153,7 @@ export class FileOperationsTracker {
     const filesRead = new Set<string>();
     const filesWritten = new Set<string>();
     const filesEdited = new Set<string>();
-    const searchesPerformed: Array<{ pattern: string; path?: string }> = [];
+    const searchesPerformed: { pattern: string; path?: string }[] = [];
 
     for (const op of this.operations) {
       switch (op.type) {

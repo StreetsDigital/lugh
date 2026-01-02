@@ -116,7 +116,7 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
    */
   async clear(conversationId: string): Promise<void> {
     await pool.query(
-      `DELETE FROM memory_records WHERE conversation_id = $1`,
+      'DELETE FROM memory_records WHERE conversation_id = $1',
       [conversationId]
     );
   }
@@ -126,7 +126,7 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
    */
   async count(conversationId: string): Promise<number> {
     const result = await pool.query<{ count: string }>(
-      `SELECT COUNT(*) as count FROM memory_records WHERE conversation_id = $1`,
+      'SELECT COUNT(*) as count FROM memory_records WHERE conversation_id = $1',
       [conversationId]
     );
     return parseInt(result.rows[0]?.count || '0', 10);

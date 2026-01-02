@@ -12,10 +12,10 @@ import { query } from '@anthropic-ai/claude-agent-sdk';
 const router = Router();
 
 interface CompletionRequest {
-  messages: Array<{
+  messages: {
     role: 'user' | 'assistant' | 'system';
     content: string;
-  }>;
+  }[];
   model?: string;
   max_tokens?: number;
   temperature?: number;

@@ -16,8 +16,7 @@ const HEARTBEAT_INTERVAL_MS = parseInt(
 
 type AgentStatus = 'idle' | 'busy' | 'stopping' | 'error';
 
-interface StatusGetter {
-  (): {
+type StatusGetter = () => {
     status: AgentStatus;
     currentTask?: {
       taskId: string;
@@ -25,7 +24,6 @@ interface StatusGetter {
       currentStep: string;
     };
   };
-}
 
 /**
  * Heartbeat sender

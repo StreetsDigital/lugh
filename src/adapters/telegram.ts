@@ -249,7 +249,7 @@ export class TelegramAdapter implements IPlatformAdapter {
         return;
       }
 
-      let summary = `👀 **All Pending Agent Approvals**\n\n`;
+      let summary = '👀 **All Pending Agent Approvals**\n\n';
       summary += `📊 Total pending: ${allPending.length} agent${allPending.length > 1 ? 's' : ''}\n\n`;
 
       // Group by swarm
@@ -445,7 +445,7 @@ export class TelegramAdapter implements IPlatformAdapter {
       }
 
       // Handle text-based agent approval: "please start agent-xxxxxx" or "start agent-xxxxxx"
-      const startMatch = message.toLowerCase().match(/(?:please\s+)?start\s+agent[- ]?([a-z0-9]+)/i);
+      const startMatch = /(?:please\s+)?start\s+agent[- ]?([a-z0-9]+)/i.exec(message.toLowerCase());
       if (startMatch) {
         const agentIdFragment = startMatch[1];
         const result = await telegramAgentApprovalHandler.approveByAgentId(agentIdFragment, userId.toString());

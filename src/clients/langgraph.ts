@@ -106,7 +106,7 @@ export class LangGraphClient {
   private config: LangGraphConfig;
   private redis: RedisClientType | null = null;
   private subscriber: RedisClientType | null = null;
-  private eventHandlers: Map<string, EventHandler[]> = new Map();
+  private eventHandlers = new Map<string, EventHandler[]>();
   private isConnected = false;
 
   constructor(config?: Partial<LangGraphConfig>) {

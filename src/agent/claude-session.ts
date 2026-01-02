@@ -47,7 +47,7 @@ export class ClaudeSession {
   private aborted = false;
   private progress = 0;
   private currentStep = 'Initializing';
-  private toolCalls: Array<{ name: string; input: unknown }> = [];
+  private toolCalls: { name: string; input: unknown }[] = [];
 
   constructor(config: SessionConfig) {
     this.config = config;

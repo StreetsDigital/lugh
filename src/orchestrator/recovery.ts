@@ -61,7 +61,7 @@ type EscalationHandler = (info: EscalationInfo) => void | Promise<void>;
  * Recovery Manager
  */
 export class RecoveryManager {
-  private failureHistory: Map<string, FailureRecord[]> = new Map();
+  private failureHistory = new Map<string, FailureRecord[]>();
   private escalationHandler: EscalationHandler | null = null;
 
   constructor() {
@@ -245,12 +245,12 @@ export class RecoveryManager {
     });
 
     // Count occurrences
-    const counts = errorTypes.reduce(
+    const counts = errorTypes.reduce<Record<string, number>>(
       (acc, type) => {
         acc[type] = (acc[type] || 0) + 1;
         return acc;
       },
-      {} as Record<string, number>
+      {}
     );
 
     // Add patterns that appear multiple times
@@ -267,12 +267,12 @@ export class RecoveryManager {
         f.verificationResult!.checks.filter((c) => !c.passed).map((c) => c.name)
       );
 
-    const verificationCounts = verificationIssues.reduce(
+    const verificationCounts = verificationIssues.reduce<Record<string, number>>(
       (acc, issue) => {
         acc[issue] = (acc[issue] || 0) + 1;
         return acc;
       },
-      {} as Record<string, number>
+      {}
     );
 
     for (const [issue, count] of Object.entries(verificationCounts)) {

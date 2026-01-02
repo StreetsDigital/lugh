@@ -243,7 +243,7 @@ interface FeatureState {
   overrideSource?: 'env' | 'runtime' | 'default';
 }
 
-const featureState: Map<string, FeatureState> = new Map();
+const featureState = new Map<string, FeatureState>();
 
 // ============================================================================
 // INITIALIZATION
@@ -367,11 +367,11 @@ export function disableFeature(featureKey: string): boolean {
 /**
  * Get all features with their current state
  */
-export function getAllFeatures(): Array<{
+export function getAllFeatures(): {
   key: string;
   definition: FeatureDefinition;
   state: FeatureState;
-}> {
+}[] {
   return Object.entries(FEATURE_DEFINITIONS).map(([key, definition]) => ({
     key,
     definition,
@@ -384,7 +384,7 @@ export function getAllFeatures(): Array<{
  */
 export function getFeaturesByMaturity(
   maturity: FeatureMaturity
-): Array<{ key: string; definition: FeatureDefinition; state: FeatureState }> {
+): { key: string; definition: FeatureDefinition; state: FeatureState }[] {
   return getAllFeatures().filter((f) => f.definition.maturity === maturity);
 }
 

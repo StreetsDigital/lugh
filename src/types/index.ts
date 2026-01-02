@@ -188,7 +188,7 @@ export interface FileOperationsSummary {
   filesRead: string[];
   filesWritten: string[];
   filesEdited: string[];
-  searchesPerformed: Array<{ pattern: string; path?: string }>;
+  searchesPerformed: { pattern: string; path?: string }[];
   totalOperations: number;
 }
 

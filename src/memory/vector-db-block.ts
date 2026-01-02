@@ -35,7 +35,7 @@ const DEFAULT_CONFIG: VectorDBConfig = {
 async function isPgVectorAvailable(): Promise<boolean> {
   try {
     const result = await pool.query(
-      `SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'vector') as available`
+      'SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = \'vector\') as available'
     );
     return result.rows[0]?.available === true;
   } catch {
@@ -50,7 +50,7 @@ export class VectorDBBlock implements IVectorDBBlock {
   config: VectorDBConfig;
   private embedder: IEmbeddingProvider;
   private pgVectorAvailable: boolean | null = null;
-  private inMemoryStore: Map<string, { record: MemoryRecord; embedding: number[] }[]> = new Map();
+  private inMemoryStore = new Map<string, { record: MemoryRecord; embedding: number[] }[]>();
 
   constructor(config?: Partial<VectorDBConfig>, embedder?: IEmbeddingProvider) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -103,7 +103,7 @@ export class VectorDBBlock implements IVectorDBBlock {
 
     if (usePgVector) {
       await pool.query(
-        `DELETE FROM memory_records WHERE conversation_id = $1 AND embedding IS NOT NULL`,
+        'DELETE FROM memory_records WHERE conversation_id = $1 AND embedding IS NOT NULL',
         [conversationId]
       );
     } else {

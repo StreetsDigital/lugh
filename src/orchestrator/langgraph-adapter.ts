@@ -228,7 +228,7 @@ async function processWithSSE(
         verbose('LangGraphAdapter', `Phase: ${update.phase as string}`);
       }
     } else if (event.type === 'error') {
-      const error = (event.data as Record<string, unknown>).error as string;
+      const error = (event.data).error as string;
       await platform.sendMessage(conversationId, `Error: ${error}`);
       return { success: false, error };
     }
@@ -271,14 +271,14 @@ async function processWithRedis(
     // Subscribe to responses
     const unsubscribe = await client.subscribe(conversationId, async (event: LangGraphEvent) => {
       if (event.type === 'response') {
-        const data = event.data as Record<string, unknown>;
+        const data = event.data;
         if (data.message) {
           await platform.sendMessage(conversationId, data.message as string);
         }
       } else if (event.type === 'ai_chunk') {
         // Stream chunks in stream mode
         if (platform.getStreamingMode() === 'stream') {
-          const data = event.data as Record<string, unknown>;
+          const data = event.data;
           if (data.chunk) {
             await platform.sendMessage(conversationId, data.chunk as string);
           }
@@ -292,7 +292,7 @@ async function processWithRedis(
           resolve({ success: true });
         }
       } else if (event.type === 'error' || event.type === 'ai_error') {
-        const data = event.data as Record<string, unknown>;
+        const data = event.data;
         const error = data.error as string;
         await platform.sendMessage(conversationId, `Error: ${error}`);
         if (!resolved) {
@@ -411,7 +411,7 @@ export async function* streamFromLangGraph(
     } else if (event.type === 'error') {
       yield {
         type: 'system',
-        content: `Error: ${(event.data as Record<string, unknown>).error as string}`,
+        content: `Error: ${(event.data).error as string}`,
       };
     }
   }

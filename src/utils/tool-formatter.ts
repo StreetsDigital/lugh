@@ -146,7 +146,7 @@ function extractToolDetails(
     }
 
     case 'TodoWrite': {
-      const todos = toolInput.todos as Array<{ content: string; status: string }>;
+      const todos = toolInput.todos as { content: string; status: string }[];
       if (todos && todos.length > 0) {
         const summary = todos
           .slice(0, 3)

@@ -265,7 +265,7 @@ export class LLMProvider {
 
     // Use OAuth token if available, otherwise fall back to API key
     if (this.config.authMethod === 'oauth' && this.config.oauthToken) {
-      headers['Authorization'] = `Bearer ${this.config.oauthToken}`;
+      headers.Authorization = `Bearer ${this.config.oauthToken}`;
     } else {
       headers['x-api-key'] = this.config.apiKey || '';
     }
@@ -292,7 +292,7 @@ export class LLMProvider {
     }
 
     const data = await response.json() as {
-      content: Array<{ type: string; text?: string }>;
+      content: { type: string; text?: string }[];
       usage?: { input_tokens?: number; output_tokens?: number };
       model?: string;
     };
@@ -351,7 +351,7 @@ export class LLMProvider {
     }
 
     const data = await response.json() as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      candidates?: { content?: { parts?: { text?: string }[] } }[];
       usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
     };
 
@@ -458,7 +458,7 @@ export class LLMProvider {
     }
 
     const data = await response.json() as {
-      choices: Array<{ message: { content: string } }>;
+      choices: { message: { content: string } }[];
       usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
       model?: string;
     };
@@ -553,7 +553,7 @@ export class LLMProvider {
     }
 
     const data = await response.json() as {
-      choices?: Array<{ message: { content: string } }>;
+      choices?: { message: { content: string } }[];
       content?: string;
       usage?: { total_tokens?: number };
       model?: string;
@@ -626,8 +626,8 @@ export function getAvailableLLMProviders(): LLMProviderType[] {
  * Provider factory - manages multiple provider instances
  */
 export class LLMProviderFactory {
-  private providers: Map<string, LLMProvider> = new Map();
-  private customConfigs: Map<string, LLMProviderConfig> = new Map();
+  private providers = new Map<string, LLMProvider>();
+  private customConfigs = new Map<string, LLMProviderConfig>();
 
   constructor() {
     if (!isEnabled('MULTI_LLM')) {
@@ -665,8 +665,8 @@ export class LLMProviderFactory {
   /**
    * List all registered configurations
    */
-  listConfigs(): Array<{ id: string; config: LLMProviderConfig; authMethod: AuthMethod }> {
-    const results: Array<{ id: string; config: LLMProviderConfig; authMethod: AuthMethod }> = [];
+  listConfigs(): { id: string; config: LLMProviderConfig; authMethod: AuthMethod }[] {
+    const results: { id: string; config: LLMProviderConfig; authMethod: AuthMethod }[] = [];
 
     // All default providers
     const defaultProviders: LLMProviderType[] = [

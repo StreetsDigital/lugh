@@ -72,7 +72,7 @@ export class OpenAIEmbeddingProvider implements IEmbeddingProvider {
     }
 
     const data = (await response.json()) as {
-      data: Array<{ embedding: number[]; index: number }>;
+      data: { embedding: number[]; index: number }[];
     };
 
     // Sort by index to maintain order

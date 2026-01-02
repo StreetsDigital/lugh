@@ -36,7 +36,7 @@ const DEFAULT_CONTEXT_CONFIG: ContextCreatorConfig = {
 export class AgentMemory implements IAgentMemory {
   chatHistory: IChatHistoryBlock;
   vectorDB: IVectorDBBlock | null;
-  workingMemory: Map<string, unknown> = new Map();
+  workingMemory = new Map<string, unknown>();
 
   private contextConfig: ContextCreatorConfig;
 

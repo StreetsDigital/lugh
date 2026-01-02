@@ -383,13 +383,13 @@ Setup:
         setVerbose(true);
         return {
           success: true,
-          message: `Verbose logging **ENABLED** ✅\n\nView logs with:\n\`docker-compose --profile with-db logs -f app-with-db\``,
+          message: 'Verbose logging **ENABLED** ✅\n\nView logs with:\n`docker-compose --profile with-db logs -f app-with-db`',
         };
       } else if (args[0] === 'off') {
         setVerbose(false);
         return {
           success: true,
-          message: `Verbose logging **DISABLED** ❌`,
+          message: 'Verbose logging **DISABLED** ❌',
         };
       } else if (args[0] === 'status') {
         const status = isVerboseEnabled();
@@ -400,7 +400,7 @@ Setup:
       } else {
         return {
           success: false,
-          message: `Usage: /verbose [on|off|status]\n\nWithout arguments, toggles verbose logging.`,
+          message: 'Usage: /verbose [on|off|status]\n\nWithout arguments, toggles verbose logging.',
         };
       }
     }
@@ -870,13 +870,13 @@ Setup:
             'name,owner,description,updatedAt,isPrivate',
           ]);
 
-          const ghRepos = JSON.parse(stdout) as Array<{
+          const ghRepos = JSON.parse(stdout) as {
             name: string;
             owner: { login: string };
             description: string | null;
             updatedAt: string;
             isPrivate: boolean;
-          }>;
+          }[];
 
           if (!ghRepos.length) {
             return {
@@ -886,7 +886,7 @@ Setup:
           }
 
           // Get local repos for comparison
-          let localFolders: string[] = [];
+          const localFolders: string[] = [];
           try {
             const entries = await readdir(workspacePath, { withFileTypes: true });
             // Get all repos including nested owner/repo structure
@@ -936,7 +936,7 @@ Setup:
       try {
         // List repos with owner/repo structure
         const entries = await readdir(workspacePath, { withFileTypes: true });
-        const repos: Array<{ display: string; path: string }> = [];
+        const repos: { display: string; path: string }[] = [];
 
         for (const entry of entries) {
           if (!entry.isDirectory()) continue;
@@ -1107,7 +1107,7 @@ Keep your response concise and helpful. The user stopped you for a reason - find
       try {
         // Build list of local repos (including owner/repo structure)
         const entries = await readdir(workspacePath, { withFileTypes: true }).catch(() => []);
-        const repos: Array<{ display: string; path: string }> = [];
+        const repos: { display: string; path: string }[] = [];
 
         for (const entry of entries) {
           if (!entry.isDirectory()) continue;

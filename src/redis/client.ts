@@ -44,7 +44,7 @@ export class RedisClient {
   private client!: RedisClientType;
   private subscriber!: RedisClientType;
   private isConnected = false;
-  private handlers: Map<string, MessageHandler<RedisMessage>[]> = new Map();
+  private handlers = new Map<string, MessageHandler<RedisMessage>[]>();
 
   constructor(private url: string = process.env.REDIS_URL || 'redis://localhost:6379') {}
 
@@ -56,12 +56,12 @@ export class RedisClient {
 
     // Main client for publishing and data operations
     this.client = createClient({ url: this.url });
-    this.client.on('error', (err: Error) => console.error('[Redis] Client error:', err));
+    this.client.on('error', (err: Error) => { console.error('[Redis] Client error:', err); });
     await this.client.connect();
 
     // Separate client for subscriptions (Redis requirement)
     this.subscriber = this.client.duplicate();
-    this.subscriber.on('error', (err: Error) => console.error('[Redis] Subscriber error:', err));
+    this.subscriber.on('error', (err: Error) => { console.error('[Redis] Subscriber error:', err); });
     await this.subscriber.connect();
 
     this.isConnected = true;
@@ -242,7 +242,7 @@ export class RedisClient {
   /**
    * Acquire lock for agent assignment (prevents race conditions)
    */
-  async acquireAgentLock(agentId: string, ttlMs: number = 30000): Promise<boolean> {
+  async acquireAgentLock(agentId: string, ttlMs = 30000): Promise<boolean> {
     const key = `${REDIS_KEYS.AGENT_LOCK}:${agentId}`;
     const result = await this.client.set(key, 'locked', {
       NX: true,

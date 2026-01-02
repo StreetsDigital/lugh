@@ -577,7 +577,7 @@ async function handleSwarmExecution(
             case 'task_decomposed':
               await platform.sendMessage(
                 conversationId,
-                `📋 **Task Decomposed**\n\n` +
+                '📋 **Task Decomposed**\n\n' +
                   `• Project: ${event.data.projectName}\n` +
                   `• Sub-tasks: ${event.data.subTaskCount}\n` +
                   `• Strategy: ${event.data.strategy}`
@@ -587,7 +587,7 @@ async function handleSwarmExecution(
             case 'agent_spawned':
               await platform.sendMessage(
                 conversationId,
-                `🚀 **Agent Spawned**\n\n` +
+                '🚀 **Agent Spawned**\n\n' +
                   `• Agent: \`${event.data.agentId}\`\n` +
                   `• Role: ${event.data.role}\n` +
                   `• Task: ${event.data.title}`
@@ -889,7 +889,7 @@ export async function handleMessage(
     // Dynamically get the appropriate AI client based on conversation's assistant type
     const aiClient = getAssistantClient(conversation.ai_assistant_type);
     console.log(`[Orchestrator] Using ${conversation.ai_assistant_type} assistant`);
-    verbose('Orchestrator', `Conversation context`, {
+    verbose('Orchestrator', 'Conversation context', {
       conversationId,
       codebaseId: conversation.codebase_id,
       commandName,
@@ -1019,10 +1019,10 @@ export async function handleMessage(
             await platform.sendMessage(conversationId, toolMessage);
 
             // Track all file operations for visibility
-            fileOpsTracker.recordToolCall(msg.toolName, msg.toolInput as Record<string, unknown>);
+            fileOpsTracker.recordToolCall(msg.toolName, msg.toolInput);
 
             // Track file writes for auto-send feature
-            const writtenPath = extractWrittenFilePath(msg.toolName, msg.toolInput as Record<string, unknown>);
+            const writtenPath = extractWrittenFilePath(msg.toolName, msg.toolInput);
             if (writtenPath) {
               writtenFiles.add(writtenPath);
             }
@@ -1079,10 +1079,10 @@ export async function handleMessage(
           console.log(`[Orchestrator] Tool call: ${msg.toolName}`);
 
           // Track all file operations for visibility
-          fileOpsTracker.recordToolCall(msg.toolName, msg.toolInput as Record<string, unknown>);
+          fileOpsTracker.recordToolCall(msg.toolName, msg.toolInput);
 
           // Track file writes for auto-send feature
-          const writtenPath = extractWrittenFilePath(msg.toolName, msg.toolInput as Record<string, unknown>);
+          const writtenPath = extractWrittenFilePath(msg.toolName, msg.toolInput);
           if (writtenPath) {
             writtenFiles.add(writtenPath);
           }
@@ -1173,7 +1173,7 @@ export async function handleMessage(
     // Auto-send created files if platform supports it
     if (writtenFiles.size > 0 && platform.sendFile) {
       console.log(`[Orchestrator] Checking ${writtenFiles.size} written files for auto-send`);
-      const filesToSend: Array<{ path: string; size: number }> = [];
+      const filesToSend: { path: string; size: number }[] = [];
 
       for (const filePath of writtenFiles) {
         // Resolve relative paths against cwd
