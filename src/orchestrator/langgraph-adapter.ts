@@ -259,7 +259,7 @@ async function processWithRedis(
     threadId?: string;
   }
 ): Promise<{ success: boolean; error?: string }> {
-  return new Promise(async (resolve) => {
+  return new Promise((resolve) => {
     let resolved = false;
     const timeout = setTimeout(() => {
       if (!resolved) {
@@ -268,50 +268,59 @@ async function processWithRedis(
       }
     }, 300000); // 5 minute timeout
 
-    // Subscribe to responses
-    const unsubscribe = await client.subscribe(conversationId, async (event: LangGraphEvent) => {
-      if (event.type === 'response') {
-        const data = event.data;
-        if (data.message) {
-          await platform.sendMessage(conversationId, data.message as string);
-        }
-      } else if (event.type === 'ai_chunk') {
-        // Stream chunks in stream mode
-        if (platform.getStreamingMode() === 'stream') {
+    // Async setup - moved outside Promise executor
+    (async (): Promise<void> => {
+      // Subscribe to responses
+      const unsubscribe = await client.subscribe(conversationId, async (event: LangGraphEvent) => {
+        if (event.type === 'response') {
           const data = event.data;
-          if (data.chunk) {
-            await platform.sendMessage(conversationId, data.chunk as string);
+          if (data.message) {
+            await platform.sendMessage(conversationId, data.message as string);
+          }
+        } else if (event.type === 'ai_chunk') {
+          // Stream chunks in stream mode
+          if (platform.getStreamingMode() === 'stream') {
+            const data = event.data;
+            if (data.chunk) {
+              await platform.sendMessage(conversationId, data.chunk as string);
+            }
+          }
+        } else if (event.type === 'ai_complete' || event.type === 'command_complete') {
+          // Cleanup on completion
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timeout);
+            await unsubscribe();
+            resolve({ success: true });
+          }
+        } else if (event.type === 'error' || event.type === 'ai_error') {
+          const data = event.data;
+          const error = data.error as string;
+          await platform.sendMessage(conversationId, `Error: ${error}`);
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timeout);
+            await unsubscribe();
+            resolve({ success: false, error });
           }
         }
-      } else if (event.type === 'ai_complete' || event.type === 'command_complete') {
-        // Cleanup on completion
-        if (!resolved) {
-          resolved = true;
-          clearTimeout(timeout);
-          await unsubscribe();
-          resolve({ success: true });
-        }
-      } else if (event.type === 'error' || event.type === 'ai_error') {
-        const data = event.data;
-        const error = data.error as string;
-        await platform.sendMessage(conversationId, `Error: ${error}`);
-        if (!resolved) {
-          resolved = true;
-          clearTimeout(timeout);
-          await unsubscribe();
-          resolve({ success: false, error });
-        }
-      }
-    });
+      });
 
-    // Publish request
-    await client.publishRequest({
-      conversationId,
-      platformType: platform.getPlatformType(),
-      message,
-      issueContext: options.issueContext,
-      threadContext: options.threadContext,
-      threadId: options.threadId,
+      // Publish request
+      await client.publishRequest({
+        conversationId,
+        platformType: platform.getPlatformType(),
+        message,
+        issueContext: options.issueContext,
+        threadContext: options.threadContext,
+        threadId: options.threadId,
+      });
+    })().catch((error: Error) => {
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timeout);
+        resolve({ success: false, error: error.message });
+      }
     });
   });
 }

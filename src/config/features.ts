@@ -436,9 +436,9 @@ export function requireFeature(featureKey: string) {
     _propertyKey: string,
     descriptor: PropertyDescriptor
   ): PropertyDescriptor {
-    const originalMethod = descriptor.value;
+    const originalMethod = descriptor.value as (...args: unknown[]) => unknown;
 
-    descriptor.value = function (...args: unknown[]) {
+    descriptor.value = function (...args: unknown[]): unknown {
       if (!isEnabled(featureKey)) {
         throw new Error(`Feature '${featureKey}' is not enabled`);
       }
