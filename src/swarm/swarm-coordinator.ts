@@ -435,5 +435,7 @@ export class SwarmCoordinator {
   }
 }
 
-// Export singleton instance
-export const swarmCoordinator = new SwarmCoordinator();
+// Export singleton instance (only instantiate if feature is enabled)
+export const swarmCoordinator = isEnabled('SWARM_COORDINATION')
+  ? new SwarmCoordinator()
+  : (null as unknown as SwarmCoordinator);

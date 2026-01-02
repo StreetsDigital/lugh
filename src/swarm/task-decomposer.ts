@@ -7,6 +7,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
+import { isEnabled } from '../config/features';
 import type { DecomposedTask, SubTask, AgentRole } from './types';
 
 /**
@@ -292,5 +293,7 @@ Request: ${userRequest}`,
   }
 }
 
-// Export singleton instance
-export const taskDecomposer = new TaskDecomposer();
+// Export singleton instance (only instantiate if feature is enabled)
+export const taskDecomposer = isEnabled('SWARM_COORDINATION')
+  ? new TaskDecomposer()
+  : (null as unknown as TaskDecomposer);

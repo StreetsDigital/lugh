@@ -693,5 +693,7 @@ export class LLMProviderFactory {
   }
 }
 
-// Export singleton factory
-export const llmProviderFactory = new LLMProviderFactory();
+// Export singleton factory (only instantiate if feature is enabled)
+export const llmProviderFactory = isEnabled('MULTI_LLM')
+  ? new LLMProviderFactory()
+  : (null as unknown as LLMProviderFactory);

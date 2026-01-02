@@ -6,6 +6,7 @@
  * into a cohesive, unified output.
  */
 
+import { isEnabled } from '../config/features';
 import type {
   DecomposedTask,
   AgentResult,
@@ -361,5 +362,7 @@ Be direct and actionable. Write for a technical founder or product manager.`;
   }
 }
 
-// Export singleton instance
-export const resultSynthesizer = new ResultSynthesizer();
+// Export singleton instance (only instantiate if feature is enabled)
+export const resultSynthesizer = isEnabled('SWARM_COORDINATION')
+  ? new ResultSynthesizer()
+  : (null as unknown as ResultSynthesizer);

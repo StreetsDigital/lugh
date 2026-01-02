@@ -20,6 +20,7 @@ import {
   type LLMProviderType,
   type LLMProviderConfig,
 } from '../llm/providers';
+import { isEnabled } from '../config/features';
 
 /**
  * Agent execution handle for tracking and control
@@ -445,5 +446,7 @@ export class DynamicAgentSpawner {
   }
 }
 
-// Export singleton instance
-export const agentSpawner = new DynamicAgentSpawner();
+// Export singleton instance (only instantiate if feature is enabled)
+export const agentSpawner = isEnabled('SWARM_COORDINATION')
+  ? new DynamicAgentSpawner()
+  : (null as unknown as DynamicAgentSpawner);
