@@ -36,13 +36,13 @@ const COST_PER_MILLION: Record<string, number> = {
   'gpt-4o': 10,
   'gpt-4o-mini': 0.6,
   'gpt-4-turbo': 30,
-  'o1': 60,
+  o1: 60,
   'o1-mini': 12,
   'grok-2': 10,
   'grok-2-mini': 2,
   'llama3.2': 0, // Local
-  'codellama': 0,
-  'mistral': 0,
+  codellama: 0,
+  mistral: 0,
   'deepseek-coder': 0,
 };
 
@@ -108,7 +108,7 @@ export class LLMCliProvider implements ILLMProvider {
         fullPrompt = `Context:\n${input.context.memoryContext}\n\n---\n\nTask: ${fullPrompt}`;
       }
       if (input.context?.recoveryHints?.length) {
-        fullPrompt += `\n\n---\n\nPrevious attempts failed. Avoid:\n${input.context.recoveryHints.map((h) => `- ${h}`).join('\n')}`;
+        fullPrompt += `\n\n---\n\nPrevious attempts failed. Avoid:\n${input.context.recoveryHints.map(h => `- ${h}`).join('\n')}`;
       }
 
       this.currentStep = `Running ${modelConfig.model}`;
@@ -127,8 +127,7 @@ export class LLMCliProvider implements ILLMProvider {
 
       // Estimate tokens (rough: ~4 chars per token)
       const estimatedTokens = Math.ceil((fullPrompt.length + response.length) / 4);
-      const cost =
-        (estimatedTokens / 1_000_000) * this.capabilities.costPerMillionTokens;
+      const cost = (estimatedTokens / 1_000_000) * this.capabilities.costPerMillionTokens;
 
       // Publish response for streaming
       await redis.publish(AGENT_CHANNELS.TOOL_CALL, {
@@ -199,11 +198,7 @@ export class LLMCliProvider implements ILLMProvider {
     return args;
   }
 
-  private async executeLLM(
-    args: string[],
-    prompt: string,
-    cwd: string
-  ): Promise<string> {
+  private async executeLLM(args: string[], prompt: string, cwd: string): Promise<string> {
     // Prepare environment - filter out undefined values
     const baseEnv = process.env as Record<string, string | undefined>;
     const env: Record<string, string> = {};
@@ -305,14 +300,8 @@ export class LLMCliProvider implements ILLMProvider {
   }
 
   private supportsImages(model: string): boolean {
-    const imageModels = [
-      'gpt-4o',
-      'gpt-4-turbo',
-      'claude-3.5-sonnet',
-      'claude-3-opus',
-      'grok-2',
-    ];
-    return imageModels.some((m) => model.includes(m));
+    const imageModels = ['gpt-4o', 'gpt-4-turbo', 'claude-3.5-sonnet', 'claude-3-opus', 'grok-2'];
+    return imageModels.some(m => model.includes(m));
   }
 
   private getContextWindow(model: string): number {
@@ -323,10 +312,10 @@ export class LLMCliProvider implements ILLMProvider {
       'gpt-4o': 128000,
       'gpt-4o-mini': 128000,
       'gpt-4-turbo': 128000,
-      'o1': 128000,
+      o1: 128000,
       'grok-2': 131072,
       'llama3.2': 128000,
-      'mistral': 32000,
+      mistral: 32000,
     };
     return contextWindows[model] || 32000;
   }
@@ -373,7 +362,7 @@ export async function getInstalledPlugins(): Promise<string[]> {
 
     // Parse plugin names from output
     const lines = output.trim().split('\n');
-    return lines.map((line) => line.trim()).filter((line) => line);
+    return lines.map(line => line.trim()).filter(line => line);
   } catch {
     return [];
   }

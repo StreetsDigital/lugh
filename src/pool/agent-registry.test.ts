@@ -71,7 +71,7 @@ describe('AgentRegistry', () => {
       const beforeTime = before?.lastHeartbeat.getTime() || 0;
 
       // Wait a bit to ensure timestamp changes
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       await registry.heartbeat(agentId);
 
@@ -133,9 +133,9 @@ describe('AgentRegistry', () => {
       const available = await registry.getAvailable();
 
       expect(available.length).toBe(2);
-      expect(available.map((a) => a.agentId)).toContain('idle-1');
-      expect(available.map((a) => a.agentId)).toContain('idle-2');
-      expect(available.map((a) => a.agentId)).not.toContain('busy-1');
+      expect(available.map(a => a.agentId)).toContain('idle-1');
+      expect(available.map(a => a.agentId)).toContain('idle-2');
+      expect(available.map(a => a.agentId)).not.toContain('busy-1');
     });
 
     test('should return empty array when no idle agents', async () => {

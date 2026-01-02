@@ -93,10 +93,7 @@ export class VerificationEngine {
 
     // 3. Verify tests (if requested)
     if (options.runTests) {
-      const testCheck = await this.verifyTests(
-        options.workingDirectory,
-        options.testCommand
-      );
+      const testCheck = await this.verifyTests(options.workingDirectory, options.testCommand);
       checks.push(testCheck);
     }
 
@@ -112,7 +109,7 @@ export class VerificationEngine {
     const durationMs = Date.now() - startTime;
 
     return {
-      success: checks.every((c) => c.passed),
+      success: checks.every(c => c.passed),
       checks,
       timestamp: new Date(),
       durationMs,
@@ -156,21 +153,18 @@ export class VerificationEngine {
   /**
    * Verify files were modified
    */
-  private async verifyFileChanges(
-    cwd: string,
-    claimedFiles: string[]
-  ): Promise<VerificationCheck> {
+  private async verifyFileChanges(cwd: string, claimedFiles: string[]): Promise<VerificationCheck> {
     try {
       // Get actual changed files
       const result = await $`git -C ${cwd} diff --name-only HEAD~1 HEAD`.text();
       const actualFiles = result
         .trim()
         .split('\n')
-        .filter((f) => f);
+        .filter(f => f);
 
       // Check if claimed files are in actual files
-      const foundFiles = claimedFiles.filter((f) =>
-        actualFiles.some((a) => a.endsWith(f) || f.endsWith(a))
+      const foundFiles = claimedFiles.filter(f =>
+        actualFiles.some(a => a.endsWith(f) || f.endsWith(a))
       );
 
       const allFound = foundFiles.length === claimedFiles.length;
@@ -182,7 +176,7 @@ export class VerificationEngine {
         actual: `Found: ${foundFiles.join(', ')}`,
         details: allFound
           ? undefined
-          : `Missing: ${claimedFiles.filter((f) => !foundFiles.includes(f)).join(', ')}`,
+          : `Missing: ${claimedFiles.filter(f => !foundFiles.includes(f)).join(', ')}`,
       };
     } catch (error) {
       return {
@@ -198,10 +192,7 @@ export class VerificationEngine {
   /**
    * Verify tests pass
    */
-  private async verifyTests(
-    cwd: string,
-    command?: string
-  ): Promise<VerificationCheck> {
+  private async verifyTests(cwd: string, command?: string): Promise<VerificationCheck> {
     // Detect test command if not provided
     const testCommand = command || (await this.detectTestCommand(cwd));
 
@@ -246,10 +237,7 @@ export class VerificationEngine {
   /**
    * Verify type check passes
    */
-  private async verifyTypeCheck(
-    cwd: string,
-    command?: string
-  ): Promise<VerificationCheck> {
+  private async verifyTypeCheck(cwd: string, command?: string): Promise<VerificationCheck> {
     // Detect type check command if not provided
     const typeCommand = command || (await this.detectTypeCheckCommand(cwd));
 

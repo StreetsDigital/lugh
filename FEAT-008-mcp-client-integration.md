@@ -16,6 +16,7 @@ Enable Lugh to access GitHub (repos, PRs, commits) and AWS infrastructure (Light
 ## Problem Statement
 
 ### Current State
+
 - Lugh runs in Docker container with no GitHub authentication configured
 - `git push` operations fail with "fatal: could not read Username for 'https://github.com'"
 - No ability to create PRs, manage repos, or interact with GitHub programmatically
@@ -24,6 +25,7 @@ Enable Lugh to access GitHub (repos, PRs, commits) and AWS infrastructure (Light
 - Custom GitHub/AWS integrations would require significant maintenance overhead
 
 ### Desired State
+
 - Lugh can push commits, create PRs, and manage GitHub repos directly from Docker container
 - Lugh can access AWS Lightsail instance, manage infrastructure, view logs
 - Authentication is centralized and secure (env vars, secrets management)
@@ -31,6 +33,7 @@ Enable Lugh to access GitHub (repos, PRs, commits) and AWS infrastructure (Light
 - Zero custom integration code - leverage official MCP servers
 
 ### Success Criteria
+
 - ✅ Lugh can `git push` commits to GitHub without manual intervention
 - ✅ Lugh can create GitHub PRs via `gh` CLI or MCP tools
 - ✅ Lugh can clone private repos, read files, search code
@@ -43,6 +46,7 @@ Enable Lugh to access GitHub (repos, PRs, commits) and AWS infrastructure (Light
 ## Requirements
 
 ### Must Have (P0)
+
 - [ ] MCP client implementation that can connect to external MCP servers
 - [ ] GitHub MCP server integration with authentication
 - [ ] Git push/pull/clone operations working
@@ -53,6 +57,7 @@ Enable Lugh to access GitHub (repos, PRs, commits) and AWS infrastructure (Light
 - [ ] Documentation for adding new MCP servers
 
 ### Should Have (P1)
+
 - [ ] MCP server registry/discovery system
 - [ ] Health checks for connected MCP servers
 - [ ] Fallback behavior when MCP servers are unavailable
@@ -60,12 +65,14 @@ Enable Lugh to access GitHub (repos, PRs, commits) and AWS infrastructure (Light
 - [ ] Configuration validation on startup
 
 ### Nice to Have (P2)
+
 - [ ] MCP server hot-reload (add servers without restart)
 - [ ] Per-user MCP credentials (multi-tenant support)
 - [ ] MCP operation caching for performance
 - [ ] Web UI for managing connected MCP servers
 
 ### Non-Goals (Explicitly Out of Scope)
+
 - Building custom GitHub API client (use MCP instead)
 - Building custom AWS SDK wrappers (use MCP instead)
 - OAuth flows for GitHub (use PAT for simplicity)
@@ -113,6 +120,7 @@ Enable Lugh to access GitHub (repos, PRs, commits) and AWS infrastructure (Light
 ### Database Changes
 
 **New table: `mcp_servers`**
+
 ```sql
 CREATE TABLE mcp_servers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -138,30 +146,33 @@ CREATE TABLE mcp_servers (
 No external API changes. Internal changes:
 
 **New MCP Client Manager** (`src/mcp/client.ts`):
+
 ```typescript
 export class MCPClientManager {
   private servers: Map<string, MCPServerProcess> = new Map();
 
-  async startServer(config: MCPServerConfig): Promise<void>
-  async stopServer(name: string): Promise<void>
-  async callTool(serverName: string, toolName: string, args: any): Promise<any>
-  async listServers(): Promise<MCPServerInfo[]>
-  async healthCheck(serverName: string): Promise<boolean>
+  async startServer(config: MCPServerConfig): Promise<void>;
+  async stopServer(name: string): Promise<void>;
+  async callTool(serverName: string, toolName: string, args: any): Promise<any>;
+  async listServers(): Promise<MCPServerInfo[]>;
+  async healthCheck(serverName: string): Promise<boolean>;
 }
 ```
 
 **MCP Server Process Wrapper** (`src/mcp/server-process.ts`):
+
 ```typescript
 export class MCPServerProcess {
-  constructor(config: MCPServerConfig)
-  async start(): Promise<void>  // Spawn stdio subprocess
-  async stop(): Promise<void>   // Kill subprocess
-  async request(method: string, params: any): Promise<any>  // JSON-RPC call
-  on(event: 'error' | 'close', handler: Function): void
+  constructor(config: MCPServerConfig);
+  async start(): Promise<void>; // Spawn stdio subprocess
+  async stop(): Promise<void>; // Kill subprocess
+  async request(method: string, params: any): Promise<any>; // JSON-RPC call
+  on(event: 'error' | 'close', handler: Function): void;
 }
 ```
 
 ### File Structure
+
 ```
 src/
 ├── mcp/
@@ -188,6 +199,7 @@ src/
 ## Implementation Plan
 
 ### Phase 1: MCP Client Foundation
+
 - [ ] Create `src/mcp/client.ts` - MCPClientManager class
 - [ ] Create `src/mcp/server-process.ts` - stdio subprocess wrapper
 - [ ] Implement JSON-RPC 2.0 client (inverse of our server from FEAT-006)
@@ -195,6 +207,7 @@ src/
 - [ ] Unit tests for client manager and server process
 
 ### Phase 2: GitHub MCP Integration
+
 - [ ] Install GitHub MCP server: `npm install @modelcontextprotocol/server-github`
 - [ ] Create `src/mcp/clients/github.ts` config
 - [ ] Add `GITHUB_PERSONAL_ACCESS_TOKEN` to Docker environment variables
@@ -205,6 +218,7 @@ src/
 - [ ] Documentation for GitHub token setup
 
 ### Phase 3: AWS MCP Integration
+
 - [ ] Install AWS MCP server: `npm install @modelcontextprotocol/server-aws`
 - [ ] Create `src/mcp/clients/aws.ts` config
 - [ ] Add `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` to Docker env
@@ -214,6 +228,7 @@ src/
 - [ ] Documentation for AWS IAM credentials setup
 
 ### Phase 4: Integration & Polish
+
 - [ ] Update `src/index.ts` to auto-start MCP clients on Lugh startup
 - [ ] Add health check endpoint that includes MCP server status
 - [ ] Add logging for all MCP operations (debug mode)
@@ -226,6 +241,7 @@ src/
 ## Testing Strategy
 
 ### Unit Tests
+
 - [ ] `MCPClientManager.startServer()` spawns subprocess correctly
 - [ ] `MCPClientManager.stopServer()` kills subprocess gracefully
 - [ ] `MCPServerProcess.request()` sends valid JSON-RPC messages
@@ -233,6 +249,7 @@ src/
 - [ ] Server process restarts on crash (resilience)
 
 ### Integration Tests
+
 - [ ] GitHub MCP: clone private repo via MCP tool
 - [ ] GitHub MCP: push commit to test repo
 - [ ] GitHub MCP: create PR with title and body
@@ -242,6 +259,7 @@ src/
 - [ ] AWS MCP: read CloudWatch log stream
 
 ### Manual Testing
+
 - [ ] End-to-end: Make code change → commit → push → create PR (all via Lugh)
 - [ ] End-to-end: Query AWS Lightsail instance status from Telegram
 - [ ] Health check shows all MCP servers as "running"
@@ -253,6 +271,7 @@ src/
 ## Migration & Rollout
 
 ### Database Migrations
+
 ```sql
 -- migrations/003_mcp_servers.sql
 CREATE TABLE IF NOT EXISTS mcp_servers (
@@ -276,6 +295,7 @@ ON CONFLICT (name) DO NOTHING;
 ```
 
 ### Deployment Steps
+
 1. Add environment variables to Docker Compose / `.env`:
    ```env
    GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxxxxxxxxxxxx
@@ -294,6 +314,7 @@ ON CONFLICT (name) DO NOTHING;
 7. Test AWS: Query Lightsail instance status from Telegram
 
 ### Rollback Plan
+
 1. Stop Docker container
 2. Remove environment variables (`GITHUB_PERSONAL_ACCESS_TOKEN`, `AWS_*`)
 3. Revert to previous Docker image (without MCP client code)
@@ -304,6 +325,7 @@ ON CONFLICT (name) DO NOTHING;
 ## Dependencies
 
 ### Requires
+
 - **FEAT-006 (MCP Server)**: Must be complete (we reuse types.ts and JSON-RPC logic)
 - **Node.js/Bun**: Runtime for MCP servers (already available)
 - **npm/npx**: To run official MCP servers via `npx`
@@ -311,20 +333,21 @@ ON CONFLICT (name) DO NOTHING;
 - **AWS IAM Credentials**: User must create IAM user with EC2/Lightsail permissions
 
 ### Blocks
+
 - None (this is a standalone feature)
 
 ---
 
 ## Risks & Mitigations
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| GitHub token leaked in logs/errors | High | Medium | Sanitize all log output, use `***` masking for tokens |
-| AWS credentials compromised | High | Medium | Use IAM roles with minimal permissions, rotate keys regularly |
-| MCP server crashes repeatedly | Medium | Low | Implement auto-restart with backoff, health checks |
-| Subprocess communication deadlock | Medium | Low | Add timeouts to all JSON-RPC calls, log hanging requests |
-| `npx` package installation slow/fails | Low | Medium | Pre-install packages in Docker image, use local cache |
-| MCP protocol version mismatch | Low | Low | Pin MCP server versions in package.json, test upgrades |
+| Risk                                  | Impact | Likelihood | Mitigation                                                    |
+| ------------------------------------- | ------ | ---------- | ------------------------------------------------------------- |
+| GitHub token leaked in logs/errors    | High   | Medium     | Sanitize all log output, use `***` masking for tokens         |
+| AWS credentials compromised           | High   | Medium     | Use IAM roles with minimal permissions, rotate keys regularly |
+| MCP server crashes repeatedly         | Medium | Low        | Implement auto-restart with backoff, health checks            |
+| Subprocess communication deadlock     | Medium | Low        | Add timeouts to all JSON-RPC calls, log hanging requests      |
+| `npx` package installation slow/fails | Low    | Medium     | Pre-install packages in Docker image, use local cache         |
+| MCP protocol version mismatch         | Low    | Low        | Pin MCP server versions in package.json, test upgrades        |
 
 ---
 

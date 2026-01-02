@@ -36,6 +36,7 @@
 ## Checkpoint Contents
 
 ### checkpoint.json
+
 ```json
 {
   "id": "chk_20241227_143022",
@@ -49,7 +50,7 @@
     "commit": "abc123def",
     "dirty_files": ["src/index.ts"],
     "worktrees": [
-      {"name": "issue-42", "branch": "fix/issue-42", "path": "/.lugh/worktrees/issue-42"}
+      { "name": "issue-42", "branch": "fix/issue-42", "path": "/.lugh/worktrees/issue-42" }
     ]
   },
 
@@ -66,7 +67,7 @@
   "agents": {
     "active_count": 2,
     "sessions": [
-      {"id": "sess_123", "conversation_id": "conv_456", "assistant_session_id": "claude_789"}
+      { "id": "sess_123", "conversation_id": "conv_456", "assistant_session_id": "claude_789" }
     ]
   },
 
@@ -102,6 +103,7 @@
 ## Commands
 
 ### Create Checkpoint
+
 ```
 /checkpoint [description]
 
@@ -112,6 +114,7 @@ Examples:
 ```
 
 **Response:**
+
 ```
 ✅ Checkpoint created: chk_20241227_143022
 
@@ -125,6 +128,7 @@ Restore with: /restore chk_20241227_143022
 ```
 
 ### List Checkpoints
+
 ```
 /checkpoints [limit]
 
@@ -134,6 +138,7 @@ Examples:
 ```
 
 **Response:**
+
 ```
 📁 Checkpoints (5 total):
 
@@ -153,6 +158,7 @@ Examples:
 ```
 
 ### Restore Checkpoint
+
 ```
 /restore <checkpoint_id> [--dry-run]
 
@@ -162,6 +168,7 @@ Examples:
 ```
 
 **Dry Run Response:**
+
 ```
 🔍 Restore Preview: chk_20241227_143022
 
@@ -176,6 +183,7 @@ Proceed? Use: /restore chk_20241227_143022 --confirm
 ```
 
 ### Delete Checkpoint
+
 ```
 /checkpoint-delete <checkpoint_id>
 ```
@@ -185,16 +193,19 @@ Proceed? Use: /restore chk_20241227_143022 --confirm
 ## Auto-Checkpoints
 
 ### Triggers
-| Event | Auto-Checkpoint? | Retention |
-|-------|------------------|-----------|
-| PR merged to main | ✅ Yes | 30 days |
-| End of day (midnight) | ✅ Yes | 7 days |
-| Before major command | ✅ Yes | 24 hours |
-| Manual /checkpoint | ✅ Yes | Forever |
-| Every hour | ❌ No | - |
+
+| Event                 | Auto-Checkpoint? | Retention |
+| --------------------- | ---------------- | --------- |
+| PR merged to main     | ✅ Yes           | 30 days   |
+| End of day (midnight) | ✅ Yes           | 7 days    |
+| Before major command  | ✅ Yes           | 24 hours  |
+| Manual /checkpoint    | ✅ Yes           | Forever   |
+| Every hour            | ❌ No            | -         |
 
 ### Before Major Commands
+
 These commands auto-create checkpoint before running:
+
 - `/restore` (before restoring)
 - `/reset` (before clearing)
 - `/worktree remove` (before deleting)
@@ -205,6 +216,7 @@ These commands auto-create checkpoint before running:
 ## Implementation
 
 ### Create Checkpoint
+
 ```typescript
 async function createCheckpoint(
   description?: string,
@@ -255,6 +267,7 @@ async function createCheckpoint(
 ```
 
 ### Restore Checkpoint
+
 ```typescript
 async function restoreCheckpoint(id: string, dryRun = false): Promise<RestoreResult> {
   const dir = join(LUGH_HOME, 'checkpoints', id);
@@ -293,13 +306,14 @@ async function restoreCheckpoint(id: string, dryRun = false): Promise<RestoreRes
 ## Cleanup Policy
 
 | Checkpoint Type | Retention | Max Count |
-|-----------------|-----------|-----------|
-| Manual | Forever | Unlimited |
-| PR merged | 30 days | 50 |
-| End of day | 7 days | 7 |
-| Pre-operation | 24 hours | 10 |
+| --------------- | --------- | --------- |
+| Manual          | Forever   | Unlimited |
+| PR merged       | 30 days   | 50        |
+| End of day      | 7 days    | 7         |
+| Pre-operation   | 24 hours  | 10        |
 
 ### Cleanup Command
+
 ```
 /checkpoint-cleanup [--dry-run]
 ```
@@ -311,18 +325,23 @@ Removes checkpoints according to retention policy.
 ## Edge Cases
 
 ### Large Databases
+
 For DBs > 1GB:
+
 - Use incremental backups
 - Only store diff from previous checkpoint
 - Compress heavily
 
 ### Active Operations
+
 If checkpoint during active agent work:
+
 - Wait for current tool to complete
 - Capture mid-stream state
 - Mark as "partial" in metadata
 
 ### Concurrent Checkpoints
+
 - Queue checkpoint requests
 - Only one checkpoint at a time
 - Return existing if < 1 minute old

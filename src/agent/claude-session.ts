@@ -225,7 +225,7 @@ export class ClaudeSession {
       return text
         .trim()
         .split('\n')
-        .filter((f) => f);
+        .filter(f => f);
     } catch {
       return [];
     }

@@ -9,13 +9,7 @@ import { Pool } from 'pg';
 import { PgPubSub } from './pubsub.js';
 import { AgentRegistry } from './agent-registry.js';
 import { TaskQueue } from './task-queue.js';
-import type {
-  TaskRequest,
-  TaskHandle,
-  PoolStatus,
-  PoolTask,
-  HeartbeatMessage,
-} from './types.js';
+import type { TaskRequest, TaskHandle, PoolStatus, PoolTask, HeartbeatMessage } from './types.js';
 
 export interface PoolCoordinatorConfig {
   /** Maximum number of agents in the pool */
@@ -36,10 +30,7 @@ export class PoolCoordinator {
   private cleanupInterval?: NodeJS.Timeout;
   private config: PoolCoordinatorConfig;
 
-  constructor(
-    pool: Pool,
-    config?: Partial<PoolCoordinatorConfig>
-  ) {
+  constructor(pool: Pool, config?: Partial<PoolCoordinatorConfig>) {
     this.pubsub = new PgPubSub(pool);
     this.registry = new AgentRegistry(pool);
     this.queue = new TaskQueue(pool);
@@ -66,7 +57,7 @@ export class PoolCoordinator {
     console.log('[PoolCoordinator] Initializing...');
 
     // Subscribe to heartbeat messages
-    await this.pubsub.subscribe('agent_heartbeat', (payload) => {
+    await this.pubsub.subscribe('agent_heartbeat', payload => {
       this.handleHeartbeat(payload as HeartbeatMessage);
     });
 
@@ -76,7 +67,7 @@ export class PoolCoordinator {
     this.isInitialized = true;
     console.log(
       `[PoolCoordinator] Initialized (poolSize: ${this.config.poolSize}, ` +
-      `staleThreshold: ${this.config.staleThreshold}s)`
+        `staleThreshold: ${this.config.staleThreshold}s)`
     );
   }
 
@@ -142,7 +133,7 @@ export class PoolCoordinator {
       }
 
       // Wait before next poll
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
     }
 
     throw new Error(`Task ${taskId} timed out after ${timeoutMs}ms`);

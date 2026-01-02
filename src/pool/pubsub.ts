@@ -36,7 +36,7 @@ export class PgPubSub {
       if (Buffer.byteLength(json, 'utf8') > 7900) {
         console.warn(
           `[PgPubSub] Payload for channel '${channel}' is large (${Buffer.byteLength(json)} bytes). ` +
-          'Consider sending only IDs and fetching full data from database.'
+            'Consider sending only IDs and fetching full data from database.'
         );
       }
 
@@ -68,7 +68,7 @@ export class PgPubSub {
         await client.query(`LISTEN ${this.sanitizeChannel(channel)}`);
 
         // Set up notification handler
-        client.on('notification', (msg) => {
+        client.on('notification', msg => {
           if (msg.channel === channel && msg.payload) {
             try {
               const payload = JSON.parse(msg.payload);
@@ -77,11 +77,8 @@ export class PgPubSub {
               if (handlers) {
                 // Call all handlers for this channel
                 for (const h of handlers) {
-                  Promise.resolve(h(payload)).catch((err) => {
-                    console.error(
-                      `[PgPubSub] Handler error for channel '${channel}':`,
-                      err
-                    );
+                  Promise.resolve(h(payload)).catch(err => {
+                    console.error(`[PgPubSub] Handler error for channel '${channel}':`, err);
                   });
                 }
               }
@@ -94,7 +91,7 @@ export class PgPubSub {
           }
         });
 
-        client.on('error', (err) => {
+        client.on('error', err => {
           console.error(`[PgPubSub] Client error for channel '${channel}':`, err);
           // Attempt to reconnect
           this.handleClientError(channel);
@@ -178,10 +175,7 @@ export class PgPubSub {
         try {
           await this.subscribe(channel, handler);
         } catch (error) {
-          console.error(
-            `[PgPubSub] Failed to resubscribe handler to '${channel}':`,
-            error
-          );
+          console.error(`[PgPubSub] Failed to resubscribe handler to '${channel}':`, error);
         }
       }
     }

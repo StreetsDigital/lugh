@@ -91,9 +91,7 @@ class AgentWorker {
     await this.register();
 
     // Subscribe to orchestrator channels
-    await this.redis.subscribeToOrchestrator((message) =>
-      this.handleOrchestratorMessage(message)
-    );
+    await this.redis.subscribeToOrchestrator(message => this.handleOrchestratorMessage(message));
 
     // Start heartbeat
     this.heartbeat.start();
@@ -143,9 +141,7 @@ class AgentWorker {
   /**
    * Handle messages from orchestrator
    */
-  private async handleOrchestratorMessage(
-    message: OrchestratorMessage
-  ): Promise<void> {
+  private async handleOrchestratorMessage(message: OrchestratorMessage): Promise<void> {
     switch (message.type) {
       case 'task:dispatch':
         await this.handleTaskDispatch(message as TaskDispatchMessage);
@@ -212,14 +208,15 @@ class AgentWorker {
 
       // Create provider based on task characteristics
       // If agent has a fixed provider, use that; otherwise let factory decide
-      this.currentProvider = this.assignedProvider === 'claude-code'
-        ? await this.providerFactory.createProvider(AGENT_ID, taskId, this.redis, characteristics)
-        : await this.providerFactory.createProviderByType(
-            this.assignedProvider,
-            AGENT_ID,
-            taskId,
-            this.redis
-          );
+      this.currentProvider =
+        this.assignedProvider === 'claude-code'
+          ? await this.providerFactory.createProvider(AGENT_ID, taskId, this.redis, characteristics)
+          : await this.providerFactory.createProviderByType(
+              this.assignedProvider,
+              AGENT_ID,
+              taskId,
+              this.redis
+            );
 
       console.log(`[Agent ${AGENT_ID}] Using provider: ${this.currentProvider.name}`);
 
@@ -322,7 +319,11 @@ class AgentWorker {
     const wordCount = description.split(/\s+/).length;
     if (wordCount < 10) {
       complexity = 'simple';
-    } else if (wordCount > 50 || description.includes('complex') || description.includes('refactor')) {
+    } else if (
+      wordCount > 50 ||
+      description.includes('complex') ||
+      description.includes('refactor')
+    ) {
       complexity = 'complex';
     }
 
@@ -449,7 +450,7 @@ class AgentWorker {
 
 // Start the worker
 const worker = new AgentWorker();
-worker.start().catch((err) => {
+worker.start().catch(err => {
   console.error('Failed to start agent worker:', err);
   process.exit(1);
 });

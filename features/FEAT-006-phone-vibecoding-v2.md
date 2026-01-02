@@ -20,6 +20,7 @@ Extend the current approval workflow (Phone Vibecoding V1) with **next-generatio
 **Current State (from `docs/phone-vibecoding-v1.md`):**
 
 ✅ **Blocking Approvals:**
+
 ```env
 BLOCKING_APPROVALS=true          # Block on high-risk tools
 APPROVAL_TIMEOUT_MS=300000       # 5 min to respond
@@ -27,12 +28,14 @@ NOTIFY_ON_RISK_TOOLS=true        # Send notifications
 ```
 
 ✅ **Basic Workflow:**
+
 1. Agent needs to run risky tool (Write, Edit, Bash)
 2. User gets notification with tool details
 3. User types `/approve` or `/reject`
 4. Agent proceeds or stops
 
 **Limitations:**
+
 - Text-only commands (slow on mobile)
 - No code preview (hard to judge changes)
 - Manual typing required (friction)
@@ -44,7 +47,9 @@ NOTIFY_ON_RISK_TOOLS=true        # Send notifications
 ## What V2 Adds
 
 ### 1. Voice Commands 🎤
+
 Send voice notes, Lugh transcribes and executes:
+
 - "Approve" → Approves pending action
 - "Reject" → Rejects pending action
 - "Show me the diff" → Displays code changes
@@ -52,7 +57,9 @@ Send voice notes, Lugh transcribes and executes:
 - "Status" → Pool status + active tasks
 
 ### 2. Inline Quick Actions ⚡
+
 Telegram inline keyboards for one-tap actions:
+
 ```
 ┌─────────────────────────────────┐
 │ Agent wants to edit auth.ts     │
@@ -65,7 +72,9 @@ Telegram inline keyboards for one-tap actions:
 ```
 
 ### 3. Rich Code Previews 📄
+
 Visual diff rendering with syntax highlighting:
+
 ```diff
 // src/auth/validate.ts
 - function validate(token) {
@@ -77,20 +86,25 @@ Visual diff rendering with syntax highlighting:
 ```
 
 ### 4. Photo-to-Task 📸
+
 Take a photo, Lugh creates tasks:
+
 - **Whiteboard sketch** → Generates implementation plan
 - **Screenshot of bug** → Creates debugging task
 - **Handwritten notes** → Converts to structured todos
 - **Architecture diagram** → Analyzes and suggests code structure
 
 ### 5. Swipe Gestures (Telegram-native) 👆
+
 - **Reply to approval message** → Auto-context for approve/reject
 - **React with 👍** → Quick approve
 - **React with 👎** → Quick reject
 - **React with 👀** → Request diff
 
 ### 6. Contextual Notifications 🔔
+
 Smart notifications with rich context:
+
 ```
 🔧 Agent-2 needs approval
 
@@ -235,18 +249,20 @@ ALTER TABLE remote_agent_approvals
 **1.1 Add Whisper Integration**
 
 Install OpenAI SDK:
+
 ```bash
 bun add openai
 ```
 
 Create `src/services/voice-transcription.ts`:
+
 ```typescript
 import OpenAI from 'openai';
 import fs from 'fs/promises';
 import path from 'path';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export interface VoiceTranscription {
@@ -255,22 +271,20 @@ export interface VoiceTranscription {
   confidence?: number;
 }
 
-export async function transcribeVoiceMessage(
-  audioFilePath: string
-): Promise<VoiceTranscription> {
+export async function transcribeVoiceMessage(audioFilePath: string): Promise<VoiceTranscription> {
   const audioFile = await fs.readFile(audioFilePath);
 
   const response = await openai.audio.transcriptions.create({
     file: audioFile,
     model: 'whisper-1',
     language: 'en', // Or detect automatically
-    response_format: 'verbose_json' // Includes confidence
+    response_format: 'verbose_json', // Includes confidence
   });
 
   return {
     text: response.text,
     duration: response.duration,
-    confidence: response.confidence
+    confidence: response.confidence,
   };
 }
 ```
@@ -278,9 +292,10 @@ export async function transcribeVoiceMessage(
 **1.2 Add Voice Message Handler**
 
 Update `src/adapters/telegram.ts`:
+
 ```typescript
 // Listen for voice messages
-this.bot.on('voice', async (msg) => {
+this.bot.on('voice', async msg => {
   const chatId = msg.chat.id;
   const conversationId = chatId.toString();
 
@@ -306,6 +321,7 @@ this.bot.on('voice', async (msg) => {
 **1.3 Create Intent Parser**
 
 Create `src/services/voice-intent-parser.ts`:
+
 ```typescript
 export interface VoiceIntent {
   type: 'approve' | 'reject' | 'command' | 'query' | 'unknown';
@@ -319,7 +335,7 @@ const INTENT_PATTERNS = {
   reject: /^(reject|no|cancel|stop|don't|abort)$/i,
   status: /^(status|state|pool|agents|what's happening)$/i,
   diff: /^(diff|show|preview|changes|what changed)$/i,
-  command: /^(plan|execute|commit|review|fix)\s+(.+)$/i
+  command: /^(plan|execute|commit|review|fix)\s+(.+)$/i,
 };
 
 export async function parseVoiceIntent(text: string): Promise<VoiceIntent> {
@@ -348,7 +364,7 @@ export async function parseVoiceIntent(text: string): Promise<VoiceIntent> {
       type: 'command',
       command: commandMatch[1],
       args: [commandMatch[2]],
-      confidence: 0.85
+      confidence: 0.85,
     };
   }
 
@@ -376,6 +392,7 @@ async function parseWithClaude(text: string): Promise<VoiceIntent> {
 **2.1 Create Inline Keyboard Builder**
 
 Create `src/adapters/telegram/keyboards.ts`:
+
 ```typescript
 import { InlineKeyboardMarkup, InlineKeyboardButton } from 'node-telegram-bot-api';
 
@@ -388,9 +405,9 @@ export function buildApprovalKeyboard(approvalId: string): InlineKeyboardMarkup 
       ],
       [
         { text: '👁️ Show Diff', callback_data: `diff:${approvalId}` },
-        { text: '⏸️ Pause Agent', callback_data: `pause:${approvalId}` }
-      ]
-    ]
+        { text: '⏸️ Pause Agent', callback_data: `pause:${approvalId}` },
+      ],
+    ],
   };
 }
 
@@ -401,10 +418,8 @@ export function buildTaskActionKeyboard(taskId: string): InlineKeyboardMarkup {
         { text: '▶️ Execute', callback_data: `task:execute:${taskId}` },
         { text: '📝 Edit', callback_data: `task:edit:${taskId}` },
       ],
-      [
-        { text: '🗑️ Cancel', callback_data: `task:cancel:${taskId}` }
-      ]
-    ]
+      [{ text: '🗑️ Cancel', callback_data: `task:cancel:${taskId}` }],
+    ],
   };
 }
 
@@ -413,12 +428,10 @@ export function buildPoolStatusKeyboard(): InlineKeyboardMarkup {
     inline_keyboard: [
       [
         { text: '🔄 Refresh', callback_data: 'pool:refresh' },
-        { text: '📊 Full Stats', callback_data: 'pool:stats' }
+        { text: '📊 Full Stats', callback_data: 'pool:stats' },
       ],
-      [
-        { text: '⏹️ Stop All', callback_data: 'pool:stop_all' }
-      ]
-    ]
+      [{ text: '⏹️ Stop All', callback_data: 'pool:stop_all' }],
+    ],
   };
 }
 ```
@@ -426,6 +439,7 @@ export function buildPoolStatusKeyboard(): InlineKeyboardMarkup {
 **2.2 Handle Callback Queries**
 
 Update `src/adapters/telegram.ts`:
+
 ```typescript
 // Listen for button clicks
 this.bot.on('callback_query', async (query) => {
@@ -506,6 +520,7 @@ private async handleApprovalButton(
 **2.3 Send Approvals with Keyboards**
 
 Update approval request sending:
+
 ```typescript
 async function requestApproval(
   conversationId: string,
@@ -515,7 +530,7 @@ async function requestApproval(
   const approval = await createApproval({
     conversationId,
     toolName,
-    toolArgs
+    toolArgs,
   });
 
   const keyboard = buildApprovalKeyboard(approval.id);
@@ -528,7 +543,7 @@ ${formatToolPreview(toolName, toolArgs)}
 [Timeout: 5 minutes]`;
 
   await platform.sendMessage(conversationId, message, {
-    reply_markup: keyboard
+    reply_markup: keyboard,
   });
 
   return waitForApproval(approval.id);
@@ -542,6 +557,7 @@ ${formatToolPreview(toolName, toolArgs)}
 **3.1 Create Diff Formatter**
 
 Create `src/services/diff-formatter.ts`:
+
 ```typescript
 import { diffLines } from 'diff';
 
@@ -584,15 +600,17 @@ export function formatDiffPreview(
   return {
     summary: `+${additions} -${deletions}`,
     preview: lines.join('\n'),
-    stats: { additions, deletions, files: 1 }
+    stats: { additions, deletions, files: 1 },
   };
 }
 
-export function formatMultiFileDiff(files: Array<{
-  path: string;
-  oldContent: string;
-  newContent: string;
-}>): string {
+export function formatMultiFileDiff(
+  files: Array<{
+    path: string;
+    oldContent: string;
+    newContent: string;
+  }>
+): string {
   const previews = files.map(file => {
     const diff = formatDiffPreview(file.oldContent, file.newContent, 10);
     return `📄 ${file.path}\n${diff.summary}\n\`\`\`\n${diff.preview}\n\`\`\``;
@@ -605,6 +623,7 @@ export function formatMultiFileDiff(files: Array<{
 **3.2 Enhance Approval Previews**
 
 Update approval message formatting:
+
 ```typescript
 function formatToolPreview(toolName: string, toolArgs: object): string {
   switch (toolName) {
@@ -659,12 +678,13 @@ ${truncated ? '\n... (truncated)' : ''}
 **4.1 Add Vision API Integration**
 
 Create `src/services/vision-analyzer.ts`:
+
 ```typescript
 import Anthropic from '@anthropic-ai/sdk';
 import fs from 'fs/promises';
 
 const anthropic = new Anthropic({
-  apiKey: process.env.CLAUDE_API_KEY
+  apiKey: process.env.CLAUDE_API_KEY,
 });
 
 export interface VisionAnalysis {
@@ -675,30 +695,28 @@ export interface VisionAnalysis {
   confidence: number;
 }
 
-export async function analyzeImage(
-  imagePath: string,
-  caption?: string
-): Promise<VisionAnalysis> {
+export async function analyzeImage(imagePath: string, caption?: string): Promise<VisionAnalysis> {
   const imageData = await fs.readFile(imagePath);
   const base64Image = imageData.toString('base64');
 
   const response = await anthropic.messages.create({
     model: 'claude-3-5-sonnet-20241022',
     max_tokens: 2000,
-    messages: [{
-      role: 'user',
-      content: [
-        {
-          type: 'image',
-          source: {
-            type: 'base64',
-            media_type: 'image/jpeg',
-            data: base64Image
-          }
-        },
-        {
-          type: 'text',
-          text: `Analyze this image for software development context.
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: 'image/jpeg',
+              data: base64Image,
+            },
+          },
+          {
+            type: 'text',
+            text: `Analyze this image for software development context.
 ${caption ? `User says: "${caption}"` : ''}
 
 Identify:
@@ -713,10 +731,11 @@ Return JSON:
   "extractedText": "Any text/code found",
   "suggestedTasks": ["task1", "task2", "task3"],
   "confidence": 0.0-1.0
-}`
-        }
-      ]
-    }]
+}`,
+          },
+        ],
+      },
+    ],
   });
 
   const content = response.content[0];
@@ -731,9 +750,10 @@ Return JSON:
 **4.2 Add Photo Handler**
 
 Update `src/adapters/telegram.ts`:
+
 ```typescript
 // Listen for photos
-this.bot.on('photo', async (msg) => {
+this.bot.on('photo', async msg => {
   const chatId = msg.chat.id;
   const conversationId = chatId.toString();
   const caption = msg.caption || '';
@@ -746,10 +766,7 @@ this.bot.on('photo', async (msg) => {
   const filePath = await this.bot.downloadFile(fileId, '/tmp');
 
   // Send thinking message
-  const thinkingMsg = await this.bot.sendMessage(
-    chatId,
-    '🔍 Analyzing image...'
-  );
+  const thinkingMsg = await this.bot.sendMessage(chatId, '🔍 Analyzing image...');
 
   try {
     // Analyze with Claude Vision
@@ -760,7 +777,7 @@ this.bot.on('photo', async (msg) => {
       conversationId,
       telegramFileId: fileId,
       caption,
-      visionAnalysis: analysis
+      visionAnalysis: analysis,
     });
 
     // Generate response
@@ -773,15 +790,14 @@ this.bot.on('photo', async (msg) => {
     const keyboard = buildVisionTaskKeyboard(analysis);
     await this.bot.sendMessage(chatId, response, {
       reply_markup: keyboard,
-      parse_mode: 'Markdown'
+      parse_mode: 'Markdown',
     });
-
   } catch (error) {
     console.error('[Vision] Analysis failed', { error });
-    await this.bot.editMessageText(
-      '❌ Failed to analyze image. Try again with a clearer photo.',
-      { chat_id: chatId, message_id: thinkingMsg.message_id }
-    );
+    await this.bot.editMessageText('❌ Failed to analyze image. Try again with a clearer photo.', {
+      chat_id: chatId,
+      message_id: thinkingMsg.message_id,
+    });
   } finally {
     await fs.unlink(filePath);
   }
@@ -791,6 +807,7 @@ this.bot.on('photo', async (msg) => {
 **4.3 Create Vision Task Actions**
 
 Create `src/handlers/vision-handler.ts`:
+
 ```typescript
 export function formatVisionResponse(analysis: VisionAnalysis): string {
   const emoji = {
@@ -798,7 +815,7 @@ export function formatVisionResponse(analysis: VisionAnalysis): string {
     code: '💻',
     screenshot: '📸',
     notes: '📝',
-    unknown: '❓'
+    unknown: '❓',
   }[analysis.type];
 
   let response = `${emoji} I see: **${analysis.type}**\n\n`;
@@ -821,13 +838,13 @@ export function buildVisionTaskKeyboard(analysis: VisionAnalysis): InlineKeyboar
     inline_keyboard: [
       analysis.suggestedTasks.slice(0, 2).map((task, i) => ({
         text: `${i + 1}. ${task.substring(0, 30)}...`,
-        callback_data: `vision:task:${i}`
+        callback_data: `vision:task:${i}`,
       })),
       [
         { text: '📝 Custom Task', callback_data: 'vision:custom' },
-        { text: '❌ Ignore', callback_data: 'vision:ignore' }
-      ]
-    ]
+        { text: '❌ Ignore', callback_data: 'vision:ignore' },
+      ],
+    ],
   };
 }
 
@@ -854,8 +871,8 @@ Create an implementation plan.`;
     message: `/command-invoke plan "${task}"`,
     metadata: {
       source: 'vision',
-      visionAnalysis: analysis
-    }
+      visionAnalysis: analysis,
+    },
   });
 }
 ```
@@ -870,7 +887,7 @@ Telegram doesn't support reactions via Bot API (yet), but we can use **reply-to-
 
 ```typescript
 // Alternative: Quick reply parsing
-this.bot.on('message', async (msg) => {
+this.bot.on('message', async msg => {
   if (msg.reply_to_message) {
     const replyTo = msg.reply_to_message;
     const text = msg.text?.toLowerCase();
@@ -890,6 +907,7 @@ this.bot.on('message', async (msg) => {
 **4.2 Emoji Shortcuts**
 
 Support emoji-only responses:
+
 ```typescript
 const EMOJI_ACTIONS: Record<string, string> = {
   '👍': 'approve',
@@ -899,7 +917,7 @@ const EMOJI_ACTIONS: Record<string, string> = {
   '👀': 'show_diff',
   '⏸️': 'pause',
   '▶️': 'resume',
-  '🔄': 'refresh'
+  '🔄': 'refresh',
 };
 
 function parseEmojiAction(text: string): string | null {
@@ -914,6 +932,7 @@ function parseEmojiAction(text: string): string | null {
 **6.1 Create Notification Service**
 
 Create `src/services/notifications.ts`:
+
 ```typescript
 export interface NotificationContext {
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -943,24 +962,27 @@ export async function sendSmartNotification(
   }
 
   // Add action buttons if actionable
-  const keyboard = context.actionable
-    ? buildContextualKeyboard(context)
-    : undefined;
+  const keyboard = context.actionable ? buildContextualKeyboard(context) : undefined;
 
   await platform.sendMessage(conversationId, fullMessage, {
     reply_markup: keyboard,
     parse_mode: 'Markdown',
-    disable_notification: context.priority === 'low'
+    disable_notification: context.priority === 'low',
   });
 }
 
 function getPriorityEmoji(priority: string): string {
   switch (priority) {
-    case 'critical': return '🚨';
-    case 'high': return '⚠️';
-    case 'medium': return '🔔';
-    case 'low': return 'ℹ️';
-    default: return '📢';
+    case 'critical':
+      return '🚨';
+    case 'high':
+      return '⚠️';
+    case 'medium':
+      return '🔔';
+    case 'low':
+      return 'ℹ️';
+    default:
+      return '📢';
   }
 }
 ```
@@ -968,6 +990,7 @@ function getPriorityEmoji(priority: string): string {
 **6.2 Context-Aware Notification Templates**
 
 Create `src/services/notification-templates.ts`:
+
 ```typescript
 export function notifyTaskComplete(
   taskId: string,
@@ -979,7 +1002,7 @@ export function notifyTaskComplete(
     category: 'task',
     actionable: true,
     preview: summary,
-    metadata: { taskId, stats }
+    metadata: { taskId, stats },
   };
 }
 
@@ -993,7 +1016,7 @@ export function notifyAgentError(
     category: 'error',
     actionable: true,
     preview: error.message,
-    metadata: { agentId, context, stack: error.stack }
+    metadata: { agentId, context, stack: error.stack },
   };
 }
 
@@ -1007,7 +1030,7 @@ export function notifyHighRiskAction(
     category: 'approval',
     actionable: true,
     preview,
-    metadata: { toolName, impact }
+    metadata: { toolName, impact },
   };
 }
 ```
@@ -1052,12 +1075,13 @@ NOTIFY_ON_RISK_TOOLS=true
 ### Unit Tests
 
 **Voice Command Parsing:**
+
 ```typescript
 describe('VoiceIntentParser', () => {
   it('should parse approve command', () => {
     expect(parseVoiceIntent('approve')).toEqual({
       type: 'approve',
-      confidence: 0.95
+      confidence: 0.95,
     });
   });
 
@@ -1066,13 +1090,14 @@ describe('VoiceIntentParser', () => {
       type: 'command',
       command: 'plan',
       args: ['add dark mode'],
-      confidence: 0.85
+      confidence: 0.85,
     });
   });
 });
 ```
 
 **Diff Formatting:**
+
 ```typescript
 describe('DiffFormatter', () => {
   it('should format diff preview', () => {
@@ -1084,6 +1109,7 @@ describe('DiffFormatter', () => {
 ```
 
 **Vision Analysis:**
+
 ```typescript
 describe('VisionAnalyzer', () => {
   it('should identify diagram', async () => {
@@ -1096,6 +1122,7 @@ describe('VisionAnalyzer', () => {
 ### Integration Tests
 
 **Voice → Execution Flow:**
+
 ```typescript
 describe('Voice Command Flow', () => {
   it('should execute voice approval', async () => {
@@ -1115,6 +1142,7 @@ describe('Voice Command Flow', () => {
 ```
 
 **Photo → Task Creation:**
+
 ```typescript
 describe('Vision Task Flow', () => {
   it('should create task from whiteboard photo', async () => {
@@ -1130,6 +1158,7 @@ describe('Vision Task Flow', () => {
 ### Manual Testing
 
 **Voice Commands:**
+
 ```bash
 # 1. Start app with voice enabled
 VOICE_COMMANDS_ENABLED=true bun run dev
@@ -1143,6 +1172,7 @@ VOICE_COMMANDS_ENABLED=true bun run dev
 ```
 
 **Photo Tasks:**
+
 ```bash
 # 1. Take photo of whiteboard sketch
 # 2. Send to Telegram bot with caption "implement this"
@@ -1155,6 +1185,7 @@ VOICE_COMMANDS_ENABLED=true bun run dev
 ```
 
 **Inline Keyboards:**
+
 ```bash
 # 1. Trigger approval request
 # 2. Verify inline buttons appear
@@ -1174,6 +1205,7 @@ VOICE_COMMANDS_ENABLED=true bun run dev
 **Backwards Compatible:** All V1 features continue to work.
 
 **Enable V2 Features Incrementally:**
+
 ```env
 # Start with just voice
 VOICE_COMMANDS_ENABLED=true
@@ -1189,6 +1221,7 @@ SMART_NOTIFICATIONS_ENABLED=true
 ```
 
 **Database Migration:**
+
 ```bash
 # Apply new tables
 psql $DATABASE_URL < migrations/011_phone_vibecoding_v2.sql
@@ -1199,6 +1232,7 @@ psql $DATABASE_URL < migrations/011_phone_vibecoding_v2.sql
 ## Files to Create/Modify
 
 ### New Services
+
 - `src/services/voice-transcription.ts` - Whisper integration
 - `src/services/voice-intent-parser.ts` - Parse voice commands
 - `src/services/vision-analyzer.ts` - Claude Vision integration
@@ -1207,24 +1241,29 @@ psql $DATABASE_URL < migrations/011_phone_vibecoding_v2.sql
 - `src/services/notification-templates.ts` - Notification builders
 
 ### New Handlers
+
 - `src/handlers/vision-handler.ts` - Photo-to-task logic
 - `src/adapters/telegram/keyboards.ts` - Inline keyboard builders
 
 ### Modify Existing
+
 - `src/adapters/telegram.ts` - Add voice/photo/callback handlers
 - `src/handlers/approval-handler.ts` - Support new approval methods
 - `src/db/approvals.ts` - Track approval methods and timing
 
 ### Database
+
 - `migrations/011_phone_vibecoding_v2.sql` - New tables + columns
 
 ### Tests
+
 - `src/services/voice-intent-parser.test.ts`
 - `src/services/vision-analyzer.test.ts`
 - `src/services/diff-formatter.test.ts`
 - `src/handlers/vision-handler.test.ts`
 
 ### Documentation
+
 - `docs/phone-vibecoding-v2.md` - Usage guide
 - Update `docs/phone-vibecoding-v1.md` - Mark as superseded
 - Update `README.md` - Add V2 features section
@@ -1234,26 +1273,31 @@ psql $DATABASE_URL < migrations/011_phone_vibecoding_v2.sql
 ## Success Criteria
 
 **Voice Commands:**
+
 - [ ] Voice note transcribed and executed in < 3 seconds
 - [ ] 90%+ accuracy on standard commands (approve/reject/status)
 - [ ] Fallback to Claude interpretation for complex commands
 
 **Inline Actions:**
+
 - [ ] All approval requests have inline keyboards
 - [ ] Button clicks execute in < 1 second
 - [ ] Message updates show result immediately
 
 **Code Previews:**
+
 - [ ] Diffs render with syntax highlighting
 - [ ] Preview shows first 15 lines with stats (+/-)
 - [ ] Full diff available on request
 
 **Photo Tasks:**
+
 - [ ] Image analyzed and tasks suggested in < 5 seconds
 - [ ] 80%+ accuracy on diagram/code/notes classification
 - [ ] Task execution integrates with existing workflows
 
 **Notifications:**
+
 - [ ] Priority levels respected (critical = sound, low = silent)
 - [ ] Context-rich previews in all notifications
 - [ ] Actionable notifications have appropriate buttons
@@ -1332,13 +1376,13 @@ Agent: *continues workflow*
 
 ## Performance Targets
 
-| Metric | Target | Current (V1) |
-|--------|--------|--------------|
-| Voice transcription | < 3s | N/A |
-| Button response | < 1s | N/A |
-| Vision analysis | < 5s | N/A |
-| Approval notification delivery | < 500ms | ~1s |
-| Code preview generation | < 2s | N/A |
+| Metric                         | Target  | Current (V1) |
+| ------------------------------ | ------- | ------------ |
+| Voice transcription            | < 3s    | N/A          |
+| Button response                | < 1s    | N/A          |
+| Vision analysis                | < 5s    | N/A          |
+| Approval notification delivery | < 500ms | ~1s          |
+| Code preview generation        | < 2s    | N/A          |
 
 ---
 
@@ -1347,10 +1391,12 @@ Agent: *continues workflow*
 ### Per-Feature Costs (Monthly, Active User)
 
 **Voice Commands:**
+
 - Whisper API: ~$0.006/minute
 - Average 50 voice commands/month × 10s each = ~$0.05/user/month
 
 **Vision Analysis:**
+
 - Claude Vision: ~$0.012 per image
 - Average 20 photos/month = ~$0.24/user/month
 
@@ -1365,26 +1411,32 @@ Agent: *continues workflow*
 ### V3 Ideas
 
 **1. Multi-Language Voice:**
+
 - Support Spanish, French, German, Chinese
 - Auto-detect language per voice note
 
 **2. Collaborative Photo Tasks:**
+
 - Multiple users annotate same photo
 - Real-time collaboration on whiteboard designs
 
 **3. Voice Streaming:**
+
 - Real-time transcription as you speak
 - Interrupt with "stop" or "cancel"
 
 **4. Smart Photo Context:**
+
 - Remember previous photos in conversation
 - "Implement the left part of that diagram I sent earlier"
 
 **5. AR Code Preview:**
+
 - Overlay diffs on actual code (mobile AR)
 - Point phone at screen, see suggested changes
 
 **6. Gesture Controls:**
+
 - Shake phone to pause all agents
 - Swipe notification to quick-approve
 
@@ -1392,19 +1444,20 @@ Agent: *continues workflow*
 
 ## Risks & Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Whisper API latency | Slow voice commands | Cache common phrases, timeout at 5s |
-| Vision API cost | High for power users | Rate limit: 50 photos/day |
-| Inline keyboard spam | Too many buttons | Max 2 rows, collapse after timeout |
+| Risk                    | Impact                | Mitigation                               |
+| ----------------------- | --------------------- | ---------------------------------------- |
+| Whisper API latency     | Slow voice commands   | Cache common phrases, timeout at 5s      |
+| Vision API cost         | High for power users  | Rate limit: 50 photos/day                |
+| Inline keyboard spam    | Too many buttons      | Max 2 rows, collapse after timeout       |
 | Voice misinterpretation | Wrong action executed | Require confirmation for destructive ops |
-| Image upload failures | Poor UX | Retry with exponential backoff |
+| Image upload failures   | Poor UX               | Retry with exponential backoff           |
 
 ---
 
 ## Dependencies
 
 ### New Packages
+
 ```bash
 bun add openai          # Whisper transcription
 bun add diff            # Diff generation
@@ -1412,6 +1465,7 @@ bun add diff            # Diff generation
 ```
 
 ### API Requirements
+
 - OpenAI API key (Whisper)
 - Claude API key (Vision - already have)
 - Telegram Bot API (already have)
@@ -1420,15 +1474,15 @@ bun add diff            # Diff generation
 
 ## Timeline Estimate
 
-| Phase | Duration | Cumulative |
-|-------|----------|------------|
-| 1. Voice Commands | 1.5 days | 1.5 days |
-| 2. Inline Quick Actions | 1 day | 2.5 days |
-| 3. Rich Code Previews | 1 day | 3.5 days |
-| 4. Photo-to-Task | 1.5 days | 5 days |
-| 5. Reaction Shortcuts | 0.5 days | 5.5 days |
-| 6. Smart Notifications | 1 day | 6.5 days |
-| Testing & Polish | 1 day | 7.5 days |
+| Phase                   | Duration | Cumulative |
+| ----------------------- | -------- | ---------- |
+| 1. Voice Commands       | 1.5 days | 1.5 days   |
+| 2. Inline Quick Actions | 1 day    | 2.5 days   |
+| 3. Rich Code Previews   | 1 day    | 3.5 days   |
+| 4. Photo-to-Task        | 1.5 days | 5 days     |
+| 5. Reaction Shortcuts   | 0.5 days | 5.5 days   |
+| 6. Smart Notifications  | 1 day    | 6.5 days   |
+| Testing & Polish        | 1 day    | 7.5 days   |
 
 **Total:** ~6-8 days for complete V2 implementation
 

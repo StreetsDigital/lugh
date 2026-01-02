@@ -189,9 +189,10 @@ export class LLMProvider {
     // Handle providers with multiple env var options
     let apiKey = '';
     if (type === 'gemini') {
-      apiKey = process.env.GEMINI_API_KEY
-        || process.env.GOOGLE_API_KEY  // GOOGLE_API_KEY takes precedence per Google docs
-        || '';
+      apiKey =
+        process.env.GEMINI_API_KEY ||
+        process.env.GOOGLE_API_KEY || // GOOGLE_API_KEY takes precedence per Google docs
+        '';
     } else {
       apiKey = process.env[apiKeyVars[type]] || '';
     }
@@ -199,9 +200,7 @@ export class LLMProvider {
     // For Claude, check multiple OAuth env var names
     let oauthToken = '';
     if (type === 'claude') {
-      oauthToken = process.env.CLAUDE_CODE_OAUTH_TOKEN
-        || process.env.CLAUDE_OAUTH_TOKEN
-        || '';
+      oauthToken = process.env.CLAUDE_CODE_OAUTH_TOKEN || process.env.CLAUDE_OAUTH_TOKEN || '';
     } else {
       oauthToken = process.env[oauthVars[type]] || '';
     }
@@ -222,10 +221,7 @@ export class LLMProvider {
   /**
    * Send a message to the LLM
    */
-  async chat(
-    messages: LLMMessage[],
-    systemPrompt?: string
-  ): Promise<LLMResponse> {
+  async chat(messages: LLMMessage[], systemPrompt?: string): Promise<LLMResponse> {
     switch (this.config.type) {
       case 'claude':
         return this.callClaude(messages, systemPrompt);
@@ -253,10 +249,7 @@ export class LLMProvider {
   /**
    * Call Claude (Anthropic API) - supports both API key and OAuth
    */
-  private async callClaude(
-    messages: LLMMessage[],
-    systemPrompt?: string
-  ): Promise<LLMResponse> {
+  private async callClaude(messages: LLMMessage[], systemPrompt?: string): Promise<LLMResponse> {
     // Build headers based on auth method
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -278,8 +271,8 @@ export class LLMProvider {
         max_tokens: this.config.maxTokens,
         system: systemPrompt,
         messages: messages
-          .filter((m) => m.role !== 'system')
-          .map((m) => ({
+          .filter(m => m.role !== 'system')
+          .map(m => ({
             role: m.role,
             content: m.content,
           })),
@@ -291,7 +284,7 @@ export class LLMProvider {
       throw new Error(`Claude API error: ${response.status} - ${error}`);
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       content: { type: string; text?: string }[];
       usage?: { input_tokens?: number; output_tokens?: number };
       model?: string;
@@ -313,16 +306,13 @@ export class LLMProvider {
   /**
    * Call Google Gemini API
    */
-  private async callGemini(
-    messages: LLMMessage[],
-    systemPrompt?: string
-  ): Promise<LLMResponse> {
+  private async callGemini(messages: LLMMessage[], systemPrompt?: string): Promise<LLMResponse> {
     // Gemini uses a different endpoint structure
     const model = this.config.model || 'gemini-1.5-pro';
     const url = `${this.config.baseUrl}/models/${model}:generateContent?key=${this.config.apiKey}`;
 
     // Convert messages to Gemini format
-    const contents = messages.map((m) => ({
+    const contents = messages.map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }],
     }));
@@ -350,14 +340,14 @@ export class LLMProvider {
       throw new Error(`Gemini API error: ${response.status} - ${error}`);
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       candidates?: { content?: { parts?: { text?: string }[] } }[];
       usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
     };
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const tokensUsed = (data.usageMetadata?.promptTokenCount || 0) +
-                       (data.usageMetadata?.candidatesTokenCount || 0);
+    const tokensUsed =
+      (data.usageMetadata?.promptTokenCount || 0) + (data.usageMetadata?.candidatesTokenCount || 0);
 
     return {
       content: text,
@@ -370,12 +360,9 @@ export class LLMProvider {
   /**
    * Call Cohere API
    */
-  private async callCohere(
-    messages: LLMMessage[],
-    systemPrompt?: string
-  ): Promise<LLMResponse> {
+  private async callCohere(messages: LLMMessage[], systemPrompt?: string): Promise<LLMResponse> {
     // Convert messages to Cohere chat format
-    const chatHistory = messages.slice(0, -1).map((m) => ({
+    const chatHistory = messages.slice(0, -1).map(m => ({
       role: m.role === 'assistant' ? 'CHATBOT' : 'USER',
       message: m.content,
     }));
@@ -386,7 +373,7 @@ export class LLMProvider {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.config.apiKey}`,
+        Authorization: `Bearer ${this.config.apiKey}`,
       },
       body: JSON.stringify({
         model: this.config.model,
@@ -403,13 +390,13 @@ export class LLMProvider {
       throw new Error(`Cohere API error: ${response.status} - ${error}`);
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       text?: string;
       meta?: { tokens?: { input_tokens?: number; output_tokens?: number } };
     };
 
-    const tokensUsed = (data.meta?.tokens?.input_tokens || 0) +
-                       (data.meta?.tokens?.output_tokens || 0);
+    const tokensUsed =
+      (data.meta?.tokens?.input_tokens || 0) + (data.meta?.tokens?.output_tokens || 0);
 
     return {
       content: data.text || '',
@@ -457,7 +444,7 @@ export class LLMProvider {
       throw new Error(`${this.config.type} API error: ${response.status} - ${error}`);
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       choices: { message: { content: string } }[];
       usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
       model?: string;
@@ -474,10 +461,7 @@ export class LLMProvider {
   /**
    * Call Ollama (local models)
    */
-  private async callOllama(
-    messages: LLMMessage[],
-    systemPrompt?: string
-  ): Promise<LLMResponse> {
+  private async callOllama(messages: LLMMessage[], systemPrompt?: string): Promise<LLMResponse> {
     const allMessages = systemPrompt
       ? [{ role: 'system' as const, content: systemPrompt }, ...messages]
       : messages;
@@ -503,7 +487,7 @@ export class LLMProvider {
       throw new Error(`Ollama error: ${response.status} - ${error}`);
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       message?: { content: string };
       eval_count?: number;
       prompt_eval_count?: number;
@@ -521,10 +505,7 @@ export class LLMProvider {
   /**
    * Call custom provider (user-configured endpoint)
    */
-  private async callCustom(
-    messages: LLMMessage[],
-    systemPrompt?: string
-  ): Promise<LLMResponse> {
+  private async callCustom(messages: LLMMessage[], systemPrompt?: string): Promise<LLMResponse> {
     if (!this.config.baseUrl) {
       throw new Error('Custom provider requires baseUrl');
     }
@@ -552,7 +533,7 @@ export class LLMProvider {
       throw new Error(`Custom provider error: ${response.status} - ${error}`);
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       choices?: { message: { content: string } }[];
       content?: string;
       usage?: { total_tokens?: number };
@@ -612,11 +593,20 @@ export function createProvider(
  */
 export function getAvailableLLMProviders(): LLMProviderType[] {
   const providers: LLMProviderType[] = [
-    'claude', 'openai', 'grok', 'gemini', 'mistral',
-    'groq', 'together', 'cohere', 'perplexity',
-    'ollama', 'openrouter', 'custom'
+    'claude',
+    'openai',
+    'grok',
+    'gemini',
+    'mistral',
+    'groq',
+    'together',
+    'cohere',
+    'perplexity',
+    'ollama',
+    'openrouter',
+    'custom',
   ];
-  return providers.filter((type) => {
+  return providers.filter(type => {
     const provider = createProvider(type);
     return provider.isAvailable();
   });
@@ -670,9 +660,17 @@ export class LLMProviderFactory {
 
     // All default providers
     const defaultProviders: LLMProviderType[] = [
-      'claude', 'openai', 'grok', 'gemini', 'mistral',
-      'groq', 'together', 'cohere', 'perplexity',
-      'ollama', 'openrouter'
+      'claude',
+      'openai',
+      'grok',
+      'gemini',
+      'mistral',
+      'groq',
+      'together',
+      'cohere',
+      'perplexity',
+      'ollama',
+      'openrouter',
     ];
 
     for (const type of defaultProviders) {

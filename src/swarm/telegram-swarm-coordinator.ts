@@ -68,7 +68,10 @@ export class TelegramSwarmCoordinator {
     this.approvalTimeoutMs = options.approvalTimeoutMs ?? 300000;
 
     // Check if auto-approve is enabled for this chat
-    if (options.autoApproveForChat || telegramAgentApprovalHandler.isAutoApproveEnabled(this.chatId)) {
+    if (
+      options.autoApproveForChat ||
+      telegramAgentApprovalHandler.isAutoApproveEnabled(this.chatId)
+    ) {
       this.requireApproval = false;
     }
   }
@@ -87,10 +90,10 @@ export class TelegramSwarmCoordinator {
       await this.bot.telegram.sendMessage(
         this.chatId,
         `🚀 **Auto-spawning Agent**\n\n` +
-        `**Agent:** \`${agentId}\`\n` +
-        `**Role:** ${subTask.role}\n` +
-        `**Task:** ${subTask.title}\n\n` +
-        `_Auto-approve mode is enabled_`,
+          `**Agent:** \`${agentId}\`\n` +
+          `**Role:** ${subTask.role}\n` +
+          `**Task:** ${subTask.title}\n\n` +
+          `_Auto-approve mode is enabled_`,
         { parse_mode: 'Markdown' }
       );
 
@@ -164,10 +167,10 @@ export class TelegramSwarmCoordinator {
     await this.bot.telegram.sendMessage(
       this.chatId,
       `🐝 **SWARM INITIALIZED**\n\n` +
-      `**Swarm ID:** \`${this.swarmId}\`\n` +
-      `**Task:** ${taskDescription.substring(0, 200)}${taskDescription.length > 200 ? '...' : ''}\n` +
-      `**Sub-tasks:** ${subTaskCount} agents will be spawned\n\n` +
-      `${this.requireApproval ? '⏳ Waiting for your approval on each agent...' : '🚀 Auto-approve mode - agents starting automatically'}`,
+        `**Swarm ID:** \`${this.swarmId}\`\n` +
+        `**Task:** ${taskDescription.substring(0, 200)}${taskDescription.length > 200 ? '...' : ''}\n` +
+        `**Sub-tasks:** ${subTaskCount} agents will be spawned\n\n` +
+        `${this.requireApproval ? '⏳ Waiting for your approval on each agent...' : '🚀 Auto-approve mode - agents starting automatically'}`,
       { parse_mode: 'Markdown' }
     );
   }
@@ -175,15 +178,20 @@ export class TelegramSwarmCoordinator {
   /**
    * Announce agent completion
    */
-  async announceAgentComplete(agentId: string, role: string, success: boolean, summary: string): Promise<void> {
+  async announceAgentComplete(
+    agentId: string,
+    role: string,
+    success: boolean,
+    summary: string
+  ): Promise<void> {
     const emoji = success ? '✅' : '❌';
     await this.bot.telegram.sendMessage(
       this.chatId,
       `${emoji} **Agent Complete**\n\n` +
-      `**Agent:** \`${agentId}\`\n` +
-      `**Role:** ${role}\n` +
-      `**Status:** ${success ? 'Success' : 'Failed'}\n\n` +
-      `${summary.substring(0, 300)}${summary.length > 300 ? '...' : ''}`,
+        `**Agent:** \`${agentId}\`\n` +
+        `**Role:** ${role}\n` +
+        `**Status:** ${success ? 'Success' : 'Failed'}\n\n` +
+        `${summary.substring(0, 300)}${summary.length > 300 ? '...' : ''}`,
       { parse_mode: 'Markdown' }
     );
   }
@@ -204,13 +212,13 @@ export class TelegramSwarmCoordinator {
     await this.bot.telegram.sendMessage(
       this.chatId,
       `🏁 **SWARM COMPLETE**\n\n` +
-      `**Swarm ID:** \`${this.swarmId}\`\n` +
-      `**Duration:** ${minutes}m ${seconds}s\n\n` +
-      `**Results:**\n` +
-      `• ✅ Completed: ${completedAgents}\n` +
-      `• ❌ Failed: ${failedAgents}\n` +
-      `• ⏭ Skipped: ${skippedAgents}\n` +
-      `• 📊 Total: ${totalAgents}`,
+        `**Swarm ID:** \`${this.swarmId}\`\n` +
+        `**Duration:** ${minutes}m ${seconds}s\n\n` +
+        `**Results:**\n` +
+        `• ✅ Completed: ${completedAgents}\n` +
+        `• ❌ Failed: ${failedAgents}\n` +
+        `• ⏭ Skipped: ${skippedAgents}\n` +
+        `• 📊 Total: ${totalAgents}`,
       { parse_mode: 'Markdown' }
     );
   }
@@ -264,7 +272,8 @@ export function createTelegramApprovalHook(
   options?: { approvalTimeoutMs?: number; autoApprove?: boolean }
 ): (subTask: SubTask, swarmId: string) => Promise<{ approved: boolean; agentId?: string }> {
   const approvalTimeoutMs = options?.approvalTimeoutMs ?? 300000;
-  const autoApprove = options?.autoApprove ?? telegramAgentApprovalHandler.isAutoApproveEnabled(chatId);
+  const autoApprove =
+    options?.autoApprove ?? telegramAgentApprovalHandler.isAutoApproveEnabled(chatId);
 
   return async (subTask: SubTask, swarmId: string) => {
     const agentId = `agent-${uuidv4().substring(0, 8)}`;
@@ -276,10 +285,10 @@ export function createTelegramApprovalHook(
       await bot.telegram.sendMessage(
         chatId,
         `🚀 **Auto-spawning Agent**\n\n` +
-        `**Agent:** \`${agentId}\`\n` +
-        `**Role:** ${subTask.role}\n` +
-        `**Task:** ${subTask.title}\n\n` +
-        `_Auto-approve mode is enabled_`,
+          `**Agent:** \`${agentId}\`\n` +
+          `**Role:** ${subTask.role}\n` +
+          `**Task:** ${subTask.title}\n\n` +
+          `_Auto-approve mode is enabled_`,
         { parse_mode: 'Markdown' }
       );
 

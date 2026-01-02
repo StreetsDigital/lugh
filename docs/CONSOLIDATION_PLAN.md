@@ -34,17 +34,17 @@ V1/
 
 ### Current State
 
-| Component | Location | Status | Action |
-|-----------|----------|--------|--------|
-| Core adapters | `src/adapters/` | Stable | Keep as-is |
-| Phone approvals | `src/adapters/telegram-approvals.ts` | Beta | Gate with feature flag |
-| Single-agent orchestrator | `src/orchestrator/` | Stable | Keep as fallback |
-| Multi-agent pool | `V1.1/orchestrator/` | Experimental | Merge with feature flag |
-| Redis messaging | `V1.1/redis/` | Experimental | Merge with feature flag |
-| LLM config API | `V1.1/orchestrator/llm-config-api.ts` | Experimental | Merge with feature flag |
-| Swarm coordination | `V1.1/orchestrator/swarm/` | Experimental | Merge with feature flag |
-| Electron app | `V1.1/electron/` | Experimental | Keep separate, link via feature flag |
-| Lugh | `Lugh-main/` | Independent | Keep as separate project |
+| Component                 | Location                              | Status       | Action                               |
+| ------------------------- | ------------------------------------- | ------------ | ------------------------------------ |
+| Core adapters             | `src/adapters/`                       | Stable       | Keep as-is                           |
+| Phone approvals           | `src/adapters/telegram-approvals.ts`  | Beta         | Gate with feature flag               |
+| Single-agent orchestrator | `src/orchestrator/`                   | Stable       | Keep as fallback                     |
+| Multi-agent pool          | `V1.1/orchestrator/`                  | Experimental | Merge with feature flag              |
+| Redis messaging           | `V1.1/redis/`                         | Experimental | Merge with feature flag              |
+| LLM config API            | `V1.1/orchestrator/llm-config-api.ts` | Experimental | Merge with feature flag              |
+| Swarm coordination        | `V1.1/orchestrator/swarm/`            | Experimental | Merge with feature flag              |
+| Electron app              | `V1.1/electron/`                      | Experimental | Keep separate, link via feature flag |
+| Lugh                      | `Lugh-main/`                          | Independent  | Keep as separate project             |
 
 ---
 
@@ -59,45 +59,55 @@ V1/
 ### Phase 2: Merge V1.1 Components (✅ DONE)
 
 **Step 1: Redis Messaging Layer** ✅
+
 ```
 V1.1/redis/ → src/redis/
 ```
+
 - Gate with `FEATURE_REDIS_MESSAGING`
 - No dependencies on other features
 - Files: `client.ts`, `channels.ts`, `messages.ts`, `index.ts`
 
 **Step 2: Agent Pool Manager** ✅
+
 ```
 V1.1/agent/ → src/agent/
 V1.1/orchestrator/pool-manager.ts → src/orchestrator/pool-manager.ts
 ```
+
 - Gate with `FEATURE_AGENT_POOL`
 - Requires: `REDIS_MESSAGING`
 - Files: `worker.ts`, `heartbeat.ts`, `providers/*`, `pool-manager.ts`
 
 **Step 3: Multi-LLM Support** ✅
+
 ```
 V1.1/orchestrator/llm-config-api.ts → src/api/llm-config.ts
 V1.1/orchestrator/swarm/llm-providers.ts → src/llm/providers.ts
 ```
+
 - Gate with `FEATURE_MULTI_LLM`
 - No dependencies on agent pool
 - Files: `llm-config.ts`, `providers.ts`
 
 **Step 4: Swarm Coordination** ✅
+
 ```
 V1.1/orchestrator/swarm/ → src/swarm/
 V1.1/orchestrator/swarm-api.ts → src/api/swarm.ts
 ```
+
 - Gate with `FEATURE_SWARM_COORDINATION`
 - Requires: `AGENT_POOL`, `MULTI_LLM`
 - Files: `types.ts`, `role-configs.ts`, `task-decomposer.ts`, `agent-spawner.ts`, `swarm-coordinator.ts`, `result-synthesizer.ts`, `index.ts`, `swarm.ts` (API)
 
 **Step 5: Verification & Recovery** ✅
+
 ```
 V1.1/orchestrator/verification.ts → src/orchestrator/verification.ts
 V1.1/orchestrator/recovery.ts → src/orchestrator/recovery.ts
 ```
+
 - Gate with `FEATURE_EXTERNAL_VERIFICATION`, `FEATURE_RECOVERY_SYSTEM`
 - Requires: `AGENT_POOL`
 - Files: `verification.ts`, `recovery.ts`
@@ -105,6 +115,7 @@ V1.1/orchestrator/recovery.ts → src/orchestrator/recovery.ts
 ### Phase 3: Update Entry Points
 
 **Modify `src/index.ts`:**
+
 ```typescript
 import { isEnabled, printFeatureSummary } from './config/features';
 
@@ -141,10 +152,12 @@ if (isEnabled('SWARM_COORDINATION')) {
 ### Phase 4: Database Migrations
 
 Migrations that need feature flag awareness:
+
 - `008_add_approvals_table.sql` → Required only when `FEATURE_PHONE_APPROVALS=true`
 - `009_llm_configuration.sql` → Required only when `FEATURE_MULTI_LLM=true`
 
 **Add migration runner logic:**
+
 ```typescript
 if (isEnabled('PHONE_APPROVALS')) {
   await runMigration('008_add_approvals_table.sql');
@@ -241,6 +254,7 @@ remote-coding-agent-main/
 Enable features in this order to minimize risk:
 
 ### Stage 1: Core Stability (Now)
+
 - ✅ `TELEGRAM_ADAPTER`
 - ✅ `SLACK_ADAPTER`
 - ✅ `DISCORD_ADAPTER`
@@ -248,15 +262,18 @@ Enable features in this order to minimize risk:
 - ✅ `LEGACY_SINGLE_AGENT`
 
 ### Stage 2: Phone Vibecoding (Next)
+
 - ⬜ `PHONE_APPROVALS`
 - ⬜ `BLOCKING_APPROVALS`
 
 ### Stage 3: Multi-LLM (After Stage 2 stable)
+
 - ⬜ `MULTI_LLM`
 - ⬜ `LLM_CONFIG_UI`
 - ⬜ `COST_TRACKING`
 
 ### Stage 4: Multi-Agent (After Stage 3 stable)
+
 - ⬜ `REDIS_MESSAGING`
 - ⬜ `AGENT_POOL`
 - ⬜ `AGENT_HEARTBEAT`
@@ -264,19 +281,21 @@ Enable features in this order to minimize risk:
 - ⬜ `RECOVERY_SYSTEM`
 
 ### Stage 5: Swarm (After Stage 4 stable)
+
 - ⬜ `SWARM_COORDINATION`
 - ⬜ `TASK_DECOMPOSER`
 
 ### Stage 6: Desktop (After Stage 3 stable)
+
 - ⬜ `ELECTRON_APP`
 
 ---
 
 ## Deprecation Timeline
 
-| Feature | Deprecated | Removal Target |
-|---------|-----------|----------------|
-| `LEGACY_SINGLE_AGENT` | When `AGENT_POOL` is stable | v2.0 |
+| Feature               | Deprecated                  | Removal Target |
+| --------------------- | --------------------------- | -------------- |
+| `LEGACY_SINGLE_AGENT` | When `AGENT_POOL` is stable | v2.0           |
 
 ---
 

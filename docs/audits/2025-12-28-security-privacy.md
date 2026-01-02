@@ -11,12 +11,12 @@
 
 This codebase is currently designed as a **single-developer tool** and is NOT suitable for SaaS deployment without significant security enhancements. The architecture explicitly avoids multi-tenant complexity, which creates substantial gaps for shared service deployment.
 
-| Risk Level | Count | Summary |
-|------------|-------|---------|
-| CRITICAL | 4 | Showstoppers for SaaS |
-| HIGH | 6 | Significant security gaps |
-| MEDIUM | 8 | Recommended improvements |
-| LOW | 4 | Best practice suggestions |
+| Risk Level | Count | Summary                   |
+| ---------- | ----- | ------------------------- |
+| CRITICAL   | 4     | Showstoppers for SaaS     |
+| HIGH       | 6     | Significant security gaps |
+| MEDIUM     | 8     | Recommended improvements  |
+| LOW        | 4     | Best practice suggestions |
 
 ---
 
@@ -28,15 +28,16 @@ This codebase is currently designed as a **single-developer tool** and is NOT su
 
 **Findings:**
 
-| Finding | Severity | File |
-|---------|----------|------|
-| All secrets stored in environment variables | OK | `src/index.ts:6-8` |
-| No secrets in database or code | OK | N/A |
-| OAuth tokens passed to AI SDK via env | MEDIUM | `src/clients/claude.ts:143-152` |
-| GitHub token embedded in git clone URLs | HIGH | `src/adapters/github.ts:358-359` |
-| Webhook secret partially logged | LOW | `src/adapters/github.ts:78` |
+| Finding                                     | Severity | File                             |
+| ------------------------------------------- | -------- | -------------------------------- |
+| All secrets stored in environment variables | OK       | `src/index.ts:6-8`               |
+| No secrets in database or code              | OK       | N/A                              |
+| OAuth tokens passed to AI SDK via env       | MEDIUM   | `src/clients/claude.ts:143-152`  |
+| GitHub token embedded in git clone URLs     | HIGH     | `src/adapters/github.ts:358-359` |
+| Webhook secret partially logged             | LOW      | `src/adapters/github.ts:78`      |
 
 **Code Reference - GitHub Token Exposure:**
+
 ```typescript
 // src/adapters/github.ts:354-364
 const ghToken = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
@@ -45,24 +46,26 @@ let cloneCommand = `git clone ${repoUrl} ${repoPath}`;
 
 if (ghToken) {
   const authenticatedUrl = `https://${ghToken}@github.com/${owner}/${repo}.git`;
-  cloneCommand = `git clone ${authenticatedUrl} ${repoPath}`;  // Token in URL!
+  cloneCommand = `git clone ${authenticatedUrl} ${repoPath}`; // Token in URL!
 }
 ```
+
 **Risk:** Token may appear in process listings, git config, or error messages.
 
 ### 1.2 Authentication & Authorization
 
 **Findings:**
 
-| Platform | Auth Method | Default | File |
-|----------|-------------|---------|------|
-| Telegram | Whitelist (user IDs) | OPEN ACCESS | `src/utils/telegram-auth.ts:29-41` |
-| Discord | Whitelist (user IDs) | OPEN ACCESS | `src/utils/discord-auth.ts:26-38` |
-| Slack | Whitelist (user IDs) | OPEN ACCESS | `src/utils/slack-auth.ts:27-37` |
-| GitHub | Whitelist (usernames) + HMAC webhook | OPEN ACCESS | `src/utils/github-auth.ts:28-44` |
-| Test Adapter | No authentication | FULLY OPEN | `src/adapters/test.ts` |
+| Platform     | Auth Method                          | Default     | File                               |
+| ------------ | ------------------------------------ | ----------- | ---------------------------------- |
+| Telegram     | Whitelist (user IDs)                 | OPEN ACCESS | `src/utils/telegram-auth.ts:29-41` |
+| Discord      | Whitelist (user IDs)                 | OPEN ACCESS | `src/utils/discord-auth.ts:26-38`  |
+| Slack        | Whitelist (user IDs)                 | OPEN ACCESS | `src/utils/slack-auth.ts:27-37`    |
+| GitHub       | Whitelist (usernames) + HMAC webhook | OPEN ACCESS | `src/utils/github-auth.ts:28-44`   |
+| Test Adapter | No authentication                    | FULLY OPEN  | `src/adapters/test.ts`             |
 
 **Critical Issue - Default Open Access:**
+
 ```typescript
 // src/utils/telegram-auth.ts:29-33
 export function isUserAuthorized(userId: number | undefined, allowedIds: number[]): boolean {
@@ -80,26 +83,27 @@ export function isUserAuthorized(userId: number | undefined, allowedIds: number[
 
 **Findings:**
 
-| Finding | Severity | File |
-|---------|----------|------|
-| Parameterized queries used consistently | OK | `src/db/*.ts` |
-| No row-level security (RLS) | CRITICAL | `migrations/000_combined.sql` |
-| No tenant isolation column | CRITICAL | All tables |
-| Connection string from env (no rotation) | MEDIUM | `src/db/connection.ts:6-7` |
-| Pool error exits process | OK | `src/db/connection.ts:15-19` |
+| Finding                                  | Severity | File                          |
+| ---------------------------------------- | -------- | ----------------------------- |
+| Parameterized queries used consistently  | OK       | `src/db/*.ts`                 |
+| No row-level security (RLS)              | CRITICAL | `migrations/000_combined.sql` |
+| No tenant isolation column               | CRITICAL | All tables                    |
+| Connection string from env (no rotation) | MEDIUM   | `src/db/connection.ts:6-7`    |
+| Pool error exits process                 | OK       | `src/db/connection.ts:15-19`  |
 
 ### 1.4 Audit Logging
 
 **Current State:** Minimal - console.log only
 
-| Logged | Not Logged |
-|--------|-----------|
-| Message receipt (platform, ID) | User identity details |
-| Tool executions (tool name) | Full tool inputs/outputs |
-| Session start/end | Failed auth attempts |
-| Clone/worktree operations | Data access patterns |
+| Logged                         | Not Logged               |
+| ------------------------------ | ------------------------ |
+| Message receipt (platform, ID) | User identity details    |
+| Tool executions (tool name)    | Full tool inputs/outputs |
+| Session start/end              | Failed auth attempts     |
+| Clone/worktree operations      | Data access patterns     |
 
 **Missing for Compliance:**
+
 - No structured audit log table
 - No immutable audit trail
 - No log shipping to secure storage
@@ -114,6 +118,7 @@ export function isUserAuthorized(userId: number | undefined, allowedIds: number[
 **File:** `migrations/000_combined.sql`
 
 **Issues:**
+
 1. **No tenant/user_id column** - All data shared globally
 2. **No row-level security policies** - Any query sees all data
 3. **Platform conversation ID is unique per platform** - Collision risk if same ID on different deployments
@@ -128,6 +133,7 @@ CREATE TABLE remote_agent_codebases (
 ```
 
 **Required for SaaS:**
+
 ```sql
 -- Would need:
 ALTER TABLE remote_agent_codebases ADD COLUMN owner_id UUID NOT NULL;
@@ -141,6 +147,7 @@ CREATE POLICY tenant_isolation ON remote_agent_codebases
 **Files:** `src/utils/lugh-paths.ts`, `src/isolation/providers/worktree.ts`
 
 **Current Structure:**
+
 ```
 ~/.lugh/
 ├── workspaces/owner/repo/    # Cloned repos
@@ -148,16 +155,18 @@ CREATE POLICY tenant_isolation ON remote_agent_codebases
 ```
 
 **Issues:**
+
 1. Single namespace for all users
 2. No per-user directory isolation
 3. AI has access to all cloned repos in workspace
 4. Path traversal protection exists but applies to single workspace root
 
 **Code Reference:**
+
 ```typescript
 // src/utils/path-validation.ts:20-24
 export function isPathWithinWorkspace(targetPath: string, basePath?: string): boolean {
-  const workspaceRoot = getWorkspaceRoot();  // Single global root
+  const workspaceRoot = getWorkspaceRoot(); // Single global root
   const effectiveBase = basePath ?? workspaceRoot;
   const resolvedTarget = resolve(effectiveBase, targetPath);
   return resolvedTarget === workspaceRoot || resolvedTarget.startsWith(workspaceRoot + sep);
@@ -169,6 +178,7 @@ export function isPathWithinWorkspace(targetPath: string, basePath?: string): bo
 **File:** `src/db/sessions.ts`
 
 **Issues:**
+
 1. Sessions linked to conversation, not user
 2. No session ownership verification
 3. Assistant session IDs stored as plain strings
@@ -203,6 +213,7 @@ export function isPathWithinWorkspace(targetPath: string, basePath?: string): bo
 | Session metadata | Database | Indefinite |
 
 **GDPR Concerns:**
+
 1. No data subject access request (DSAR) support
 2. No right-to-deletion implementation
 3. Tool inputs in `remote_agent_approvals.tool_input` may contain PII
@@ -220,15 +231,15 @@ export function isPathWithinWorkspace(targetPath: string, basePath?: string): bo
 
 ### 3.3 Encryption Status
 
-| Layer | Encrypted | Notes |
-|-------|-----------|-------|
-| Database at rest | NO* | Depends on Postgres config |
-| Database in transit | DEPENDS | If DATABASE_URL uses SSL |
-| Redis in transit | NO | Default redis:// URL |
-| File storage at rest | NO | Plain filesystem |
-| API in transit | DEPENDS | If behind HTTPS proxy |
+| Layer                | Encrypted | Notes                      |
+| -------------------- | --------- | -------------------------- |
+| Database at rest     | NO\*      | Depends on Postgres config |
+| Database in transit  | DEPENDS   | If DATABASE_URL uses SSL   |
+| Redis in transit     | NO        | Default redis:// URL       |
+| File storage at rest | NO        | Plain filesystem           |
+| API in transit       | DEPENDS   | If behind HTTPS proxy      |
 
-*Docker compose uses unencrypted local connection
+\*Docker compose uses unencrypted local connection
 
 ### 3.4 Logging of Sensitive Data
 
@@ -262,11 +273,13 @@ if (!oauthToken && !apiKey) {
 ```
 
 **Issues:**
+
 1. Single set of credentials for all users (no per-user API keys)
 2. OAuth token not rotated automatically
 3. Credentials passed in env to child processes
 
 **Critical Configuration:**
+
 ```typescript
 // src/clients/claude.ts:153-154
 permissionMode: 'bypassPermissions',  // CRITICAL: AI can execute any tool
@@ -278,12 +291,14 @@ allowDangerouslySkipPermissions: true,
 ### 4.2 Prompt Injection Risks
 
 **Locations:**
+
 1. **User messages** - Direct input to AI
 2. **GitHub issue/PR bodies** - Parsed and sent to AI
 3. **Thread context** - Accumulated messages sent as context
 4. **Command templates** - User-defined with variable substitution
 
 **Code Reference:**
+
 ```typescript
 // src/orchestrator/orchestrator.ts:740-742
 if (threadContext) {
@@ -296,12 +311,14 @@ if (threadContext) {
 ### 4.3 Data Leakage Through AI Responses
 
 **Concerns:**
+
 1. AI has access to all files in working directory
 2. AI can read any file via `Read` tool
 3. No content filtering on AI outputs
 4. `.env` files blocked from auto-send but AI can still read them
 
 **Blocked Patterns (partial protection):**
+
 ```typescript
 // src/orchestrator/orchestrator.ts:143
 /\.env$/,           // Actual .env files
@@ -311,6 +328,7 @@ if (threadContext) {
 ### 4.4 Session/Conversation Privacy
 
 **Issues:**
+
 1. Sessions tied to conversation, not authenticated user
 2. If conversation ID is predictable, sessions could be hijacked
 3. No session expiration beyond inactivity-based staleness
@@ -377,49 +395,49 @@ if (threadContext) {
 
 ## 6. Compliance Checklist
 
-| Requirement | Status | Gap |
-|-------------|--------|-----|
-| **GDPR** | | |
-| Lawful basis for processing | MISSING | No consent mechanism |
-| Data minimization | PARTIAL | Tool inputs may contain excess data |
-| Right to access | MISSING | No DSAR support |
-| Right to deletion | MISSING | No deletion mechanism |
-| Data portability | MISSING | No export functionality |
-| **SOC 2** | | |
-| Access controls | PARTIAL | Auth exists but defaults open |
-| Audit logging | MISSING | No structured audit trail |
-| Encryption | MISSING | No encryption at rest |
-| Incident response | MISSING | No alerting or procedures |
-| **HIPAA** | | |
-| PHI handling | NOT APPLICABLE | Unless used with healthcare data |
-| BAA requirements | NOT APPLICABLE | N/A |
+| Requirement                 | Status         | Gap                                 |
+| --------------------------- | -------------- | ----------------------------------- |
+| **GDPR**                    |                |                                     |
+| Lawful basis for processing | MISSING        | No consent mechanism                |
+| Data minimization           | PARTIAL        | Tool inputs may contain excess data |
+| Right to access             | MISSING        | No DSAR support                     |
+| Right to deletion           | MISSING        | No deletion mechanism               |
+| Data portability            | MISSING        | No export functionality             |
+| **SOC 2**                   |                |                                     |
+| Access controls             | PARTIAL        | Auth exists but defaults open       |
+| Audit logging               | MISSING        | No structured audit trail           |
+| Encryption                  | MISSING        | No encryption at rest               |
+| Incident response           | MISSING        | No alerting or procedures           |
+| **HIPAA**                   |                |                                     |
+| PHI handling                | NOT APPLICABLE | Unless used with healthcare data    |
+| BAA requirements            | NOT APPLICABLE | N/A                                 |
 
 ---
 
 ## 7. Files Analyzed
 
-| File Path | Purpose |
-|-----------|---------|
-| `/home/user/makewithLugh/src/index.ts` | Main entry point, endpoint definitions |
-| `/home/user/makewithLugh/src/adapters/telegram.ts` | Telegram adapter with auth |
-| `/home/user/makewithLugh/src/adapters/github.ts` | GitHub webhook handler |
-| `/home/user/makewithLugh/src/adapters/discord.ts` | Discord adapter |
-| `/home/user/makewithLugh/src/adapters/slack.ts` | Slack adapter |
-| `/home/user/makewithLugh/src/db/connection.ts` | Database pool config |
-| `/home/user/makewithLugh/src/db/sessions.ts` | Session operations |
-| `/home/user/makewithLugh/src/db/conversations.ts` | Conversation operations |
-| `/home/user/makewithLugh/src/db/approvals.ts` | Approval workflow |
-| `/home/user/makewithLugh/src/orchestrator/orchestrator.ts` | AI conversation management |
-| `/home/user/makewithLugh/src/clients/claude.ts` | Claude SDK integration |
-| `/home/user/makewithLugh/src/utils/telegram-auth.ts` | Telegram auth utilities |
-| `/home/user/makewithLugh/src/utils/github-auth.ts` | GitHub auth utilities |
-| `/home/user/makewithLugh/src/utils/slack-auth.ts` | Slack auth utilities |
-| `/home/user/makewithLugh/src/utils/discord-auth.ts` | Discord auth utilities |
-| `/home/user/makewithLugh/src/utils/path-validation.ts` | Path traversal protection |
-| `/home/user/makewithLugh/src/utils/logger.ts` | Logging utilities |
-| `/home/user/makewithLugh/src/redis/client.ts` | Redis client |
-| `/home/user/makewithLugh/migrations/000_combined.sql` | Database schema |
-| `/home/user/makewithLugh/docker-compose.yml` | Container configuration |
+| File Path                                                  | Purpose                                |
+| ---------------------------------------------------------- | -------------------------------------- |
+| `/home/user/makewithLugh/src/index.ts`                     | Main entry point, endpoint definitions |
+| `/home/user/makewithLugh/src/adapters/telegram.ts`         | Telegram adapter with auth             |
+| `/home/user/makewithLugh/src/adapters/github.ts`           | GitHub webhook handler                 |
+| `/home/user/makewithLugh/src/adapters/discord.ts`          | Discord adapter                        |
+| `/home/user/makewithLugh/src/adapters/slack.ts`            | Slack adapter                          |
+| `/home/user/makewithLugh/src/db/connection.ts`             | Database pool config                   |
+| `/home/user/makewithLugh/src/db/sessions.ts`               | Session operations                     |
+| `/home/user/makewithLugh/src/db/conversations.ts`          | Conversation operations                |
+| `/home/user/makewithLugh/src/db/approvals.ts`              | Approval workflow                      |
+| `/home/user/makewithLugh/src/orchestrator/orchestrator.ts` | AI conversation management             |
+| `/home/user/makewithLugh/src/clients/claude.ts`            | Claude SDK integration                 |
+| `/home/user/makewithLugh/src/utils/telegram-auth.ts`       | Telegram auth utilities                |
+| `/home/user/makewithLugh/src/utils/github-auth.ts`         | GitHub auth utilities                  |
+| `/home/user/makewithLugh/src/utils/slack-auth.ts`          | Slack auth utilities                   |
+| `/home/user/makewithLugh/src/utils/discord-auth.ts`        | Discord auth utilities                 |
+| `/home/user/makewithLugh/src/utils/path-validation.ts`     | Path traversal protection              |
+| `/home/user/makewithLugh/src/utils/logger.ts`              | Logging utilities                      |
+| `/home/user/makewithLugh/src/redis/client.ts`              | Redis client                           |
+| `/home/user/makewithLugh/migrations/000_combined.sql`      | Database schema                        |
+| `/home/user/makewithLugh/docker-compose.yml`               | Container configuration                |
 
 ---
 
@@ -436,4 +454,4 @@ This codebase is well-designed for its intended purpose as a **single-developer 
 
 ---
 
-*Report generated by Security & Privacy Audit Agent*
+_Report generated by Security & Privacy Audit Agent_

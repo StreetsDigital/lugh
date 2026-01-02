@@ -228,7 +228,7 @@ async function processWithSSE(
         verbose('LangGraphAdapter', `Phase: ${update.phase as string}`);
       }
     } else if (event.type === 'error') {
-      const error = (event.data).error as string;
+      const error = event.data.error as string;
       await platform.sendMessage(conversationId, `Error: ${error}`);
       return { success: false, error };
     }
@@ -259,7 +259,7 @@ async function processWithRedis(
     threadId?: string;
   }
 ): Promise<{ success: boolean; error?: string }> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     let resolved = false;
     const timeout = setTimeout(() => {
       if (!resolved) {
@@ -420,7 +420,7 @@ export async function* streamFromLangGraph(
     } else if (event.type === 'error') {
       yield {
         type: 'system',
-        content: `Error: ${(event.data).error as string}`,
+        content: `Error: ${event.data.error as string}`,
       };
     }
   }

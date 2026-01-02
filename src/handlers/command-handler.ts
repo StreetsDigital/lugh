@@ -383,7 +383,8 @@ Setup:
         setVerbose(true);
         return {
           success: true,
-          message: 'Verbose logging **ENABLED** ✅\n\nView logs with:\n`docker-compose --profile with-db logs -f app-with-db`',
+          message:
+            'Verbose logging **ENABLED** ✅\n\nView logs with:\n`docker-compose --profile with-db logs -f app-with-db`',
         };
       } else if (args[0] === 'off') {
         setVerbose(false);
@@ -881,7 +882,8 @@ Setup:
           if (!ghRepos.length) {
             return {
               success: true,
-              message: 'No GitHub repositories found.\n\nCreate one at github.com or check your token permissions.',
+              message:
+                'No GitHub repositories found.\n\nCreate one at github.com or check your token permissions.',
             };
           }
 
@@ -968,7 +970,8 @@ Setup:
         if (!repos.length) {
           return {
             success: true,
-            message: 'No local repositories.\n\nUse `/workspaces github` to see your GitHub repos\nUse `/clone <url>` to clone one',
+            message:
+              'No local repositories.\n\nUse `/workspaces github` to see your GitHub repos\nUse `/clone <url>` to clone one',
           };
         }
 

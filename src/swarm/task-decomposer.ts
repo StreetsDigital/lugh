@@ -81,10 +81,12 @@ export class TaskDecomposer {
       const parsed = this.parseResponse(response);
 
       // Add IDs to sub-tasks
-      const subTasks: SubTask[] = parsed.subTasks.map((task: Omit<SubTask, 'id'>, index: number) => ({
-        ...task,
-        id: `task-${index + 1}-${uuidv4().substring(0, 8)}`,
-      }));
+      const subTasks: SubTask[] = parsed.subTasks.map(
+        (task: Omit<SubTask, 'id'>, index: number) => ({
+          ...task,
+          id: `task-${index + 1}-${uuidv4().substring(0, 8)}`,
+        })
+      );
 
       // Update dependencies to use actual IDs
       const taskIdMap = new Map<number, string>();
@@ -93,8 +95,8 @@ export class TaskDecomposer {
       });
 
       // Resolve dependency references
-      subTasks.forEach((task) => {
-        task.dependencies = task.dependencies.map((dep) => {
+      subTasks.forEach(task => {
+        task.dependencies = task.dependencies.map(dep => {
           // If dep is a number reference, resolve it
           const numDep = parseInt(dep, 10);
           if (!isNaN(numDep) && taskIdMap.has(numDep)) {
@@ -150,7 +152,7 @@ export class TaskDecomposer {
       throw new Error(`Claude API error: ${response.status} - ${error}`);
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       content: Array<{ type: string; text?: string }>;
     };
     const content = data.content[0];
@@ -204,7 +206,7 @@ export class TaskDecomposer {
     }, 0);
 
     // Parallel tasks run simultaneously, so we use max not sum
-    const hasParallelTasks = subTasks.some((t) => t.dependencies.length === 0);
+    const hasParallelTasks = subTasks.some(t => t.dependencies.length === 0);
     const totalMinutes = hasParallelTasks
       ? criticalPathMinutes + 2 // Some overhead
       : subTasks.reduce((sum, t) => sum + durationMap[t.estimatedDuration], 0);
@@ -256,7 +258,14 @@ Request: ${userRequest}`,
 
     const roleKeywords: Record<AgentRole, string[]> = {
       'competitor-analysis': ['competitor', 'competition', 'market leader', 'alternative', 'vs'],
-      'tech-stack-research': ['tech', 'stack', 'framework', 'language', 'database', 'infrastructure'],
+      'tech-stack-research': [
+        'tech',
+        'stack',
+        'framework',
+        'language',
+        'database',
+        'infrastructure',
+      ],
       'architecture-design': ['architecture', 'design', 'system', 'scale', 'api', 'structure'],
       'project-management': ['plan', 'timeline', 'milestone', 'sprint', 'agile', 'team'],
       'market-research': ['market', 'user', 'customer', 'persona', 'target', 'audience'],
@@ -271,7 +280,7 @@ Request: ${userRequest}`,
     };
 
     for (const [role, keywords] of Object.entries(roleKeywords)) {
-      if (keywords.some((kw) => request.includes(kw))) {
+      if (keywords.some(kw => request.includes(kw))) {
         suggestedRoles.push(role as AgentRole);
       }
     }

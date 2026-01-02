@@ -11,6 +11,7 @@
 ## Executive Summary
 
 A self-improving autonomous organization of AI agents that:
+
 1. Collects improvement data across all users
 2. Autonomously optimizes internal tools per customer
 3. Runs infrastructure/engineering work at regular intervals
@@ -58,6 +59,7 @@ An autonomous ethics layer that monitors all agent activity and **immediately ha
 ```
 
 **Implementation:**
+
 - Pre-action hook on every tool call
 - Semantic analysis of intent + action
 - Configurable ethical boundaries per organization
@@ -95,6 +97,7 @@ Human-in-the-loop emergency stop accessible from any platform.
 ```
 
 **Access Points:**
+
 - Telegram: `/stop all` or inline 🔴 button
 - Slack: `/lugh-stop` slash command
 - Web Dashboard: Prominent red button
@@ -581,13 +584,13 @@ CREATE TABLE backlog_items (
 
 ### Work Types
 
-| Type | Source | Priority | Team |
-|------|--------|----------|------|
-| **BAU** | Improvement insights, errors | Normal | Rotates |
-| **Tech Debt** | Code analysis, metrics | Low-Normal | Infrastructure |
-| **Features** | Product planning, user feedback | Normal-High | Product |
-| **Improvements** | Cross-customer patterns | Normal | Tools |
-| **Incidents** | Monitoring, user reports | Critical | On-call rotation |
+| Type             | Source                          | Priority    | Team             |
+| ---------------- | ------------------------------- | ----------- | ---------------- |
+| **BAU**          | Improvement insights, errors    | Normal      | Rotates          |
+| **Tech Debt**    | Code analysis, metrics          | Low-Normal  | Infrastructure   |
+| **Features**     | Product planning, user feedback | Normal-High | Product          |
+| **Improvements** | Cross-customer patterns         | Normal      | Tools            |
+| **Incidents**    | Monitoring, user reports        | Critical    | On-call rotation |
 
 ---
 
@@ -639,6 +642,7 @@ interface OwnerDigest {
 ## Implementation Phases
 
 ### Phase 1: Safety Foundation (Week 1-2)
+
 - [ ] Ethics Guardian service
 - [ ] Emergency Stop service
 - [ ] Database schema for safety
@@ -646,30 +650,35 @@ interface OwnerDigest {
 - [ ] Audit logging
 
 ### Phase 2: Hierarchy Core (Week 3-4)
+
 - [ ] Agent definition schema
 - [ ] Hierarchy manager
 - [ ] Delegation system
 - [ ] Reporting chain
 
 ### Phase 3: Improvement Data (Week 5-6)
+
 - [ ] Event collector
 - [ ] Cross-customer aggregation
 - [ ] Pattern detection
 - [ ] Insight generation
 
 ### Phase 4: Agile Framework (Week 7-8)
+
 - [ ] Sprint manager
 - [ ] Backlog management
 - [ ] Work assignment
 - [ ] Velocity tracking
 
 ### Phase 5: Autonomous Operations (Week 9-10)
+
 - [ ] Scheduled agent runs
 - [ ] Per-customer improvements
 - [ ] Owner notifications
 - [ ] Dashboard
 
 ### Phase 6: Polish & Scale (Week 11-12)
+
 - [ ] Performance optimization
 - [ ] Multi-org support
 - [ ] Advanced analytics
@@ -700,7 +709,7 @@ safety:
   emergency_stop:
     enabled: true
     require_2fa_for_resume: false
-    auto_resume_after_hours: null  # Never auto-resume
+    auto_resume_after_hours: null # Never auto-resume
 
 hierarchy:
   levels:
@@ -756,4 +765,4 @@ notifications:
 
 ---
 
-*This document will be updated as the design evolves.*
+_This document will be updated as the design evolves._

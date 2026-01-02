@@ -289,9 +289,7 @@ export class ProviderFactory {
     }
 
     if (!this.llmCliAvailable) {
-      console.warn(
-        '[ProviderFactory] llm CLI not installed, falling back to claude-code'
-      );
+      console.warn('[ProviderFactory] llm CLI not installed, falling back to claude-code');
       throw new Error('llm CLI not installed');
     }
 
@@ -307,7 +305,7 @@ export class ProviderFactory {
    * Get all available providers
    */
   getAvailableProviders(): LLMProviderType[] {
-    return Object.keys(this.config.providers).filter((type) =>
+    return Object.keys(this.config.providers).filter(type =>
       this.isProviderAvailable(type as LLMProviderType)
     ) as LLMProviderType[];
   }

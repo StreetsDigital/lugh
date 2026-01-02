@@ -33,11 +33,7 @@ import {
   WorktreeStatusBreakdown,
 } from '../services/cleanup-service';
 import * as approvalDb from '../db/approvals';
-import {
-  createAbortController,
-  isAborted,
-  clearAbortState,
-} from './abort-manager';
+import { createAbortController, isAborted, clearAbortState } from './abort-manager';
 import {
   FileOperationsTracker,
   formatFileOperationsSummary,
@@ -76,12 +72,18 @@ function formatWorktreeLimitMessage(
  * Returns the file path if this is a file-writing tool, null otherwise
  */
 const FILE_WRITING_TOOLS = [
-  'write_file', 'Write',           // Claude Code's file writing
-  'create_file', 'create',         // File creation variants
-  'str_replace_editor', 'Edit',    // File editing (creates if new)
+  'write_file',
+  'Write', // Claude Code's file writing
+  'create_file',
+  'create', // File creation variants
+  'str_replace_editor',
+  'Edit', // File editing (creates if new)
 ];
 
-function extractWrittenFilePath(toolName: string, toolInput: Record<string, unknown> | undefined): string | null {
+function extractWrittenFilePath(
+  toolName: string,
+  toolInput: Record<string, unknown> | undefined
+): string | null {
   if (!toolInput) return null;
   if (!FILE_WRITING_TOOLS.includes(toolName)) return null;
 
@@ -98,23 +100,70 @@ function extractWrittenFilePath(toolName: string, toolInput: Record<string, unkn
  */
 const SENDABLE_EXTENSIONS = new Set([
   // Source code
-  '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
-  '.py', '.pyw', '.pyi',
-  '.go', '.rs', '.java', '.kt', '.kts',
-  '.rb', '.php', '.swift', '.c', '.cpp', '.h', '.hpp',
-  '.cs', '.fs', '.scala', '.clj', '.ex', '.exs',
+  '.ts',
+  '.tsx',
+  '.js',
+  '.jsx',
+  '.mjs',
+  '.cjs',
+  '.py',
+  '.pyw',
+  '.pyi',
+  '.go',
+  '.rs',
+  '.java',
+  '.kt',
+  '.kts',
+  '.rb',
+  '.php',
+  '.swift',
+  '.c',
+  '.cpp',
+  '.h',
+  '.hpp',
+  '.cs',
+  '.fs',
+  '.scala',
+  '.clj',
+  '.ex',
+  '.exs',
   // Config
-  '.json', '.yaml', '.yml', '.toml', '.ini', '.cfg',
-  '.env.example', '.env.local', '.env.development',
+  '.json',
+  '.yaml',
+  '.yml',
+  '.toml',
+  '.ini',
+  '.cfg',
+  '.env.example',
+  '.env.local',
+  '.env.development',
   // Docs
-  '.md', '.txt', '.rst', '.adoc',
+  '.md',
+  '.txt',
+  '.rst',
+  '.adoc',
   // Data
-  '.csv', '.sql', '.graphql', '.prisma',
+  '.csv',
+  '.sql',
+  '.graphql',
+  '.prisma',
   // Scripts
-  '.sh', '.bash', '.zsh', '.fish', '.ps1', '.bat', '.cmd',
+  '.sh',
+  '.bash',
+  '.zsh',
+  '.fish',
+  '.ps1',
+  '.bat',
+  '.cmd',
   // Web
-  '.html', '.htm', '.css', '.scss', '.sass', '.less',
-  '.svg', '.xml',
+  '.html',
+  '.htm',
+  '.css',
+  '.scss',
+  '.sass',
+  '.less',
+  '.svg',
+  '.xml',
 ]);
 
 /**
@@ -186,7 +235,9 @@ function isFileTypeWorthSending(filePath: string): boolean {
 /**
  * Check if a file should be auto-sent (right type, small enough, exists)
  */
-async function shouldAutoSendFile(filePath: string): Promise<{ send: boolean; size: number; reason?: string }> {
+async function shouldAutoSendFile(
+  filePath: string
+): Promise<{ send: boolean; size: number; reason?: string }> {
   // Check file type first (before stat to save I/O)
   if (!isFileTypeWorthSending(filePath)) {
     return { send: false, size: 0, reason: 'file type not in whitelist' };
@@ -572,7 +623,7 @@ async function handleSwarmExecution(
         await telegramCoordinator.announceSwarmStart(userRequest, 0);
 
         // Set up event handlers
-        swarmCoordinator.onEvent(async (event) => {
+        swarmCoordinator.onEvent(async event => {
           switch (event.type) {
             case 'task_decomposed':
               await platform.sendMessage(
@@ -595,7 +646,11 @@ async function handleSwarmExecution(
               break;
 
             case 'agent_completed': {
-              const completedData = event.data as { agentId: string; role: string; duration: number };
+              const completedData = event.data as {
+                agentId: string;
+                role: string;
+                duration: number;
+              };
               await telegramCoordinator.announceAgentComplete(
                 completedData.agentId,
                 completedData.role,
@@ -648,10 +703,7 @@ async function handleSwarmExecution(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('[Orchestrator] Swarm execution failed:', errorMessage);
-    await platform.sendMessage(
-      conversationId,
-      `❌ **Swarm Failed**\n\n${errorMessage}`
-    );
+    await platform.sendMessage(conversationId, `❌ **Swarm Failed**\n\n${errorMessage}`);
   }
 }
 
@@ -750,12 +802,7 @@ export async function handleMessage(
         // This is used by /swarm to trigger parallel agent execution
         if (result.swarmRequest) {
           console.log('[Orchestrator] Routing to swarm coordinator');
-          await handleSwarmExecution(
-            conversation,
-            result.swarmRequest,
-            platform,
-            conversationId
-          );
+          await handleSwarmExecution(conversation, result.swarmRequest, platform, conversationId);
           return;
         }
 
@@ -970,11 +1017,7 @@ export async function handleMessage(
     let approvalContext: ApprovalContext | undefined;
     const blockingApprovalsEnabled = process.env.BLOCKING_APPROVALS === 'true';
 
-    if (
-      blockingApprovalsEnabled &&
-      platform.getPlatformType() === 'telegram' &&
-      platform.getBot
-    ) {
+    if (blockingApprovalsEnabled && platform.getPlatformType() === 'telegram' && platform.getBot) {
       approvalContext = {
         sessionId: session.id,
         chatId: parseInt(conversationId, 10),
@@ -997,61 +1040,61 @@ export async function handleMessage(
     const fileOpsTracker = new FileOperationsTracker();
 
     if (mode === 'stream') {
-        // Stream mode: Send each chunk immediately
-        for await (const msg of aiClient.sendQuery(
-          promptToSend,
-          cwd,
-          session.assistant_session_id ?? undefined,
-          approvalContext
-        )) {
-          // Check for abort signal before processing each chunk
-          if (isAborted(conversationId)) {
-            console.log('[Orchestrator] Abort detected, stopping stream');
-            wasAborted = true;
-            break;
+      // Stream mode: Send each chunk immediately
+      for await (const msg of aiClient.sendQuery(
+        promptToSend,
+        cwd,
+        session.assistant_session_id ?? undefined,
+        approvalContext
+      )) {
+        // Check for abort signal before processing each chunk
+        if (isAborted(conversationId)) {
+          console.log('[Orchestrator] Abort detected, stopping stream');
+          wasAborted = true;
+          break;
+        }
+
+        if (msg.type === 'assistant' && msg.content) {
+          await platform.sendMessage(conversationId, msg.content);
+        } else if (msg.type === 'tool' && msg.toolName) {
+          // Format and send tool call notification
+          const toolMessage = formatToolCall(msg.toolName, msg.toolInput);
+          await platform.sendMessage(conversationId, toolMessage);
+
+          // Track all file operations for visibility
+          fileOpsTracker.recordToolCall(msg.toolName, msg.toolInput);
+
+          // Track file writes for auto-send feature
+          const writtenPath = extractWrittenFilePath(msg.toolName, msg.toolInput);
+          if (writtenPath) {
+            writtenFiles.add(writtenPath);
           }
 
-          if (msg.type === 'assistant' && msg.content) {
-            await platform.sendMessage(conversationId, msg.content);
-          } else if (msg.type === 'tool' && msg.toolName) {
-            // Format and send tool call notification
-            const toolMessage = formatToolCall(msg.toolName, msg.toolInput);
-            await platform.sendMessage(conversationId, toolMessage);
+          // Send risk notification for high-risk tools
+          if (notifyOnRisk && isHighRiskTool(msg.toolName)) {
+            const riskLevel = getToolRiskLevel(msg.toolName, msg.toolInput ?? {});
 
-            // Track all file operations for visibility
-            fileOpsTracker.recordToolCall(msg.toolName, msg.toolInput);
-
-            // Track file writes for auto-send feature
-            const writtenPath = extractWrittenFilePath(msg.toolName, msg.toolInput);
-            if (writtenPath) {
-              writtenFiles.add(writtenPath);
-            }
-
-            // Send risk notification for high-risk tools
-            if (notifyOnRisk && isHighRiskTool(msg.toolName)) {
-              const riskLevel = getToolRiskLevel(msg.toolName, msg.toolInput ?? {});
-
-              // Record in database for audit trail
-              await approvalDb.createApproval({
+            // Record in database for audit trail
+            await approvalDb
+              .createApproval({
                 session_id: session.id,
                 tool_name: msg.toolName,
                 tool_input: msg.toolInput ?? {},
                 risk_level: riskLevel,
-              }).catch(err => {
+              })
+              .catch(err => {
                 console.warn('[Orchestrator] Failed to record tool execution:', err);
               });
 
-              // Log for monitoring
-              console.log(
-                `[Orchestrator] ${riskLevel.toUpperCase()} risk tool: ${msg.toolName}`
-              );
-            }
-          } else if (msg.type === 'result' && msg.sessionId) {
-            // Save session ID for resume
-            await sessionDb.updateSession(session.id, msg.sessionId);
+            // Log for monitoring
+            console.log(`[Orchestrator] ${riskLevel.toUpperCase()} risk tool: ${msg.toolName}`);
           }
+        } else if (msg.type === 'result' && msg.sessionId) {
+          // Save session ID for resume
+          await sessionDb.updateSession(session.id, msg.sessionId);
         }
-      } else {
+      }
+    } else {
       // Batch mode: Accumulate all chunks for logging, send only final clean summary
       const allChunks: { type: string; content: string }[] = [];
       const assistantMessages: string[] = [];
@@ -1091,18 +1134,18 @@ export async function handleMessage(
           if (notifyOnRisk && isHighRiskTool(msg.toolName)) {
             const riskLevel = getToolRiskLevel(msg.toolName, msg.toolInput ?? {});
 
-            await approvalDb.createApproval({
-              session_id: session.id,
-              tool_name: msg.toolName,
-              tool_input: msg.toolInput ?? {},
-              risk_level: riskLevel,
-            }).catch(err => {
-              console.warn('[Orchestrator] Failed to record tool execution:', err);
-            });
+            await approvalDb
+              .createApproval({
+                session_id: session.id,
+                tool_name: msg.toolName,
+                tool_input: msg.toolInput ?? {},
+                risk_level: riskLevel,
+              })
+              .catch(err => {
+                console.warn('[Orchestrator] Failed to record tool execution:', err);
+              });
 
-            console.log(
-              `[Orchestrator] ${riskLevel.toUpperCase()} risk tool: ${msg.toolName}`
-            );
+            console.log(`[Orchestrator] ${riskLevel.toUpperCase()} risk tool: ${msg.toolName}`);
           }
         } else if (msg.type === 'result' && msg.sessionId) {
           await sessionDb.updateSession(session.id, msg.sessionId);
@@ -1236,12 +1279,11 @@ export async function handleMessage(
     // Notify user if operation was aborted via /stop
     if (wasAborted) {
       console.log('[Orchestrator] Operation was aborted by /stop command');
-      await platform.sendMessage(
-        conversationId,
-        '⚠️ Operation interrupted by /stop command'
-      ).catch(err => {
-        console.warn('[Orchestrator] Failed to send abort notification:', err);
-      });
+      await platform
+        .sendMessage(conversationId, '⚠️ Operation interrupted by /stop command')
+        .catch(err => {
+          console.warn('[Orchestrator] Failed to send abort notification:', err);
+        });
     }
   }
 }

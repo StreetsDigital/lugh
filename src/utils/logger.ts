@@ -42,7 +42,8 @@ export function verbose(tag: string, message: string, data?: unknown): void {
   if (data !== undefined) {
     // Truncate large data for readability
     const dataStr = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-    const truncated = dataStr.length > 2000 ? dataStr.substring(0, 2000) + '\n... (truncated)' : dataStr;
+    const truncated =
+      dataStr.length > 2000 ? dataStr.substring(0, 2000) + '\n... (truncated)' : dataStr;
     console.log(`${prefix} ${message}\n${truncated}`);
   } else {
     console.log(`${prefix} ${message}`);
@@ -72,7 +73,8 @@ export function logResponse(type: string, content: string): void {
   if (!verboseEnabled) return;
 
   const timestamp = new Date().toISOString();
-  const truncated = content.length > 1000 ? content.substring(0, 1000) + '... (truncated)' : content;
+  const truncated =
+    content.length > 1000 ? content.substring(0, 1000) + '... (truncated)' : content;
   console.log(`[${timestamp}] [VERBOSE] [Claude] RESPONSE [${type}]: ${truncated}`);
 }
 
@@ -87,7 +89,8 @@ export function logToolCall(toolName: string, toolInput: unknown): void {
   console.log('-'.repeat(40));
 
   const inputStr = JSON.stringify(toolInput, null, 2);
-  const truncated = inputStr.length > 3000 ? inputStr.substring(0, 3000) + '\n... (truncated)' : inputStr;
+  const truncated =
+    inputStr.length > 3000 ? inputStr.substring(0, 3000) + '\n... (truncated)' : inputStr;
   console.log(truncated);
   console.log('-'.repeat(40) + '\n');
 }

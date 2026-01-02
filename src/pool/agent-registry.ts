@@ -14,10 +14,7 @@ export class AgentRegistry {
   /**
    * Register a new agent in the pool
    */
-  async register(
-    agentId: string,
-    capabilities: string[] = ['general']
-  ): Promise<void> {
+  async register(agentId: string, capabilities: string[] = ['general']): Promise<void> {
     try {
       await this.pool.query(
         `
@@ -58,7 +55,7 @@ export class AgentRegistry {
       if (result.rowCount === 0) {
         console.warn(
           `[AgentRegistry] Heartbeat failed: agent '${agentId}' not found. ` +
-          'Agent may need to re-register.'
+            'Agent may need to re-register.'
         );
       }
     } catch (error) {
@@ -70,11 +67,7 @@ export class AgentRegistry {
   /**
    * Set agent status (idle, busy, offline)
    */
-  async setStatus(
-    agentId: string,
-    status: AgentStatus,
-    currentTaskId?: string
-  ): Promise<void> {
+  async setStatus(agentId: string, status: AgentStatus, currentTaskId?: string): Promise<void> {
     try {
       await this.pool.query(
         `
@@ -89,10 +82,7 @@ export class AgentRegistry {
 
       console.log(`[AgentRegistry] Agent '${agentId}' status: ${status}`);
     } catch (error) {
-      console.error(
-        `[AgentRegistry] Failed to set status for agent '${agentId}':`,
-        error
-      );
+      console.error(`[AgentRegistry] Failed to set status for agent '${agentId}':`, error);
       throw error;
     }
   }
@@ -119,7 +109,7 @@ export class AgentRegistry {
         `
       );
 
-      return result.rows.map((row) => ({
+      return result.rows.map(row => ({
         ...row,
         capabilities: Array.isArray(row.capabilities)
           ? row.capabilities
@@ -189,7 +179,7 @@ export class AgentRegistry {
         `
       );
 
-      return result.rows.map((row) => ({
+      return result.rows.map(row => ({
         ...row,
         capabilities: Array.isArray(row.capabilities)
           ? row.capabilities
@@ -219,7 +209,7 @@ export class AgentRegistry {
         [maxAgeSeconds]
       );
 
-      const prunedAgents = result.rows.map((r) => r.agentId);
+      const prunedAgents = result.rows.map(r => r.agentId);
 
       if (prunedAgents.length > 0) {
         console.warn(

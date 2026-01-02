@@ -150,7 +150,7 @@ function extractToolDetails(
       if (todos && todos.length > 0) {
         const summary = todos
           .slice(0, 3)
-          .map((t) => `  ${t.status === 'completed' ? '✓' : '○'} ${t.content}`)
+          .map(t => `  ${t.status === 'completed' ? '✓' : '○'} ${t.content}`)
           .join('\n');
         const more = todos.length > 3 ? `\n  ...+${todos.length - 3} more` : '';
         return summary + more;

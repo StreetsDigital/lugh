@@ -132,22 +132,22 @@ export class RecoveryManager {
 
     // Extract hints from previous failures
     const recoveryHints = failures
-      .map((f) => {
+      .map(f => {
         if (f.verificationResult && !f.verificationResult.success) {
           // Extract from verification failures
           return f.verificationResult.checks
-            .filter((c) => !c.passed)
-            .map((c) => `${c.name}: ${c.details || c.actual}`)
+            .filter(c => !c.passed)
+            .map(c => `${c.name}: ${c.details || c.actual}`)
             .join('; ');
         }
         return f.error;
       })
-      .filter((h) => h);
+      .filter(h => h);
 
     // Extract what to avoid
     const whatToAvoid = failures
-      .filter((f) => f.approach)
-      .map((f) => f.approach!)
+      .filter(f => f.approach)
+      .map(f => f.approach!)
       .filter((a, i, arr) => arr.indexOf(a) === i); // unique
 
     // Extract failure patterns
@@ -234,24 +234,20 @@ export class RecoveryManager {
     const patterns: string[] = [];
 
     // Check for common error types
-    const errorTypes = failures.map((f) => {
+    const errorTypes = failures.map(f => {
       if (f.error.includes('syntax')) return 'syntax_error';
       if (f.error.includes('type')) return 'type_error';
-      if (f.error.includes('import') || f.error.includes('module'))
-        return 'import_error';
+      if (f.error.includes('import') || f.error.includes('module')) return 'import_error';
       if (f.error.includes('test')) return 'test_failure';
       if (f.error.includes('timeout')) return 'timeout';
       return 'unknown';
     });
 
     // Count occurrences
-    const counts = errorTypes.reduce<Record<string, number>>(
-      (acc, type) => {
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-      },
-      {}
-    );
+    const counts = errorTypes.reduce<Record<string, number>>((acc, type) => {
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
 
     // Add patterns that appear multiple times
     for (const [type, count] of Object.entries(counts)) {
@@ -262,18 +258,13 @@ export class RecoveryManager {
 
     // Check for verification patterns
     const verificationIssues = failures
-      .filter((f) => f.verificationResult)
-      .flatMap((f) =>
-        f.verificationResult!.checks.filter((c) => !c.passed).map((c) => c.name)
-      );
+      .filter(f => f.verificationResult)
+      .flatMap(f => f.verificationResult!.checks.filter(c => !c.passed).map(c => c.name));
 
-    const verificationCounts = verificationIssues.reduce<Record<string, number>>(
-      (acc, issue) => {
-        acc[issue] = (acc[issue] || 0) + 1;
-        return acc;
-      },
-      {}
-    );
+    const verificationCounts = verificationIssues.reduce<Record<string, number>>((acc, issue) => {
+      acc[issue] = (acc[issue] || 0) + 1;
+      return acc;
+    }, {});
 
     for (const [issue, count] of Object.entries(verificationCounts)) {
       if (count >= 2) {
@@ -293,19 +284,19 @@ export class RecoveryManager {
     // Check failure patterns
     const patterns = this.extractFailurePatterns(failures);
 
-    if (patterns.some((p) => p.includes('type_error'))) {
+    if (patterns.some(p => p.includes('type_error'))) {
       actions.push('Review type definitions and interfaces');
     }
 
-    if (patterns.some((p) => p.includes('import_error'))) {
+    if (patterns.some(p => p.includes('import_error'))) {
       actions.push('Check import paths and module exports');
     }
 
-    if (patterns.some((p) => p.includes('test_failure'))) {
+    if (patterns.some(p => p.includes('test_failure'))) {
       actions.push('Review test expectations or implementation logic');
     }
 
-    if (patterns.some((p) => p.includes('commits'))) {
+    if (patterns.some(p => p.includes('commits'))) {
       actions.push('Ensure agent is committing changes correctly');
     }
 

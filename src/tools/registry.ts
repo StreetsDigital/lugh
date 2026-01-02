@@ -48,9 +48,7 @@ export class ToolRegistry implements IToolRegistry {
     // Register all tools from the toolkit
     for (const tool of toolkit.getTools()) {
       // Prefix with toolkit name if not already present
-      const fullName = tool.name.includes('.')
-        ? tool.name
-        : `${toolkit.name}.${tool.name}`;
+      const fullName = tool.name.includes('.') ? tool.name : `${toolkit.name}.${tool.name}`;
 
       const prefixedTool = {
         ...tool,
@@ -88,9 +86,7 @@ export class ToolRegistry implements IToolRegistry {
 
     for (const tool of this.tools.values()) {
       // Use the base name (after last dot) for deduplication
-      const baseName = tool.name.includes('.')
-        ? tool.name.split('.').pop()!
-        : tool.name;
+      const baseName = tool.name.includes('.') ? tool.name.split('.').pop()! : tool.name;
 
       if (!seen.has(baseName)) {
         seen.add(baseName);
@@ -105,7 +101,7 @@ export class ToolRegistry implements IToolRegistry {
    * Get tools available for a specific platform
    */
   getForPlatform(platform: ToolPlatform): IFunctionTool[] {
-    return this.getAll().filter((tool) => {
+    return this.getAll().filter(tool => {
       const platforms = tool.platforms || ['all'];
       return platforms.includes('all') || platforms.includes(platform);
     });
@@ -115,7 +111,7 @@ export class ToolRegistry implements IToolRegistry {
    * Get tools by tag
    */
   getByTag(tag: string): IFunctionTool[] {
-    return this.getAll().filter((tool) => tool.tags?.includes(tag));
+    return this.getAll().filter(tool => tool.tags?.includes(tag));
   }
 
   /**
@@ -128,10 +124,7 @@ export class ToolRegistry implements IToolRegistry {
   /**
    * Execute a tool by name
    */
-  async execute<TInput, TOutput>(
-    name: string,
-    input: TInput
-  ): Promise<ToolResult<TOutput>> {
+  async execute<TInput, TOutput>(name: string, input: TInput): Promise<ToolResult<TOutput>> {
     const tool = this.get(name);
 
     if (!tool) {
@@ -157,7 +150,7 @@ export class ToolRegistry implements IToolRegistry {
    * Get all tools as MCP definitions
    */
   toMCPDefinitions(): MCPToolDefinition[] {
-    return this.getAll().map((tool) => ({
+    return this.getAll().map(tool => ({
       name: tool.name,
       description: tool.description,
       inputSchema: tool.parameters,

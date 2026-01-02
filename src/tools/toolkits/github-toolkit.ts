@@ -17,10 +17,7 @@ const execFileAsync = promisify(execFile);
 /**
  * Execute a GitHub CLI command
  */
-async function ghExec(
-  args: string[],
-  cwd?: string
-): Promise<{ stdout: string; stderr: string }> {
+async function ghExec(args: string[], cwd?: string): Promise<{ stdout: string; stderr: string }> {
   try {
     const result = await execFileAsync('gh', args, {
       cwd,
@@ -118,8 +115,14 @@ export class GitHubToolkit extends Toolkit {
           limit?: number;
         }): Promise<ToolResult<{ issues: GitHubIssue[] }>> => {
           try {
-            const args = ['issue', 'list', '-R', input.repo, '--json',
-              'number,title,state,body,url,author,labels,createdAt'];
+            const args = [
+              'issue',
+              'list',
+              '-R',
+              input.repo,
+              '--json',
+              'number,title,state,body,url,author,labels,createdAt',
+            ];
 
             if (input.state) args.push('--state', input.state);
             if (input.labels?.length) args.push('--label', input.labels.join(','));
@@ -171,8 +174,7 @@ export class GitHubToolkit extends Toolkit {
           assignees?: string[];
         }): Promise<ToolResult<{ number: number; url: string }>> => {
           try {
-            const args = ['issue', 'create', '-R', input.repo,
-              '--title', input.title];
+            const args = ['issue', 'create', '-R', input.repo, '--title', input.title];
 
             if (input.body) args.push('--body', input.body);
             if (input.labels?.length) {
@@ -220,9 +222,15 @@ export class GitHubToolkit extends Toolkit {
           number: number;
         }): Promise<ToolResult<{ issue: GitHubIssue }>> => {
           try {
-            const args = ['issue', 'view', input.number.toString(),
-              '-R', input.repo, '--json',
-              'number,title,state,body,url,author,labels,createdAt'];
+            const args = [
+              'issue',
+              'view',
+              input.number.toString(),
+              '-R',
+              input.repo,
+              '--json',
+              'number,title,state,body,url,author,labels,createdAt',
+            ];
 
             const { stdout } = await ghExec(args);
             const issue = parseJSON<GitHubIssue>(stdout);
@@ -258,9 +266,13 @@ export class GitHubToolkit extends Toolkit {
         }): Promise<ToolResult<{ commented: boolean }>> => {
           try {
             await ghExec([
-              'issue', 'comment', input.number.toString(),
-              '-R', input.repo,
-              '--body', input.body,
+              'issue',
+              'comment',
+              input.number.toString(),
+              '-R',
+              input.repo,
+              '--body',
+              input.body,
             ]);
 
             return { success: true, data: { commented: true } };
@@ -359,8 +371,14 @@ export class GitHubToolkit extends Toolkit {
           limit?: number;
         }): Promise<ToolResult<{ prs: GitHubPR[] }>> => {
           try {
-            const args = ['pr', 'list', '-R', input.repo, '--json',
-              'number,title,state,body,url,author,headRefName,baseRefName,mergeable,createdAt'];
+            const args = [
+              'pr',
+              'list',
+              '-R',
+              input.repo,
+              '--json',
+              'number,title,state,body,url,author,headRefName,baseRefName,mergeable,createdAt',
+            ];
 
             if (input.state) args.push('--state', input.state);
             if (input.author) args.push('--author', input.author);
@@ -397,9 +415,15 @@ export class GitHubToolkit extends Toolkit {
           number: number;
         }): Promise<ToolResult<{ pr: GitHubPR }>> => {
           try {
-            const args = ['pr', 'view', input.number.toString(),
-              '-R', input.repo, '--json',
-              'number,title,state,body,url,author,headRefName,baseRefName,mergeable,createdAt'];
+            const args = [
+              'pr',
+              'view',
+              input.number.toString(),
+              '-R',
+              input.repo,
+              '--json',
+              'number,title,state,body,url,author,headRefName,baseRefName,mergeable,createdAt',
+            ];
 
             const { stdout } = await ghExec(args);
             const pr = parseJSON<GitHubPR>(stdout);
@@ -433,8 +457,11 @@ export class GitHubToolkit extends Toolkit {
         }): Promise<ToolResult<{ diff: string }>> => {
           try {
             const { stdout } = await ghExec([
-              'pr', 'diff', input.number.toString(),
-              '-R', input.repo,
+              'pr',
+              'diff',
+              input.number.toString(),
+              '-R',
+              input.repo,
             ]);
 
             return { success: true, data: { diff: stdout } };
@@ -473,8 +500,7 @@ export class GitHubToolkit extends Toolkit {
           body?: string;
         }): Promise<ToolResult<{ reviewed: boolean }>> => {
           try {
-            const args = ['pr', 'review', input.number.toString(),
-              '-R', input.repo];
+            const args = ['pr', 'review', input.number.toString(), '-R', input.repo];
 
             switch (input.action) {
               case 'approve':
@@ -528,8 +554,7 @@ export class GitHubToolkit extends Toolkit {
           deleteBranch?: boolean;
         }): Promise<ToolResult<{ merged: boolean }>> => {
           try {
-            const args = ['pr', 'merge', input.number.toString(),
-              '-R', input.repo];
+            const args = ['pr', 'merge', input.number.toString(), '-R', input.repo];
 
             if (input.method === 'squash') args.push('--squash');
             else if (input.method === 'rebase') args.push('--rebase');

@@ -48,7 +48,7 @@ router.post('/completion', async (req: Request, res: Response) => {
   try {
     // Build prompt from messages
     const prompt = body.messages
-      .map((m) => {
+      .map(m => {
         if (m.role === 'system') return `<system>${m.content}</system>\n`;
         if (m.role === 'user') return `Human: ${m.content}\n`;
         return `Assistant: ${m.content}\n`;
@@ -131,7 +131,7 @@ router.post('/stream', async (req: Request, res: Response) => {
   try {
     // Build prompt from messages
     const prompt = body.messages
-      .map((m) => {
+      .map(m => {
         if (m.role === 'system') return `<system>${m.content}</system>\n`;
         if (m.role === 'user') return `Human: ${m.content}\n`;
         return `Assistant: ${m.content}\n`;

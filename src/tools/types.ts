@@ -122,10 +122,7 @@ export interface IToolRegistry {
   has(name: string): boolean;
 
   /** Execute a tool by name */
-  execute<TInput, TOutput>(
-    name: string,
-    input: TInput
-  ): Promise<ToolResult<TOutput>>;
+  execute<TInput, TOutput>(name: string, input: TInput): Promise<ToolResult<TOutput>>;
 }
 
 /**

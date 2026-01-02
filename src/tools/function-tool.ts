@@ -49,9 +49,10 @@ export interface FunctionToolConfig<TInput = unknown, TOutput = unknown> {
 /**
  * FunctionTool class
  */
-export class FunctionTool<TInput = unknown, TOutput = unknown>
-  implements IFunctionTool<TInput, TOutput>
-{
+export class FunctionTool<TInput = unknown, TOutput = unknown> implements IFunctionTool<
+  TInput,
+  TOutput
+> {
   readonly name: string;
   readonly description: string;
   readonly parameters: JSONSchema;
@@ -209,12 +210,8 @@ export function tool(options: ToolDecoratorOptions) {
 /**
  * Extract tool metadata from a decorated method
  */
-export function getToolMetadata(
-  method: unknown
-): ToolDecoratorOptions | undefined {
-  return (method as Record<string, unknown>)?.__toolMetadata as
-    | ToolDecoratorOptions
-    | undefined;
+export function getToolMetadata(method: unknown): ToolDecoratorOptions | undefined {
+  return (method as Record<string, unknown>)?.__toolMetadata as ToolDecoratorOptions | undefined;
 }
 
 /**
@@ -236,7 +233,7 @@ export function extractToolsFromClass(instance: object): FunctionTool[] {
           name: metadata.name || key,
           description: metadata.description,
           parameters: metadata.parameters || { type: 'object', properties: {} },
-          execute: async (input) => {
+          execute: async input => {
             try {
               const result = await method.call(instance, input);
               return { success: true, data: result };

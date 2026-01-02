@@ -9,21 +9,21 @@
  * Supported LLM providers
  */
 export type LLMProviderType =
-  | 'claude-code'      // Claude Code SDK (agentic coding)
-  | 'claude'           // Claude via llm CLI
-  | 'openai'           // OpenAI GPT models via llm CLI
-  | 'grok'             // xAI Grok via llm CLI (OpenAI-compatible)
-  | 'ollama'           // Local models via Ollama
-  | 'openrouter';      // OpenRouter for multiple providers
+  | 'claude-code' // Claude Code SDK (agentic coding)
+  | 'claude' // Claude via llm CLI
+  | 'openai' // OpenAI GPT models via llm CLI
+  | 'grok' // xAI Grok via llm CLI (OpenAI-compatible)
+  | 'ollama' // Local models via Ollama
+  | 'openrouter'; // OpenRouter for multiple providers
 
 /**
  * Model configuration
  */
 export interface ModelConfig {
   provider: LLMProviderType;
-  model: string;           // e.g., 'claude-3-sonnet', 'gpt-4o', 'grok-2'
-  apiKey?: string;         // API key (from env if not specified)
-  baseUrl?: string;        // Custom endpoint (for Grok, Ollama, OpenRouter)
+  model: string; // e.g., 'claude-3-sonnet', 'gpt-4o', 'grok-2'
+  apiKey?: string; // API key (from env if not specified)
+  baseUrl?: string; // Custom endpoint (for Grok, Ollama, OpenRouter)
   maxTokens?: number;
   temperature?: number;
 }
@@ -34,7 +34,7 @@ export interface ModelConfig {
 export interface TaskCharacteristics {
   type: 'coding' | 'analysis' | 'chat' | 'review' | 'planning';
   complexity: 'simple' | 'medium' | 'complex';
-  requiresTools: boolean;       // Does task need tool use (file ops, git, etc)?
+  requiresTools: boolean; // Does task need tool use (file ops, git, etc)?
   estimatedTokens?: number;
   priority: 'low' | 'normal' | 'high' | 'critical';
   costSensitive?: boolean;
@@ -69,13 +69,13 @@ export interface LLMToolCall {
 export interface LLMSessionResult {
   success: boolean;
   summary: string;
-  response?: string;         // Raw LLM response (for non-agentic providers)
+  response?: string; // Raw LLM response (for non-agentic providers)
   commitsCreated: number;
   filesModified: string[];
   testsRun: boolean;
   testsPassed: boolean;
   tokensUsed?: number;
-  cost?: number;            // Estimated cost in USD
+  cost?: number; // Estimated cost in USD
   error?: {
     message: string;
     stack?: string;
@@ -87,12 +87,12 @@ export interface LLMSessionResult {
  * Provider capabilities
  */
 export interface ProviderCapabilities {
-  supportsTools: boolean;           // Can use tools (file ops, git, etc)
-  supportsStreaming: boolean;       // Can stream responses
-  supportsImages: boolean;          // Can process images
-  supportsCodeExecution: boolean;   // Can execute code in sandbox
-  maxContextWindow: number;         // Max tokens in context
-  costPerMillionTokens: number;     // Approximate cost for comparison
+  supportsTools: boolean; // Can use tools (file ops, git, etc)
+  supportsStreaming: boolean; // Can stream responses
+  supportsImages: boolean; // Can process images
+  supportsCodeExecution: boolean; // Can execute code in sandbox
+  maxContextWindow: number; // Max tokens in context
+  costPerMillionTokens: number; // Approximate cost for comparison
 }
 
 /**

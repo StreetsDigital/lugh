@@ -54,13 +54,7 @@ export interface DecomposedTask {
 /**
  * Status of a spawned agent
  */
-export type AgentStatus =
-  | 'pending'
-  | 'spawning'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'cancelled';
+export type AgentStatus = 'pending' | 'spawning' | 'running' | 'completed' | 'failed' | 'cancelled';
 
 /**
  * A spawned agent instance

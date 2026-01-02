@@ -130,11 +130,7 @@ export interface IVectorDBBlock extends IMemoryBlock {
   /**
    * Search by semantic similarity
    */
-  search(
-    conversationId: string,
-    query: string,
-    topK?: number
-  ): Promise<MemorySearchResult[]>;
+  search(conversationId: string, query: string, topK?: number): Promise<MemorySearchResult[]>;
 
   /**
    * Add a record with automatic embedding

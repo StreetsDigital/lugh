@@ -22,6 +22,7 @@ claude setup-token
 ```
 
 This outputs a token like:
+
 ```
 sk-ant-oat01-XXXXXXXXXXXXXXX...
 ```
@@ -89,17 +90,17 @@ When Claude Code runs tools, you see real-time feedback:
 
 ### Tool Icons
 
-| Icon | Tool | Description |
-|------|------|-------------|
-| ⚡ | Bash | Shell commands |
-| 📖 | Read | Reading files |
-| ✏️ | Write | Creating files |
-| 🔧 | Edit | Modifying files |
-| 🔍 | Glob | File pattern search |
-| 🔎 | Grep | Content search |
-| 🤖 | Task | Sub-agent spawning |
-| 📝 | TodoWrite | Task tracking |
-| 🌐 | WebFetch | HTTP requests |
+| Icon | Tool      | Description         |
+| ---- | --------- | ------------------- |
+| ⚡   | Bash      | Shell commands      |
+| 📖   | Read      | Reading files       |
+| ✏️   | Write     | Creating files      |
+| 🔧   | Edit      | Modifying files     |
+| 🔍   | Glob      | File pattern search |
+| 🔎   | Grep      | Content search      |
+| 🤖   | Task      | Sub-agent spawning  |
+| 📝   | TodoWrite | Task tracking       |
+| 🌐   | WebFetch  | HTTP requests       |
 
 ## Session Control
 
@@ -113,6 +114,7 @@ Bot: ⏹️ Session aborted.
 ```
 
 Common reasons to stop:
+
 - Wrong direction on implementation
 - Running too long
 - About to modify wrong files
@@ -130,12 +132,12 @@ Bot: **Active Sessions:**
 
 ## Why OAuth Instead of API Key?
 
-| Feature | API Key | OAuth Token |
-|---------|---------|-------------|
-| Billing | Pay-per-use | Max subscription |
-| Cost | $0.03+ per message | Included |
-| Validity | Permanent | 1 year |
-| Best for | One-off tasks | Heavy usage |
+| Feature  | API Key            | OAuth Token      |
+| -------- | ------------------ | ---------------- |
+| Billing  | Pay-per-use        | Max subscription |
+| Cost     | $0.03+ per message | Included         |
+| Validity | Permanent          | 1 year           |
+| Best for | One-off tasks      | Heavy usage      |
 
 If you have a Claude Max subscription, OAuth is preferred - unlimited usage at no extra cost.
 
@@ -148,6 +150,7 @@ V1 uses **notification-only** mode. You see what Claude Code is doing, but it do
 The Claude Agent SDK's internal stream management has timeouts that are shorter than human response time. If we block for approval, the SDK times out before you can respond.
 
 Future versions may implement async approval with:
+
 - Request queuing
 - Batch approval (`/approve all`)
 - Auto-approve for trusted operations
@@ -159,6 +162,7 @@ For now, use `/stop` if you see something you don't want.
 ### 1. Start with Clear Prompts
 
 Good prompts reduce the need for `/stop`:
+
 ```
 "Add a logout button to the header. Only modify Header.tsx."
 ```
@@ -166,6 +170,7 @@ Good prompts reduce the need for `/stop`:
 ### 2. Watch the Tool Stream
 
 The first few tool calls tell you if Claude is on the right track:
+
 - Reading correct files?
 - Looking in right directories?
 - Understanding the codebase structure?
@@ -179,6 +184,7 @@ Don't wait for a bad implementation to complete. If tool calls look wrong, `/sto
 Git worktrees let you work on multiple features simultaneously without conflicts. Each worktree is an isolated checkout of the same repo on a different branch.
 
 **Perfect for:**
+
 - Multiple AI sessions working on independent features
 - Reviewing PRs while continuing development
 - Hotfixes that can't wait
@@ -204,6 +210,7 @@ Each conversation gets isolated workspace under `~/.lugh/worktrees/`. No conflic
 ### "Balance too low" Error
 
 You're using an API key instead of OAuth token:
+
 ```bash
 # Generate OAuth token
 claude setup-token
@@ -217,6 +224,7 @@ CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...
 ### No Tool Messages Appearing
 
 Check streaming mode is enabled:
+
 ```env
 TELEGRAM_STREAMING_MODE=stream
 ```
@@ -224,6 +232,7 @@ TELEGRAM_STREAMING_MODE=stream
 ### Session Not Responding
 
 Check if Claude Code is actually running:
+
 ```bash
 docker-compose --profile with-db logs -f app-with-db
 ```
@@ -233,6 +242,7 @@ Look for errors in the logs.
 ### Container Not Picking Up Changes
 
 Recreate the container:
+
 ```bash
 docker-compose --profile with-db up -d --force-recreate app-with-db
 ```

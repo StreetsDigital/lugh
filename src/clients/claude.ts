@@ -120,25 +120,28 @@ export class ClaudeClient implements IAssistantClient {
     const oauthToken = process.env.CLAUDE_CODE_OAUTH_TOKEN;
     const apiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY;
     if (!oauthToken && !apiKey) {
-      throw new Error('No credentials found. Set CLAUDE_CODE_OAUTH_TOKEN (for Max subscription) or ANTHROPIC_API_KEY.');
+      throw new Error(
+        'No credentials found. Set CLAUDE_CODE_OAUTH_TOKEN (for Max subscription) or ANTHROPIC_API_KEY.'
+      );
     }
 
     // Check if blocking approvals are enabled
-    const blockingApprovalsEnabled =
-      approvalContext && process.env.BLOCKING_APPROVALS !== 'false';
+    const blockingApprovalsEnabled = approvalContext && process.env.BLOCKING_APPROVALS !== 'false';
 
     // Configure git to use GITHUB_TOKEN for authentication (if available)
     // Git will use these environment variables for HTTPS auth
     const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-    const gitEnv = githubToken ? {
-      // Configure git credential helper via environment
-      // This tells git to use our token for github.com
-      GIT_CONFIG_COUNT: '2',
-      GIT_CONFIG_KEY_0: 'credential.https://github.com.helper',
-      GIT_CONFIG_VALUE_0: `!f() { echo "username=x-access-token"; echo "password=${githubToken}"; }; f`,
-      GIT_CONFIG_KEY_1: 'credential.helper',
-      GIT_CONFIG_VALUE_1: 'cache --timeout=3600',
-    } : {};
+    const gitEnv = githubToken
+      ? {
+          // Configure git credential helper via environment
+          // This tells git to use our token for github.com
+          GIT_CONFIG_COUNT: '2',
+          GIT_CONFIG_KEY_0: 'credential.https://github.com.helper',
+          GIT_CONFIG_VALUE_0: `!f() { echo "username=x-access-token"; echo "password=${githubToken}"; }; f`,
+          GIT_CONFIG_KEY_1: 'credential.helper',
+          GIT_CONFIG_VALUE_1: 'cache --timeout=3600',
+        }
+      : {};
 
     const options: Options = {
       cwd,

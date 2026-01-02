@@ -73,7 +73,9 @@ describe('tool-formatter', () => {
           file_path: '/path/to/file.ts',
           old_string: 'this is a very long string that exceeds thirty characters',
         });
-        expect(result).toBe('🔧 **Edit**\n└─ file.ts\n   replacing: "this is a very long string tha..."');
+        expect(result).toBe(
+          '🔧 **Edit**\n└─ file.ts\n   replacing: "this is a very long string tha..."'
+        );
       });
 
       test('replaces newlines with arrows in preview', () => {
@@ -145,9 +147,7 @@ describe('tool-formatter', () => {
             { content: 'Task 5', status: 'pending' },
           ],
         });
-        expect(result).toBe(
-          '📝 **TodoWrite**\n  ✓ Task 1\n  ○ Task 2\n  ○ Task 3\n  ...+2 more'
-        );
+        expect(result).toBe('📝 **TodoWrite**\n  ✓ Task 1\n  ○ Task 2\n  ○ Task 3\n  ...+2 more');
       });
     });
 

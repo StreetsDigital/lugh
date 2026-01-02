@@ -69,9 +69,7 @@ export function createLLMConfigRouter(): Router {
    */
   router.get('/config', async (_req: Request, res: Response) => {
     try {
-      const result = await pool.query<LLMConfiguration>(
-        'SELECT * FROM llm_configuration LIMIT 1'
-      );
+      const result = await pool.query<LLMConfiguration>('SELECT * FROM llm_configuration LIMIT 1');
 
       if (result.rows.length === 0) {
         // Create default config if none exists
@@ -151,9 +149,7 @@ export function createLLMConfigRouter(): Router {
         'SELECT provider, is_active, last_validated_at FROM llm_api_keys'
       );
 
-      const keyStatus = new Map(
-        keysResult.rows.map((k) => [k.provider, k])
-      );
+      const keyStatus = new Map(keysResult.rows.map(k => [k.provider, k]));
 
       const providers = [
         {

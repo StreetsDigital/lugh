@@ -44,11 +44,16 @@ const approvalResolvers = new Map<string, (result: 'approved' | 'rejected' | 'ti
  */
 function getPriorityEmoji(priority: string): string {
   switch (priority) {
-    case 'critical': return '🔴';
-    case 'high': return '🟠';
-    case 'medium': return '🟡';
-    case 'low': return '🟢';
-    default: return '⚪';
+    case 'critical':
+      return '🔴';
+    case 'high':
+      return '🟠';
+    case 'medium':
+      return '🟡';
+    case 'low':
+      return '🟢';
+    default:
+      return '⚪';
   }
 }
 
@@ -57,10 +62,14 @@ function getPriorityEmoji(priority: string): string {
  */
 function getDurationText(duration: string): string {
   switch (duration) {
-    case 'short': return '< 1 min';
-    case 'medium': return '1-5 min';
-    case 'long': return '> 5 min';
-    default: return 'Unknown';
+    case 'short':
+      return '< 1 min';
+    case 'medium':
+      return '1-5 min';
+    case 'long':
+      return '> 5 min';
+    default:
+      return 'Unknown';
   }
 }
 
@@ -224,7 +233,9 @@ export async function approveByAgentId(
         approvalResolvers.delete(approvalId);
       }
 
-      console.log(`[AgentApprovals] Agent ${request.agentId} approved by text command from ${userId}`);
+      console.log(
+        `[AgentApprovals] Agent ${request.agentId} approved by text command from ${userId}`
+      );
       return { success: true, role: request.role, title: request.title };
     }
   }
@@ -270,10 +281,16 @@ export function getAgentDetails(approvalId: string): string {
     return 'Agent spawn request not found or expired.';
   }
 
-  const statusEmoji = request.status === 'approved' ? '✅' :
-                       request.status === 'rejected' ? '❌' :
-                       request.status === 'pending' ? '⏳' :
-                       request.status === 'timeout' ? '⏰' : '❓';
+  const statusEmoji =
+    request.status === 'approved'
+      ? '✅'
+      : request.status === 'rejected'
+        ? '❌'
+        : request.status === 'pending'
+          ? '⏳'
+          : request.status === 'timeout'
+            ? '⏰'
+            : '❓';
 
   return `🔍 **Full Details for Agent ${request.agentId}**
 
@@ -304,7 +321,7 @@ export async function waitForAgentApproval(
   approvalId: string,
   timeoutMs: number = 300000
 ): Promise<'approved' | 'rejected' | 'timeout'> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     // Store resolver for callback
     approvalResolvers.set(approvalId, resolve);
 
@@ -461,7 +478,8 @@ export function createMockApproval(options: {
     agentId,
     role: options.role ?? 'Test Agent',
     title: options.title ?? 'Mock task for testing',
-    description: options.description ?? 'This is a mock approval request for testing the /pending command.',
+    description:
+      options.description ?? 'This is a mock approval request for testing the /pending command.',
     priority: options.priority ?? 'medium',
     estimatedDuration: 'medium',
     requiredTools: true,

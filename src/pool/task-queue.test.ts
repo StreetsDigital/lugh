@@ -116,8 +116,8 @@ describe('TaskQueue', () => {
 
       // One should get the task, one should get null
       const results = [task1, task2];
-      const assigned = results.filter((t) => t !== null);
-      const nulls = results.filter((t) => t === null);
+      const assigned = results.filter(t => t !== null);
+      const nulls = results.filter(t => t === null);
 
       expect(assigned.length).toBe(1);
       expect(nulls.length).toBe(1);
@@ -207,9 +207,9 @@ describe('TaskQueue', () => {
       });
 
       await queue.addResult(taskId, 'chunk', { sequence: 1 });
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
       await queue.addResult(taskId, 'chunk', { sequence: 2 });
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
       await queue.addResult(taskId, 'chunk', { sequence: 3 });
 
       const results = await queue.getResults(taskId);

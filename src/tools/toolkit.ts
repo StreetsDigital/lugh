@@ -53,27 +53,19 @@ export abstract class Toolkit implements IToolkit {
 /**
  * Create a toolkit from a set of tools
  */
-export function createToolkit(
-  name: string,
-  description: string,
-  tools: IFunctionTool[]
-): IToolkit {
+export function createToolkit(name: string, description: string, tools: IFunctionTool[]): IToolkit {
   return {
     name,
     description,
     getTools: () => tools,
-    getTool: (toolName: string) => tools.find((t) => t.name === toolName),
+    getTool: (toolName: string) => tools.find(t => t.name === toolName),
   };
 }
 
 /**
  * Combine multiple toolkits into one
  */
-export function combineToolkits(
-  name: string,
-  description: string,
-  toolkits: IToolkit[]
-): IToolkit {
-  const allTools = toolkits.flatMap((tk) => tk.getTools());
+export function combineToolkits(name: string, description: string, toolkits: IToolkit[]): IToolkit {
+  const allTools = toolkits.flatMap(tk => tk.getTools());
   return createToolkit(name, description, allTools);
 }

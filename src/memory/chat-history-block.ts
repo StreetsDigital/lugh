@@ -57,9 +57,7 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
   /**
    * Write a record to chat history
    */
-  async write(
-    record: Omit<MemoryRecord, 'id' | 'createdAt'>
-  ): Promise<MemoryRecord> {
+  async write(record: Omit<MemoryRecord, 'id' | 'createdAt'>): Promise<MemoryRecord> {
     const id = uuidv4();
     const createdAt = new Date();
 
@@ -115,10 +113,7 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
    * Clear all records for a conversation
    */
   async clear(conversationId: string): Promise<void> {
-    await pool.query(
-      'DELETE FROM memory_records WHERE conversation_id = $1',
-      [conversationId]
-    );
+    await pool.query('DELETE FROM memory_records WHERE conversation_id = $1', [conversationId]);
   }
 
   /**
@@ -169,10 +164,7 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
   /**
    * Get recent messages
    */
-  async getRecentMessages(
-    conversationId: string,
-    limit?: number
-  ): Promise<MemoryMessage[]> {
+  async getRecentMessages(conversationId: string, limit?: number): Promise<MemoryMessage[]> {
     const maxLimit = limit || this.config.maxMessages;
 
     const result = await pool.query<{
@@ -190,7 +182,7 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
     );
 
     // Return in chronological order (oldest first)
-    return result.rows.reverse().map((row) => ({
+    return result.rows.reverse().map(row => ({
       id: row.id,
       role: (row.metadata?.role as MemoryMessage['role']) || 'user',
       content: row.content,
@@ -210,9 +202,7 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
     }
 
     // Format messages for summarization
-    const formatted = messages
-      .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
-      .join('\n\n');
+    const formatted = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
 
     try {
       const llm = this.getLLM();
@@ -232,7 +222,7 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
       // Fallback: return first and last few messages
       const first = messages.slice(0, 2);
       const last = messages.slice(-2);
-      return `[Summary unavailable]\n\nFirst messages:\n${first.map((m) => `- ${m.content.slice(0, 100)}...`).join('\n')}\n\nRecent messages:\n${last.map((m) => `- ${m.content.slice(0, 100)}...`).join('\n')}`;
+      return `[Summary unavailable]\n\nFirst messages:\n${first.map(m => `- ${m.content.slice(0, 100)}...`).join('\n')}\n\nRecent messages:\n${last.map(m => `- ${m.content.slice(0, 100)}...`).join('\n')}`;
     }
   }
 
@@ -240,10 +230,7 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
    * Prune old messages, optionally creating a summary
    */
   private async pruneOldMessages(conversationId: string): Promise<void> {
-    const messages = await this.getRecentMessages(
-      conversationId,
-      this.config.maxMessages * 2
-    );
+    const messages = await this.getRecentMessages(conversationId, this.config.maxMessages * 2);
 
     if (messages.length <= this.config.maxMessages) {
       return;
@@ -255,9 +242,7 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
 
     if (this.config.summarizeOnOverflow && toPrune.length > 0) {
       // Create a summary of pruned messages
-      const formatted = toPrune
-        .map((m) => `${m.role}: ${m.content}`)
-        .join('\n');
+      const formatted = toPrune.map(m => `${m.role}: ${m.content}`).join('\n');
 
       try {
         const llm = this.getLLM();
@@ -282,7 +267,7 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
     }
 
     // Delete old messages
-    const keepIds = toKeep.map((m) => m.id);
+    const keepIds = toKeep.map(m => m.id);
     if (keepIds.length > 0) {
       await pool.query(
         `DELETE FROM memory_records
@@ -301,14 +286,8 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
   /**
    * Get formatted context for prompts
    */
-  async getFormattedContext(
-    conversationId: string,
-    maxMessages?: number
-  ): Promise<string> {
-    const messages = await this.getRecentMessages(
-      conversationId,
-      maxMessages || 20
-    );
+  async getFormattedContext(conversationId: string, maxMessages?: number): Promise<string> {
+    const messages = await this.getRecentMessages(conversationId, maxMessages || 20);
 
     if (messages.length === 0) {
       return '';
@@ -328,9 +307,7 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
       context += summaries.rows[0].content + '\n\n---\n\n';
     }
 
-    context += messages
-      .map((m) => `**${m.role}**: ${m.content}`)
-      .join('\n\n');
+    context += messages.map(m => `**${m.role}**: ${m.content}`).join('\n\n');
 
     return context;
   }
@@ -339,8 +316,6 @@ export class ChatHistoryBlock implements IChatHistoryBlock {
 /**
  * Create a ChatHistoryBlock instance
  */
-export function createChatHistoryBlock(
-  config?: Partial<ChatHistoryConfig>
-): ChatHistoryBlock {
+export function createChatHistoryBlock(config?: Partial<ChatHistoryConfig>): ChatHistoryBlock {
   return new ChatHistoryBlock(config);
 }

@@ -28,10 +28,9 @@ export async function createApproval(data: {
  * Get an approval by ID
  */
 export async function getApproval(id: string): Promise<Approval | null> {
-  const result = await pool.query<Approval>(
-    'SELECT * FROM remote_agent_approvals WHERE id = $1',
-    [id]
-  );
+  const result = await pool.query<Approval>('SELECT * FROM remote_agent_approvals WHERE id = $1', [
+    id,
+  ]);
   return result.rows[0] || null;
 }
 
@@ -114,7 +113,7 @@ export async function waitForApproval(
 
   // Mark as timed out in database
   await pool.query(
-    'UPDATE remote_agent_approvals SET status = \'timeout\' WHERE id = $1 AND status = \'pending\'',
+    "UPDATE remote_agent_approvals SET status = 'timeout' WHERE id = $1 AND status = 'pending'",
     [id]
   );
 

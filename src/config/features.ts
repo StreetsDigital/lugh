@@ -124,11 +124,7 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
     maturity: 'experimental',
     defaultEnabled: false,
     migrations: ['009_llm_configuration.sql'],
-    endpoints: [
-      '/api/llm/config',
-      '/api/llm/providers',
-      '/api/llm/api-keys',
-    ],
+    endpoints: ['/api/llm/config', '/api/llm/providers', '/api/llm/api-keys'],
   },
 
   LLM_CONFIG_UI: {
@@ -385,7 +381,7 @@ export function getAllFeatures(): {
 export function getFeaturesByMaturity(
   maturity: FeatureMaturity
 ): { key: string; definition: FeatureDefinition; state: FeatureState }[] {
-  return getAllFeatures().filter((f) => f.definition.maturity === maturity);
+  return getAllFeatures().filter(f => f.definition.maturity === maturity);
 }
 
 /**
@@ -393,8 +389,8 @@ export function getFeaturesByMaturity(
  */
 export function getEnabledFeatures(): string[] {
   return getAllFeatures()
-    .filter((f) => f.state.enabled)
-    .map((f) => f.key);
+    .filter(f => f.state.enabled)
+    .map(f => f.key);
 }
 
 /**

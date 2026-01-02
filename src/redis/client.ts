@@ -15,11 +15,7 @@
 
 import { createClient, RedisClientType } from 'redis';
 import { isEnabled } from '../config/features';
-import {
-  ORCHESTRATOR_CHANNELS,
-  AGENT_CHANNELS,
-  REDIS_KEYS,
-} from './channels';
+import { ORCHESTRATOR_CHANNELS, AGENT_CHANNELS, REDIS_KEYS } from './channels';
 import {
   type RedisMessage,
   type OrchestratorMessage,
@@ -56,12 +52,16 @@ export class RedisClient {
 
     // Main client for publishing and data operations
     this.client = createClient({ url: this.url });
-    this.client.on('error', (err: Error) => { console.error('[Redis] Client error:', err); });
+    this.client.on('error', (err: Error) => {
+      console.error('[Redis] Client error:', err);
+    });
     await this.client.connect();
 
     // Separate client for subscriptions (Redis requirement)
     this.subscriber = this.client.duplicate();
-    this.subscriber.on('error', (err: Error) => { console.error('[Redis] Subscriber error:', err); });
+    this.subscriber.on('error', (err: Error) => {
+      console.error('[Redis] Subscriber error:', err);
+    });
     await this.subscriber.connect();
 
     this.isConnected = true;
@@ -96,9 +96,7 @@ export class RedisClient {
   /**
    * Subscribe to orchestrator channels (for agents)
    */
-  async subscribeToOrchestrator(
-    handler: MessageHandler<OrchestratorMessage>
-  ): Promise<void> {
+  async subscribeToOrchestrator(handler: MessageHandler<OrchestratorMessage>): Promise<void> {
     for (const channel of Object.values(ORCHESTRATOR_CHANNELS)) {
       await this.subscribe(channel, handler as MessageHandler<RedisMessage>);
     }
@@ -116,10 +114,7 @@ export class RedisClient {
   /**
    * Subscribe to a specific channel
    */
-  async subscribe(
-    channel: string,
-    handler: MessageHandler<RedisMessage>
-  ): Promise<void> {
+  async subscribe(channel: string, handler: MessageHandler<RedisMessage>): Promise<void> {
     // Track handlers
     const handlers = this.handlers.get(channel) || [];
     handlers.push(handler);
@@ -158,10 +153,7 @@ export class RedisClient {
   /**
    * Set agent info
    */
-  async setAgentInfo(
-    agentId: string,
-    info: Record<string, string>
-  ): Promise<void> {
+  async setAgentInfo(agentId: string, info: Record<string, string>): Promise<void> {
     const key = `${REDIS_KEYS.AGENT}:${agentId}`;
     await this.client.hSet(key, info);
   }
@@ -177,10 +169,7 @@ export class RedisClient {
   /**
    * Set task info
    */
-  async setTaskInfo(
-    taskId: string,
-    info: Record<string, string>
-  ): Promise<void> {
+  async setTaskInfo(taskId: string, info: Record<string, string>): Promise<void> {
     const key = `${REDIS_KEYS.TASK}:${taskId}`;
     await this.client.hSet(key, info);
   }
@@ -266,20 +255,14 @@ export class RedisClient {
   /**
    * Dispatch a task to agents
    */
-  async dispatchTask(
-    message: OrchestratorMessage & { type: 'task:dispatch' }
-  ): Promise<void> {
+  async dispatchTask(message: OrchestratorMessage & { type: 'task:dispatch' }): Promise<void> {
     await this.publish(ORCHESTRATOR_CHANNELS.TASK_DISPATCH, message);
   }
 
   /**
    * Send stop command to agent
    */
-  async stopAgent(
-    agentId: string,
-    taskId: string,
-    reason: string
-  ): Promise<void> {
+  async stopAgent(agentId: string, taskId: string, reason: string): Promise<void> {
     await this.publish(ORCHESTRATOR_CHANNELS.CONTROL_STOP, {
       type: 'control:stop',
       agentId,

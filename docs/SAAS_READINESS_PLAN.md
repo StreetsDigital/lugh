@@ -13,12 +13,12 @@ Lugh is currently designed as a **single-developer tool** with explicit architec
 
 ### Key Gaps by Category
 
-| Category | Critical Issues |
-|----------|-----------------|
-| **Multi-tenancy** | No tenant isolation in database or filesystem |
-| **Security** | AI runs with bypass permissions, default-open auth |
-| **Compliance** | No GDPR rights implementation, no DPAs |
-| **Audit** | No structured audit logging |
+| Category          | Critical Issues                                    |
+| ----------------- | -------------------------------------------------- |
+| **Multi-tenancy** | No tenant isolation in database or filesystem      |
+| **Security**      | AI runs with bypass permissions, default-open auth |
+| **Compliance**    | No GDPR rights implementation, no DPAs             |
+| **Audit**         | No structured audit logging                        |
 
 ---
 
@@ -64,6 +64,7 @@ CREATE POLICY tenant_isolation ON remote_agent_codebases
 ```
 
 **Files to Modify:**
+
 - `migrations/` - Add new migration file
 - `src/db/connection.ts` - Set `app.current_user_id` on each request
 - All query files in `src/db/` - Add owner_id filters
@@ -73,6 +74,7 @@ CREATE POLICY tenant_isolation ON remote_agent_codebases
 **Current:** `~/.lugh/workspaces/` shared globally
 
 **Required Structure:**
+
 ```
 ~/.lugh/
 ├── users/
@@ -85,6 +87,7 @@ CREATE POLICY tenant_isolation ON remote_agent_codebases
 ```
 
 **Files to Modify:**
+
 - `src/utils/lugh-paths.ts` - Add user-scoped path functions
 - `src/isolation/providers/worktree.ts` - Add user context
 - `src/handlers/command-handler.ts` - Pass user context
@@ -94,6 +97,7 @@ CREATE POLICY tenant_isolation ON remote_agent_codebases
 **Current:** All platform adapters default to `return true` when whitelist empty
 
 **Required Change:**
+
 ```typescript
 // src/utils/telegram-auth.ts (and all other *-auth.ts files)
 export function isUserAuthorized(userId: number | undefined, allowedIds: number[]): boolean {
@@ -106,6 +110,7 @@ export function isUserAuthorized(userId: number | undefined, allowedIds: number[
 ```
 
 **Alternative (SaaS mode):** Implement registration flow:
+
 ```typescript
 // New: src/services/registration.ts
 export async function registerUser(platform: string, platformUserId: string): Promise<User> {
@@ -118,12 +123,14 @@ export async function registerUser(platform: string, platformUserId: string): Pr
 ### 1.4 Remove Permission Bypass (for production)
 
 **Current:** `src/clients/claude.ts:153-154`
+
 ```typescript
 permissionMode: 'bypassPermissions',
 allowDangerouslySkipPermissions: true,
 ```
 
 **Options:**
+
 1. **Use approval workflow for all tools** - Already exists, make mandatory
 2. **Whitelist safe tools** - Define allowed tools per user tier
 3. **Sandbox execution** - Run in isolated containers
@@ -162,6 +169,7 @@ router.delete('/api/privacy/data', async (req, res) => {
 ```
 
 **Database Functions:**
+
 ```sql
 -- Cascade delete for user data
 CREATE FUNCTION delete_user_data(p_user_id UUID) RETURNS void AS $$
@@ -182,9 +190,9 @@ $$ LANGUAGE plpgsql;
 
 ```typescript
 interface RetentionPolicy {
-  inactiveSessions: number;  // days
-  approvalRecords: number;   // days
-  logFiles: number;          // days
+  inactiveSessions: number; // days
+  approvalRecords: number; // days
+  logFiles: number; // days
 }
 
 const DEFAULT_POLICY: RetentionPolicy = {
@@ -201,12 +209,14 @@ export async function enforceRetention(): Promise<void> {
 ### 2.3 Privacy Policy & Terms
 
 **Required Documents:**
+
 - [ ] Privacy Policy (`docs/legal/PRIVACY_POLICY.md`)
 - [ ] Terms of Service (`docs/legal/TERMS_OF_SERVICE.md`)
 - [ ] Cookie Policy (if applicable)
 - [ ] Data Processing Agreement template
 
 **Display Requirements:**
+
 - Show privacy notice on first interaction
 - Link to full policy in bot responses
 - Require acceptance before first use
@@ -215,12 +225,12 @@ export async function enforceRetention(): Promise<void> {
 
 **Required Agreements:**
 
-| Provider | Type | Priority | Contact |
-|----------|------|----------|---------|
-| Anthropic | DPA for Claude API | HIGH | sales@anthropic.com |
-| OpenAI | DPA for Codex API | HIGH | dpa@openai.com |
-| Database Host | DPA for PostgreSQL | HIGH | Depends on provider |
-| GitHub | Verify Microsoft DPA coverage | MEDIUM | Via enterprise agreement |
+| Provider      | Type                          | Priority | Contact                  |
+| ------------- | ----------------------------- | -------- | ------------------------ |
+| Anthropic     | DPA for Claude API            | HIGH     | sales@anthropic.com      |
+| OpenAI        | DPA for Codex API             | HIGH     | dpa@openai.com           |
+| Database Host | DPA for PostgreSQL            | HIGH     | Depends on provider      |
+| GitHub        | Verify Microsoft DPA coverage | MEDIUM   | Via enterprise agreement |
 
 ---
 
@@ -229,6 +239,7 @@ export async function enforceRetention(): Promise<void> {
 ### 3.1 Audit Logging System
 
 **New Table:**
+
 ```sql
 CREATE TABLE audit_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -251,6 +262,7 @@ CREATE INDEX idx_audit_log_event_type ON audit_log(event_type);
 ```
 
 **Implementation:**
+
 ```typescript
 // src/utils/audit-logger.ts
 export interface AuditEvent {
@@ -271,6 +283,7 @@ export async function logAudit(event: AuditEvent): Promise<void> {
 ```
 
 **Events to Log:**
+
 - [ ] Authentication attempts (success/failure)
 - [ ] Conversation access
 - [ ] Command execution
@@ -282,6 +295,7 @@ export async function logAudit(event: AuditEvent): Promise<void> {
 ### 3.2 Rate Limiting
 
 **Middleware:**
+
 ```typescript
 // src/middleware/rate-limit.ts
 import rateLimit from 'express-rate-limit';
@@ -300,6 +314,7 @@ export const aiLimiter = rateLimit({
 ```
 
 **Apply to:**
+
 - [ ] `/test/*` endpoints (or disable in production)
 - [ ] All message handlers
 - [ ] Per-user quotas for AI API calls
@@ -307,6 +322,7 @@ export const aiLimiter = rateLimit({
 ### 3.3 Secure Test Endpoints
 
 **Option 1:** Disable in production
+
 ```typescript
 if (process.env.NODE_ENV !== 'development') {
   // Don't register /test/* routes
@@ -314,19 +330,20 @@ if (process.env.NODE_ENV !== 'development') {
 ```
 
 **Option 2:** Add authentication
+
 ```typescript
 router.use('/test', requireAuth);
 ```
 
 ### 3.4 Encryption Requirements
 
-| Layer | Requirement | Implementation |
-|-------|-------------|----------------|
-| Database at rest | Enable PostgreSQL encryption | Cloud provider setting |
-| Database in transit | Require SSL | `?sslmode=require` in DATABASE_URL |
-| File storage | Encrypt worktrees | LUKS or cloud provider encryption |
-| API in transit | HTTPS only | Nginx/cloud load balancer SSL termination |
-| Secrets | Use secrets manager | AWS Secrets Manager / HashiCorp Vault |
+| Layer               | Requirement                  | Implementation                            |
+| ------------------- | ---------------------------- | ----------------------------------------- |
+| Database at rest    | Enable PostgreSQL encryption | Cloud provider setting                    |
+| Database in transit | Require SSL                  | `?sslmode=require` in DATABASE_URL        |
+| File storage        | Encrypt worktrees            | LUKS or cloud provider encryption         |
+| API in transit      | HTTPS only                   | Nginx/cloud load balancer SSL termination |
+| Secrets             | Use secrets manager          | AWS Secrets Manager / HashiCorp Vault     |
 
 ---
 
@@ -344,6 +361,7 @@ router.use('/test', requireAuth);
 ### 4.2 Access Management
 
 **Migrate from env vars to database:**
+
 ```sql
 CREATE TABLE access_grants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -375,27 +393,27 @@ CREATE TABLE access_grants (
 
 ## Implementation Timeline
 
-| Phase | Scope | Dependency |
-|-------|-------|------------|
-| **Phase 1** | Multi-tenancy, Auth, DB Schema | None |
-| **Phase 2** | GDPR endpoints, Privacy Policy, DPAs | Phase 1 |
-| **Phase 3** | Audit logging, Rate limiting, Encryption | Phase 1 |
-| **Phase 4** | SOC 2 policies, Monitoring, Backup | Phases 1-3 |
+| Phase       | Scope                                    | Dependency |
+| ----------- | ---------------------------------------- | ---------- |
+| **Phase 1** | Multi-tenancy, Auth, DB Schema           | None       |
+| **Phase 2** | GDPR endpoints, Privacy Policy, DPAs     | Phase 1    |
+| **Phase 3** | Audit logging, Rate limiting, Encryption | Phase 1    |
+| **Phase 4** | SOC 2 policies, Monitoring, Backup       | Phases 1-3 |
 
 ---
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `src/api/privacy.ts` | GDPR endpoints |
-| `src/services/data-retention.ts` | Retention enforcement |
-| `src/services/registration.ts` | User registration flow |
-| `src/utils/audit-logger.ts` | Audit logging |
-| `src/middleware/rate-limit.ts` | Rate limiting |
-| `migrations/XXX_multi_tenant.sql` | Schema changes |
-| `docs/legal/PRIVACY_POLICY.md` | Privacy policy |
-| `docs/legal/TERMS_OF_SERVICE.md` | Terms of service |
+| File                              | Purpose                |
+| --------------------------------- | ---------------------- |
+| `src/api/privacy.ts`              | GDPR endpoints         |
+| `src/services/data-retention.ts`  | Retention enforcement  |
+| `src/services/registration.ts`    | User registration flow |
+| `src/utils/audit-logger.ts`       | Audit logging          |
+| `src/middleware/rate-limit.ts`    | Rate limiting          |
+| `migrations/XXX_multi_tenant.sql` | Schema changes         |
+| `docs/legal/PRIVACY_POLICY.md`    | Privacy policy         |
+| `docs/legal/TERMS_OF_SERVICE.md`  | Terms of service       |
 
 ---
 
@@ -417,6 +435,7 @@ CREATE TABLE access_grants (
 ```
 
 **Advantages:**
+
 - Keep existing users happy
 - Gradual migration path
 - Enterprise option for security-conscious orgs
@@ -433,13 +452,13 @@ CREATE TABLE access_grants (
 
 ## Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Data breach | Medium | High | Encryption, access controls, audit logging |
-| GDPR fine | Medium | High | Implement data subject rights, DPAs |
-| AI abuse | High | Medium | Rate limiting, approval workflow |
-| Cost explosion | Medium | Medium | Per-user quotas, spend alerts |
-| Availability issues | Low | Medium | Monitoring, backup, auto-scaling |
+| Risk                | Likelihood | Impact | Mitigation                                 |
+| ------------------- | ---------- | ------ | ------------------------------------------ |
+| Data breach         | Medium     | High   | Encryption, access controls, audit logging |
+| GDPR fine           | Medium     | High   | Implement data subject rights, DPAs        |
+| AI abuse            | High       | Medium | Rate limiting, approval workflow           |
+| Cost explosion      | Medium     | Medium | Per-user quotas, spend alerts              |
+| Availability issues | Low        | Medium | Monitoring, backup, auto-scaling           |
 
 ---
 

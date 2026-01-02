@@ -94,7 +94,7 @@ export class SwarmCoordinator {
    */
   private findSwarmByAgent(agentId: string): string | undefined {
     for (const [swarmId, session] of this.sessions) {
-      if (session.agents.some((a) => a.id === agentId)) {
+      if (session.agents.some(a => a.id === agentId)) {
         return swarmId;
       }
     }
@@ -105,10 +105,7 @@ export class SwarmCoordinator {
    * Execute a swarm for a user request
    * This is the main entry point
    */
-  async execute(
-    userRequest: string,
-    conversationId: string
-  ): Promise<SwarmSession> {
+  async execute(userRequest: string, conversationId: string): Promise<SwarmSession> {
     const swarmId = `swarm-${uuidv4().substring(0, 8)}`;
     console.log(`[SwarmCoordinator] Starting swarm ${swarmId}`);
 
@@ -152,9 +149,7 @@ export class SwarmCoordinator {
         },
       });
 
-      console.log(
-        `[SwarmCoordinator] Decomposed into ${decomposedTask.subTasks.length} sub-tasks`
-      );
+      console.log(`[SwarmCoordinator] Decomposed into ${decomposedTask.subTasks.length} sub-tasks`);
 
       // Step 2: Build execution graph
       const executionGraph = this.buildExecutionGraph(decomposedTask.subTasks);
@@ -173,10 +168,7 @@ export class SwarmCoordinator {
         data: { resultCount: results.length },
       });
 
-      const synthesizedResult = await this.synthesizer.synthesize(
-        decomposedTask,
-        results
-      );
+      const synthesizedResult = await this.synthesizer.synthesize(decomposedTask, results);
 
       // Complete session
       session.status = 'completed';
@@ -250,9 +242,7 @@ export class SwarmCoordinator {
       for (const [_taskId, node] of graph) {
         if (node.status === 'pending' || node.status === 'ready') {
           // Check if all dependencies are complete
-          const depsComplete = node.dependsOn.every((depId) =>
-            completedIds.has(depId)
-          );
+          const depsComplete = node.dependsOn.every(depId => completedIds.has(depId));
 
           if (depsComplete && node.status !== 'ready') {
             node.status = 'ready';
@@ -267,9 +257,7 @@ export class SwarmCoordinator {
       // Spawn agents for ready tasks
       for (const node of readyTasks) {
         if (!runningPromises.has(node.subTask.id)) {
-          console.log(
-            `[SwarmCoordinator] Spawning agent for: ${node.subTask.title}`
-          );
+          console.log(`[SwarmCoordinator] Spawning agent for: ${node.subTask.title}`);
 
           node.status = 'running';
 
@@ -289,52 +277,54 @@ export class SwarmCoordinator {
           });
 
           // Track the promise
-          const resultPromise = handle.promise.then((result) => {
-            node.status = 'completed';
-            node.result = result;
-            completedIds.add(node.subTask.id);
+          const resultPromise = handle.promise
+            .then(result => {
+              node.status = 'completed';
+              node.result = result;
+              completedIds.add(node.subTask.id);
 
-            this.emitEvent({
-              type: 'agent_completed',
-              swarmId,
-              timestamp: new Date(),
-              data: {
-                agentId: handle.agent.id,
+              this.emitEvent({
+                type: 'agent_completed',
+                swarmId,
+                timestamp: new Date(),
+                data: {
+                  agentId: handle.agent.id,
+                  role: node.subTask.role,
+                  duration: result.duration,
+                },
+              });
+
+              return result;
+            })
+            .catch(error => {
+              node.status = 'failed';
+              completedIds.add(node.subTask.id); // Mark as done even on failure
+
+              this.emitEvent({
+                type: 'agent_failed',
+                swarmId,
+                timestamp: new Date(),
+                data: {
+                  agentId: handle.agent.id,
+                  role: node.subTask.role,
+                  error: error.message,
+                },
+              });
+
+              // Return a failure result
+              return {
+                subTaskId: node.subTask.id,
                 role: node.subTask.role,
-                duration: result.duration,
-              },
+                summary: `Failed: ${error.message}`,
+                details: '',
+                artifacts: [],
+                recommendations: [],
+                nextSteps: [],
+                confidence: 0,
+                tokensUsed: 0,
+                duration: 0,
+              } as AgentResult;
             });
-
-            return result;
-          }).catch((error) => {
-            node.status = 'failed';
-            completedIds.add(node.subTask.id); // Mark as done even on failure
-
-            this.emitEvent({
-              type: 'agent_failed',
-              swarmId,
-              timestamp: new Date(),
-              data: {
-                agentId: handle.agent.id,
-                role: node.subTask.role,
-                error: error.message,
-              },
-            });
-
-            // Return a failure result
-            return {
-              subTaskId: node.subTask.id,
-              role: node.subTask.role,
-              summary: `Failed: ${error.message}`,
-              details: '',
-              artifacts: [],
-              recommendations: [],
-              nextSteps: [],
-              confidence: 0,
-              tokensUsed: 0,
-              duration: 0,
-            } as AgentResult;
-          });
 
           runningPromises.set(node.subTask.id, resultPromise);
         }
@@ -382,7 +372,7 @@ export class SwarmCoordinator {
    */
   getActiveSessions(): SwarmSession[] {
     return Array.from(this.sessions.values()).filter(
-      (s) => s.status !== 'completed' && s.status !== 'failed'
+      s => s.status !== 'completed' && s.status !== 'failed'
     );
   }
 
@@ -419,7 +409,7 @@ export class SwarmCoordinator {
     const session = this.sessions.get(swarmId);
     if (!session) return null;
 
-    const agents = session.agents.map((a) => ({
+    const agents = session.agents.map(a => ({
       role: a.role,
       status: a.status,
       progress: a.progress,
@@ -427,9 +417,9 @@ export class SwarmCoordinator {
 
     return {
       total: session.decomposedTask?.subTasks.length || 0,
-      completed: agents.filter((a) => a.status === 'completed').length,
-      running: agents.filter((a) => a.status === 'running').length,
-      failed: agents.filter((a) => a.status === 'failed').length,
+      completed: agents.filter(a => a.status === 'completed').length,
+      running: agents.filter(a => a.status === 'running').length,
+      failed: agents.filter(a => a.status === 'failed').length,
       agents,
     };
   }

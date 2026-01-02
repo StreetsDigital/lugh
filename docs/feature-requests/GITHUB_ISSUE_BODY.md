@@ -7,6 +7,7 @@ After analyzing the [CAMEL AI framework](https://github.com/camel-ai/camel) (15k
 ### Background
 
 CAMEL AI's four foundational principles:
+
 - **Evolvability**: Agents improve through data generation
 - **Scalability**: Designed for millions of agents
 - **Statefulness**: Memory across interactions
@@ -14,14 +15,14 @@ CAMEL AI's four foundational principles:
 
 ### Proposed Features
 
-| Priority | Feature | Effort | Value |
-|----------|---------|--------|-------|
-| **P0** | Memory Systems (conversation buffer + vector store) | 2-3 days | High |
-| **P0** | RAG/Codebase Indexing | 3-4 days | High |
-| **P1** | Dynamic Role Assignment | 1-2 days | Medium |
-| **P1** | Inter-Agent Communication | 2-3 days | Medium |
-| **P2** | Custom Tool Registry | 2-3 days | Medium |
-| **P2** | Self-Improvement Logging | 4-5 days | Medium |
+| Priority | Feature                                             | Effort   | Value  |
+| -------- | --------------------------------------------------- | -------- | ------ |
+| **P0**   | Memory Systems (conversation buffer + vector store) | 2-3 days | High   |
+| **P0**   | RAG/Codebase Indexing                               | 3-4 days | High   |
+| **P1**   | Dynamic Role Assignment                             | 1-2 days | Medium |
+| **P1**   | Inter-Agent Communication                           | 2-3 days | Medium |
+| **P2**   | Custom Tool Registry                                | 2-3 days | Medium |
+| **P2**   | Self-Improvement Logging                            | 4-5 days | Medium |
 
 ### Quick Wins
 

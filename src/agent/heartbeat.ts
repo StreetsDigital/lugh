@@ -9,21 +9,18 @@
 import os from 'os';
 import { AGENT_CHANNELS, type RedisClient, type AgentHeartbeatMessage } from '../redis/client';
 
-const HEARTBEAT_INTERVAL_MS = parseInt(
-  process.env.HEARTBEAT_INTERVAL_MS || '5000',
-  10
-);
+const HEARTBEAT_INTERVAL_MS = parseInt(process.env.HEARTBEAT_INTERVAL_MS || '5000', 10);
 
 type AgentStatus = 'idle' | 'busy' | 'stopping' | 'error';
 
 type StatusGetter = () => {
-    status: AgentStatus;
-    currentTask?: {
-      taskId: string;
-      progress: number;
-      currentStep: string;
-    };
+  status: AgentStatus;
+  currentTask?: {
+    taskId: string;
+    progress: number;
+    currentStep: string;
   };
+};
 
 /**
  * Heartbeat sender
@@ -46,18 +43,16 @@ export class Heartbeat {
   start(): void {
     if (this.intervalId) return;
 
-    console.log(
-      `[Heartbeat] Starting for ${this.agentId} every ${HEARTBEAT_INTERVAL_MS}ms`
-    );
+    console.log(`[Heartbeat] Starting for ${this.agentId} every ${HEARTBEAT_INTERVAL_MS}ms`);
 
     this.intervalId = setInterval(() => {
-      this.sendHeartbeat().catch((err) => {
+      this.sendHeartbeat().catch(err => {
         console.error('[Heartbeat] Failed to send:', err);
       });
     }, HEARTBEAT_INTERVAL_MS);
 
     // Send initial heartbeat immediately
-    this.sendHeartbeat().catch((err) => {
+    this.sendHeartbeat().catch(err => {
       console.error('[Heartbeat] Failed to send initial:', err);
     });
   }

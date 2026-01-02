@@ -13,11 +13,11 @@ Before you begin, you'll need:
 
 ## Step 1: Choose Your Setup Method
 
-| Method | Best For | Time |
-|--------|----------|------|
+| Method                                    | Best For                  | Time    |
+| ----------------------------------------- | ------------------------- | ------- |
 | [Docker Quick Start](#docker-quick-start) | Trying it out, production | ~10 min |
-| [Local Development](#local-development) | Contributing, customizing | ~15 min |
-| [Cloud Deployment](cloud-deployment.md) | 24/7 self-hosted | ~30 min |
+| [Local Development](#local-development)   | Contributing, customizing | ~15 min |
+| [Cloud Deployment](cloud-deployment.md)   | 24/7 self-hosted          | ~30 min |
 
 ## Docker Quick Start
 
@@ -36,43 +36,51 @@ curl -fsSL https://raw.githubusercontent.com/dynamous-community/remote-coding-ag
 #### Database
 
 **Option A: Use a managed database (recommended)**
+
 1. Create a free database at [Supabase](https://supabase.com) or [Neon](https://neon.tech)
 2. Copy the connection string
 
 **Option B: Run PostgreSQL locally**
+
 - Uncomment the postgres service in docker-compose.yml
 - Use: `postgresql://postgres:postgres@postgres:5432/lugh`
 
 #### AI Assistant
 
 **Claude (recommended):**
+
 1. Install Claude Code CLI: https://docs.anthropic.com/claude-code
 2. Run: `claude setup-token`
 3. Copy the token (starts with `sk-ant-oat01-`)
 
 **Codex:**
+
 1. Run: `codex login`
 2. Copy credentials from `~/.codex/auth.json`
 
 #### Platform (choose at least one)
 
 **Telegram:**
+
 1. Message [@BotFather](https://t.me/BotFather) on Telegram
 2. Send `/newbot` and follow prompts
 3. Copy the bot token
 
 **Discord:**
+
 1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
 2. Create New Application > Bot > Reset Token
 3. Enable MESSAGE CONTENT INTENT in Bot settings
 4. Copy the bot token
 
 **Slack:**
+
 1. Go to [Slack API](https://api.slack.com/apps)
 2. Create New App > From Scratch
 3. See [Slack Setup Guide](slack-setup.md) for detailed steps
 
 **GitHub Webhooks:**
+
 1. Generate a webhook secret: `openssl rand -hex 32`
 2. Add webhook to your repo (Settings > Webhooks)
 3. Set URL: `https://your-server/webhooks/github`
@@ -87,6 +95,7 @@ nano .env
 ```
 
 At minimum, set:
+
 - `DATABASE_URL`
 - One AI assistant (`CLAUDE_CODE_OAUTH_TOKEN` or Codex credentials)
 - One platform (`TELEGRAM_BOT_TOKEN`, `DISCORD_BOT_TOKEN`, etc.)
@@ -112,6 +121,7 @@ curl http://localhost:3000/health/db
 ### 1.6 Test Your Bot
 
 Send a message to your bot:
+
 - **Telegram**: Message your bot with `/help`
 - **Discord**: Mention your bot with `@botname /help`
 - **Slack**: Message your bot with `/help`
@@ -176,6 +186,7 @@ The server starts with hot reload. Changes to code automatically restart.
 ### "No AI assistant credentials found"
 
 Set at least one of:
+
 - `CLAUDE_CODE_OAUTH_TOKEN` (recommended)
 - `CLAUDE_API_KEY`
 - `CODEX_ID_TOKEN` + `CODEX_ACCESS_TOKEN` + `CODEX_REFRESH_TOKEN`

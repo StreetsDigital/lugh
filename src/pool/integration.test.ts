@@ -59,7 +59,7 @@ describe('Multi-Agent Pool Integration', () => {
       await agent.start();
 
       // Give agent time to register
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Submit a task
       const request: TaskRequest = {
@@ -92,7 +92,7 @@ describe('Multi-Agent Pool Integration', () => {
       }
 
       // Give agents time to register
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Submit 3 tasks simultaneously
       const tasks = await Promise.all([
@@ -115,14 +115,14 @@ describe('Multi-Agent Pool Integration', () => {
 
       // Wait for all to complete
       const results = await Promise.all(
-        tasks.map((handle) => coordinator.waitForResult(handle.taskId, 5000))
+        tasks.map(handle => coordinator.waitForResult(handle.taskId, 5000))
       );
 
       expect(results.length).toBe(3);
-      expect(results.every((r) => r.status === 'completed')).toBe(true);
+      expect(results.every(r => r.status === 'completed')).toBe(true);
 
       // Check that tasks were distributed across different agents
-      const assignedAgents = results.map((r) => r.assignedAgentId);
+      const assignedAgents = results.map(r => r.assignedAgentId);
       const uniqueAgents = new Set(assignedAgents);
 
       // Should use multiple agents (not all the same agent)
@@ -140,7 +140,7 @@ describe('Multi-Agent Pool Integration', () => {
         await agent.start();
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Submit 5 tasks (more than agents)
       const tasks = await Promise.all([
@@ -173,11 +173,11 @@ describe('Multi-Agent Pool Integration', () => {
 
       // All should eventually complete
       const results = await Promise.all(
-        tasks.map((handle) => coordinator.waitForResult(handle.taskId, 10000))
+        tasks.map(handle => coordinator.waitForResult(handle.taskId, 10000))
       );
 
       expect(results.length).toBe(5);
-      expect(results.every((r) => r.status === 'completed')).toBe(true);
+      expect(results.every(r => r.status === 'completed')).toBe(true);
     });
   });
 
@@ -191,7 +191,7 @@ describe('Multi-Agent Pool Integration', () => {
       agents.push(agent);
       await agent.start();
 
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Submit tasks with different priorities
       const lowPriority = await coordinator.submitTask({
@@ -230,9 +230,7 @@ describe('Multi-Agent Pool Integration', () => {
         queue.getTask(lowPriority.taskId),
       ]);
 
-      const completionTimes = tasks.map(
-        (t) => t?.completedAt?.getTime() || Infinity
-      );
+      const completionTimes = tasks.map(t => t?.completedAt?.getTime() || Infinity);
 
       // High priority should complete first
       expect(completionTimes[0]).toBeLessThan(completionTimes[1]);
@@ -250,7 +248,7 @@ describe('Multi-Agent Pool Integration', () => {
       await agent1.start();
       await agent2.start();
 
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Submit a task
       const handle = await coordinator.submitTask({
@@ -260,7 +258,7 @@ describe('Multi-Agent Pool Integration', () => {
       });
 
       // Wait a bit for task to be assigned
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       const queue = coordinator.getQueue();
       const task = await queue.getTask(handle.taskId);
@@ -288,7 +286,7 @@ describe('Multi-Agent Pool Integration', () => {
         await agent.start();
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Submit 2 tasks (so 2 agents are busy, 2 are idle)
       await coordinator.submitTask({
@@ -304,7 +302,7 @@ describe('Multi-Agent Pool Integration', () => {
       });
 
       // Wait for tasks to be assigned
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       const status = await coordinator.getPoolStatus();
 

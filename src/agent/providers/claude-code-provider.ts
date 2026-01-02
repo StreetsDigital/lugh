@@ -81,7 +81,7 @@ export class ClaudeCodeProvider implements ILLMProvider {
         fullPrompt = `${input.context.memoryContext}\n\n---\n\nTask: ${fullPrompt}`;
       }
       if (input.context?.recoveryHints?.length) {
-        fullPrompt += `\n\n---\n\nPrevious attempts failed. Avoid:\n${input.context.recoveryHints.map((h) => `- ${h}`).join('\n')}`;
+        fullPrompt += `\n\n---\n\nPrevious attempts failed. Avoid:\n${input.context.recoveryHints.map(h => `- ${h}`).join('\n')}`;
       }
 
       // Run Claude Code session
@@ -213,7 +213,7 @@ export class ClaudeCodeProvider implements ILLMProvider {
       return text
         .trim()
         .split('\n')
-        .filter((f) => f);
+        .filter(f => f);
     } catch {
       return [];
     }

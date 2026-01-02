@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  claude:
+    image: node:20
+    container_name: claude-code
+    working_dir: /workspace
+    user: "1000:1000"
+    environment:
+      - CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN}
+      - HOME=/home/node
+      - NPM_CONFIG_PREFIX=/home/node/.npm-global
+      - PATH=/home/node/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+      - claude-home:/home/node
+    command: >
+      sh -c "mkdir -p /home/node/.npm-global &&
+             npm install -g @anthropic-ai/claude-code &&
+             /home/node/.npm-global/bin/claude --dangerously-skip-permissions"
+    stdin_open: true
+    tty: true
+
+volumes:
+  claude-home:

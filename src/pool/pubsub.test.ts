@@ -65,12 +65,12 @@ describe('PgPubSub', () => {
       await pubsub.subscribe(channel, handler);
 
       // Give subscription time to register
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       await pubsub.publish(channel, payload);
 
       // Wait for message delivery
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       expect(received).toEqual(payload);
     });
@@ -86,11 +86,11 @@ describe('PgPubSub', () => {
       await pubsub.subscribe(channel, handler1);
       await pubsub.subscribe(channel, handler2);
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       await pubsub.publish(channel, payload);
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       expect(received.length).toBe(2);
       expect(received[0]).toEqual({ handler: 1, msg: payload });
@@ -102,16 +102,16 @@ describe('PgPubSub', () => {
       const payload = { test: true };
       let received: unknown = null;
 
-      await pubsub.subscribe(channel, (msg) => {
+      await pubsub.subscribe(channel, msg => {
         received = msg;
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Should work despite special characters
       await pubsub.publish(channel, payload);
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       expect(received).toEqual(payload);
     });
@@ -128,20 +128,20 @@ describe('PgPubSub', () => {
       };
 
       await pubsub.subscribe(channel, handler);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // First message should be received
       await pubsub.publish(channel, payload);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
       expect(count).toBe(1);
 
       // Unsubscribe
       await pubsub.unsubscribe(channel, handler);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Second message should NOT be received
       await pubsub.publish(channel, payload);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
       expect(count).toBe(1); // Still 1, not 2
     });
 

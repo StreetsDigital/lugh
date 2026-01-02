@@ -84,11 +84,11 @@ describe('PoolCoordinator', () => {
         notified = true;
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       await coordinator.submitTask(request);
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       expect(notified).toBe(true);
     });
@@ -102,9 +102,7 @@ describe('PoolCoordinator', () => {
         payload: {},
       };
 
-      await expect(uninitCoordinator.submitTask(request)).rejects.toThrow(
-        'Not initialized'
-      );
+      await expect(uninitCoordinator.submitTask(request)).rejects.toThrow('Not initialized');
     });
   });
 
@@ -145,9 +143,7 @@ describe('PoolCoordinator', () => {
         await queue.fail(handle.taskId, 'Test error');
       }, 100);
 
-      await expect(coordinator.waitForResult(handle.taskId, 5000)).rejects.toThrow(
-        'failed'
-      );
+      await expect(coordinator.waitForResult(handle.taskId, 5000)).rejects.toThrow('failed');
     });
 
     test('should timeout if task takes too long', async () => {
@@ -160,9 +156,7 @@ describe('PoolCoordinator', () => {
       const handle = await coordinator.submitTask(request);
 
       // Don't complete the task, let it timeout
-      await expect(coordinator.waitForResult(handle.taskId, 500)).rejects.toThrow(
-        'timed out'
-      );
+      await expect(coordinator.waitForResult(handle.taskId, 500)).rejects.toThrow('timed out');
     });
   });
 

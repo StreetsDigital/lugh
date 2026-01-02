@@ -169,9 +169,7 @@ describe('LangGraphClient', () => {
         message: 'Hello!',
       };
 
-      await expect(client.processConversation(request)).rejects.toThrow(
-        'LangGraph request failed'
-      );
+      await expect(client.processConversation(request)).rejects.toThrow('LangGraph request failed');
 
       mockFetch.mockRestore();
     });

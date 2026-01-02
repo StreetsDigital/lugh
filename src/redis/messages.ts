@@ -442,9 +442,7 @@ export type RedisMessage = OrchestratorMessage | AgentMessage;
 /**
  * Create a timestamped message
  */
-export function createMessage<T extends { timestamp?: string }>(
-  message: Omit<T, 'timestamp'>
-): T {
+export function createMessage<T extends { timestamp?: string }>(message: Omit<T, 'timestamp'>): T {
   return {
     ...message,
     timestamp: new Date().toISOString(),

@@ -17,10 +17,7 @@ const execFileAsync = promisify(execFile);
 /**
  * Execute a git command safely
  */
-async function gitExec(
-  args: string[],
-  cwd?: string
-): Promise<{ stdout: string; stderr: string }> {
+async function gitExec(args: string[], cwd?: string): Promise<{ stdout: string; stderr: string }> {
   try {
     const result = await execFileAsync('git', args, {
       cwd,
@@ -85,7 +82,8 @@ export class GitToolkit extends Toolkit {
 
           try {
             await gitExec(args);
-            const clonedPath = input.directory || input.url.split('/').pop()?.replace('.git', '') || 'repo';
+            const clonedPath =
+              input.directory || input.url.split('/').pop()?.replace('.git', '') || 'repo';
             return { success: true, data: { path: clonedPath } };
           } catch (error) {
             return { success: false, error: String(error) };
@@ -118,8 +116,9 @@ export class GitToolkit extends Toolkit {
             if (input.short) args.push('--short');
 
             const { stdout } = await gitExec(args, input.cwd);
-            const clean = stdout.includes('nothing to commit') ||
-                          (input.short === true && stdout.trim() === '');
+            const clean =
+              stdout.includes('nothing to commit') ||
+              (input.short === true && stdout.trim() === '');
 
             return { success: true, data: { status: stdout, clean } };
           } catch (error) {
@@ -309,16 +308,24 @@ export class GitToolkit extends Toolkit {
           action: 'list' | 'create' | 'delete' | 'switch';
           name?: string;
           startPoint?: string;
-        }): Promise<ToolResult<{ branches?: string[]; current?: string; created?: string; deleted?: string; switched?: string }>> => {
+        }): Promise<
+          ToolResult<{
+            branches?: string[];
+            current?: string;
+            created?: string;
+            deleted?: string;
+            switched?: string;
+          }>
+        > => {
           try {
             switch (input.action) {
               case 'list': {
                 const { stdout } = await gitExec(['branch', '-a'], input.cwd);
                 const branches = stdout
                   .split('\n')
-                  .map((b) => b.trim())
-                  .filter((b) => b);
-                const current = branches.find((b) => b.startsWith('*'))?.slice(2);
+                  .map(b => b.trim())
+                  .filter(b => b);
+                const current = branches.find(b => b.startsWith('*'))?.slice(2);
                 return { success: true, data: { branches, current } };
               }
 
@@ -463,7 +470,9 @@ export class GitToolkit extends Toolkit {
           action: 'save' | 'list' | 'pop' | 'apply' | 'drop';
           message?: string;
           index?: number;
-        }): Promise<ToolResult<{ stashes?: string[]; saved?: boolean; applied?: boolean; dropped?: boolean }>> => {
+        }): Promise<
+          ToolResult<{ stashes?: string[]; saved?: boolean; applied?: boolean; dropped?: boolean }>
+        > => {
           try {
             const stashRef = input.index !== undefined ? `stash@{${input.index}}` : undefined;
 
@@ -477,7 +486,7 @@ export class GitToolkit extends Toolkit {
 
               case 'list': {
                 const { stdout } = await gitExec(['stash', 'list'], input.cwd);
-                const stashes = stdout.split('\n').filter((s) => s.trim());
+                const stashes = stdout.split('\n').filter(s => s.trim());
                 return { success: true, data: { stashes } };
               }
 

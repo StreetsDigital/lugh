@@ -9,21 +9,27 @@
 ## What You Get
 
 ### 🎤 Voice Commands
+
 Send voice notes instead of typing:
+
 - "Approve" → Instantly approve pending actions
 - "Show me the diff" → See code changes
 - "Plan adding dark mode" → Create implementation plan
 - "Status" → Check system status
 
 ### 📸 Photo-to-Task
+
 Take a photo, get structured tasks:
+
 - **Whiteboard sketch** → Implementation plan
 - **Bug screenshot** → Debugging task
 - **Architecture diagram** → Code structure suggestions
 - **Handwritten notes** → Structured todos
 
 ### ⚡ Inline Quick Actions
+
 One-tap approvals with inline buttons:
+
 ```
 ┌─────────────────────────────────┐
 │ Agent wants to edit auth.ts     │
@@ -33,7 +39,9 @@ One-tap approvals with inline buttons:
 ```
 
 ### 📄 Rich Code Previews
+
 See diffs before approving:
+
 ```diff
 // src/auth/validate.ts
 - function validate(token) {
@@ -44,7 +52,9 @@ See diffs before approving:
 ```
 
 ### 🔔 Smart Notifications
+
 Priority-based alerts with context:
+
 - 🚨 Critical = Sound + full preview
 - ⚠️ High = Notification with diff
 - 🔔 Medium = Silent with preview
@@ -63,6 +73,7 @@ Priority-based alerts with context:
 ## Quick Implementation Guide
 
 ### 1. Prerequisites
+
 ```bash
 # Get OpenAI API key for Whisper
 # Visit: https://platform.openai.com/api-keys
@@ -71,6 +82,7 @@ Priority-based alerts with context:
 ```
 
 ### 2. Setup
+
 ```bash
 # Create branch
 git checkout -b feat/phone-vibecoding-v2
@@ -89,6 +101,7 @@ echo "INLINE_KEYBOARDS_ENABLED=true" >> .env
 ```
 
 ### 3. Implementation Order
+
 Follow the checklist in [FEAT-006-CHECKLIST.md](./FEAT-006-CHECKLIST.md):
 
 1. **Phase 1:** Voice Commands (1.5 days)
@@ -101,6 +114,7 @@ Follow the checklist in [FEAT-006-CHECKLIST.md](./FEAT-006-CHECKLIST.md):
 **Total:** ~6-8 days
 
 ### 4. Testing
+
 ```bash
 # Unit tests
 bun test src/services/voice-intent-parser.test.ts
@@ -117,6 +131,7 @@ bun test src/adapters/telegram.test.ts
 ## User Experience Examples
 
 ### Voice Approval (Hands-Free Coding)
+
 ```
 [User driving, gets notification]
 User: *sends voice note* "approve"
@@ -125,6 +140,7 @@ Bot: ✅ Approved - Agent proceeding...
 ```
 
 ### Photo to Implementation
+
 ```
 [User at whiteboard meeting]
 User: *takes photo of architecture sketch*
@@ -145,6 +161,7 @@ Bot: Creating implementation plan for authentication service...
 ```
 
 ### One-Tap Approval
+
 ```
 Bot: 🔧 Agent needs approval
 
@@ -164,6 +181,7 @@ Bot: ✅ Approved - Agent proceeding...
 ## Cost Estimate
 
 **Per Active User/Month:**
+
 - Voice (Whisper): ~50 commands × 10s = **$0.05**
 - Vision (Claude): ~20 photos = **$0.24**
 - **Total: ~$0.30/user/month**
@@ -203,40 +221,48 @@ Response with Rich Formatting
 
 ## Performance Targets
 
-| Feature | Target | Measurement |
-|---------|--------|-------------|
-| Voice transcription | < 3s | Whisper API latency |
-| Button response | < 1s | Callback → DB update |
-| Vision analysis | < 5s | Claude Vision API |
-| Code preview gen | < 2s | Diff calculation |
-| Notification delivery | < 500ms | Send to Telegram |
+| Feature               | Target  | Measurement          |
+| --------------------- | ------- | -------------------- |
+| Voice transcription   | < 3s    | Whisper API latency  |
+| Button response       | < 1s    | Callback → DB update |
+| Vision analysis       | < 5s    | Claude Vision API    |
+| Code preview gen      | < 2s    | Diff calculation     |
+| Notification delivery | < 500ms | Send to Telegram     |
 
 ---
 
 ## Rollout Plan
 
 ### Stage 1: Voice Only (Low Risk)
+
 ```env
 VOICE_COMMANDS_ENABLED=true
 ```
+
 Test with small user group.
 
 ### Stage 2: Add Inline Actions
+
 ```env
 INLINE_KEYBOARDS_ENABLED=true
 ```
+
 Expand to more users.
 
 ### Stage 3: Add Vision
+
 ```env
 VISION_ENABLED=true
 ```
+
 Monitor API costs closely.
 
 ### Stage 4: Full V2
+
 ```env
 SMART_NOTIFICATIONS_ENABLED=true
 ```
+
 All features enabled.
 
 ---
@@ -244,21 +270,25 @@ All features enabled.
 ## Troubleshooting
 
 **Voice transcription slow?**
+
 - Check OpenAI API status
 - Verify audio file < 30 seconds
 - Check network latency
 
 **Vision analysis failing?**
+
 - Verify image size < 10MB
 - Check supported format (jpg/png/webp)
 - Confirm Claude API key has Vision access
 
 **Buttons not working?**
+
 - Check callback query handler registered
 - Verify database approvals table has V2 columns
 - Check Telegram bot permissions
 
 **Previews not showing?**
+
 - Verify diff library installed (`bun add diff`)
 - Check file encoding (UTF-8)
 - Test with smaller files

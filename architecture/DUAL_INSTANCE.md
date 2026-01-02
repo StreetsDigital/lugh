@@ -36,24 +36,25 @@
 
 ## Isolation Matrix
 
-| Aspect | Staging | Prod |
-|--------|---------|------|
-| **Telegram Bot** | @LughDev | @Lugh |
-| **Bot Token** | `TELEGRAM_BOT_TOKEN_STAGING` | `TELEGRAM_BOT_TOKEN_PROD` |
-| **Port** | 3001 | 3000 |
-| **Database** | `staging_lugh` | `prod_lugh` |
-| **LUGH_HOME** | `~/.lugh-staging` | `~/.lugh-prod` |
-| **Redis Prefix** | `staging:` | `prod:` |
-| **Git Branch** | `develop` / feature | `main` |
-| **Auto-deploy** | On push to develop | On push to main |
-| **Users** | Just you | Real customers |
-| **Can break?** | Yes | Never |
+| Aspect           | Staging                      | Prod                      |
+| ---------------- | ---------------------------- | ------------------------- |
+| **Telegram Bot** | @LughDev                     | @Lugh                     |
+| **Bot Token**    | `TELEGRAM_BOT_TOKEN_STAGING` | `TELEGRAM_BOT_TOKEN_PROD` |
+| **Port**         | 3001                         | 3000                      |
+| **Database**     | `staging_lugh`               | `prod_lugh`               |
+| **LUGH_HOME**    | `~/.lugh-staging`            | `~/.lugh-prod`            |
+| **Redis Prefix** | `staging:`                   | `prod:`                   |
+| **Git Branch**   | `develop` / feature          | `main`                    |
+| **Auto-deploy**  | On push to develop           | On push to main           |
+| **Users**        | Just you                     | Real customers            |
+| **Can break?**   | Yes                          | Never                     |
 
 ---
 
 ## Docker Compose Files
 
 ### docker-compose.staging.yml
+
 ```yaml
 version: '3.8'
 
@@ -70,7 +71,7 @@ services:
       - BOT_DISPLAY_NAME=Lugh Dev
       - PORT=3000
     ports:
-      - "3001:3000"
+      - '3001:3000'
     volumes:
       - lugh-staging-data:/.lugh-staging
     depends_on:
@@ -85,12 +86,12 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - '5432:5432'
 
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
 
 volumes:
   lugh-staging-data:
@@ -98,6 +99,7 @@ volumes:
 ```
 
 ### docker-compose.prod.yml
+
 ```yaml
 version: '3.8'
 
@@ -114,7 +116,7 @@ services:
       - BOT_DISPLAY_NAME=Lugh
       - PORT=3000
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - lugh-prod-data:/.lugh-prod
     depends_on:
@@ -134,6 +136,7 @@ volumes:
 ## Environment Files
 
 ### .env.staging
+
 ```bash
 # Telegram
 TELEGRAM_BOT_TOKEN=123456789:AAA_your_staging_bot_token
@@ -161,6 +164,7 @@ FEATURE_SIMULATION_LAYER=true
 ```
 
 ### .env.prod
+
 ```bash
 # Telegram
 TELEGRAM_BOT_TOKEN=987654321:BBB_your_prod_bot_token
@@ -226,6 +230,7 @@ FEATURE_SIMULATION_LAYER=false
 ```
 
 ### Promotion Command
+
 ```
 @LughDev: /promote
 Bot: Creating PR from develop → main...
@@ -263,6 +268,7 @@ CREATE DATABASE prod_lugh;
 ## Deployment Commands
 
 ### Initial Setup
+
 ```bash
 # SSH to server
 ssh user@your-server
@@ -294,6 +300,7 @@ docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ### Daily Operations
+
 ```bash
 # View logs
 docker logs -f lugh-staging

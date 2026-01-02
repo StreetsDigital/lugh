@@ -7,12 +7,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import type {
-  SubTask,
-  SpawnedAgent,
-  AgentResult,
-  Artifact,
-} from './types';
+import type { SubTask, SpawnedAgent, AgentResult, Artifact } from './types';
 import { getRoleConfig } from './role-configs';
 import {
   LLMProvider,
@@ -128,7 +123,7 @@ export class DynamicAgentSpawner {
   private async executeAgent(
     agent: SpawnedAgent,
     subTask: SubTask,
-    roleConfig: typeof import('./role-configs').ROLE_CONFIGS[keyof typeof import('./role-configs').ROLE_CONFIGS],
+    roleConfig: (typeof import('./role-configs').ROLE_CONFIGS)[keyof typeof import('./role-configs').ROLE_CONFIGS],
     signal: AbortSignal
   ): Promise<AgentResult> {
     agent.status = 'running';
@@ -214,7 +209,7 @@ export class DynamicAgentSpawner {
    */
   private async executeWithLLMProvider(
     subTask: SubTask,
-    roleConfig: typeof import('./role-configs').ROLE_CONFIGS[keyof typeof import('./role-configs').ROLE_CONFIGS],
+    roleConfig: (typeof import('./role-configs').ROLE_CONFIGS)[keyof typeof import('./role-configs').ROLE_CONFIGS],
     _signal: AbortSignal
   ): Promise<{ response: string; tokensUsed: number }> {
     const provider = this.getProviderForRole(subTask.role);
@@ -245,7 +240,7 @@ export class DynamicAgentSpawner {
    */
   private async executeWithClaudeAPI(
     subTask: SubTask,
-    roleConfig: typeof import('./role-configs').ROLE_CONFIGS[keyof typeof import('./role-configs').ROLE_CONFIGS],
+    roleConfig: (typeof import('./role-configs').ROLE_CONFIGS)[keyof typeof import('./role-configs').ROLE_CONFIGS],
     signal: AbortSignal
   ): Promise<{ response: string; tokensUsed: number }> {
     // Use the new provider system
@@ -257,7 +252,7 @@ export class DynamicAgentSpawner {
    */
   private async executeWithClaudeCode(
     subTask: SubTask,
-    roleConfig: typeof import('./role-configs').ROLE_CONFIGS[keyof typeof import('./role-configs').ROLE_CONFIGS],
+    roleConfig: (typeof import('./role-configs').ROLE_CONFIGS)[keyof typeof import('./role-configs').ROLE_CONFIGS],
     _signal: AbortSignal
   ): Promise<{ response: string; tokensUsed: number }> {
     this.updateProgress(subTask.id, 20, 'Starting Claude Code...');
@@ -313,7 +308,7 @@ export class DynamicAgentSpawner {
     confidence: number;
   } {
     // Extract summary (first paragraph or first few sentences)
-    const paragraphs = response.split('\n\n').filter((p) => p.trim());
+    const paragraphs = response.split('\n\n').filter(p => p.trim());
     const summary = paragraphs[0]?.substring(0, 500) || 'Analysis completed';
 
     // Extract code blocks as artifacts
@@ -340,7 +335,7 @@ export class DynamicAgentSpawner {
     if (recommendationsMatch) {
       const items = recommendationsMatch[1].match(/[-*\d.]\s*(.+)/g);
       if (items) {
-        recommendations.push(...items.map((item) => item.replace(/^[-*\d.]\s*/, '').trim()));
+        recommendations.push(...items.map(item => item.replace(/^[-*\d.]\s*/, '').trim()));
       }
     }
 
@@ -352,7 +347,7 @@ export class DynamicAgentSpawner {
     if (nextStepsMatch) {
       const items = nextStepsMatch[1].match(/[-*\d.]\s*(.+)/g);
       if (items) {
-        nextSteps.push(...items.map((item) => item.replace(/^[-*\d.]\s*/, '').trim()));
+        nextSteps.push(...items.map(item => item.replace(/^[-*\d.]\s*/, '').trim()));
       }
     }
 
@@ -431,7 +426,7 @@ export class DynamicAgentSpawner {
    * Get all active agents
    */
   getActiveAgents(): SpawnedAgent[] {
-    return Array.from(this.activeAgents.values()).map((h) => h.agent);
+    return Array.from(this.activeAgents.values()).map(h => h.agent);
   }
 
   /**

@@ -35,13 +35,13 @@
 
 ## Stack (Lightweight)
 
-| Component | Tool | Why |
-|-----------|------|-----|
-| **Metrics** | Prometheus | Industry standard, free |
-| **Dashboards** | Grafana | Beautiful, free |
-| **Alerts** | Grafana → Telegram | Alerts to your phone |
-| **Logs** | Loki (or just Docker logs) | Keep it simple |
-| **Uptime** | Better Uptime / UptimeRobot | External check |
+| Component      | Tool                        | Why                     |
+| -------------- | --------------------------- | ----------------------- |
+| **Metrics**    | Prometheus                  | Industry standard, free |
+| **Dashboards** | Grafana                     | Beautiful, free         |
+| **Alerts**     | Grafana → Telegram          | Alerts to your phone    |
+| **Logs**       | Loki (or just Docker logs)  | Keep it simple          |
+| **Uptime**     | Better Uptime / UptimeRobot | External check          |
 
 **All free tier compatible.**
 
@@ -60,7 +60,7 @@ services:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     ports:
-      - "9090:9090"
+      - '9090:9090'
     restart: unless-stopped
 
   grafana:
@@ -73,7 +73,7 @@ services:
       - grafana-data:/var/lib/grafana
       - ./monitoring/dashboards:/etc/grafana/provisioning/dashboards
     ports:
-      - "3002:3000"
+      - '3002:3000'
     depends_on:
       - prometheus
     restart: unless-stopped
@@ -82,7 +82,7 @@ services:
     image: prom/node-exporter:latest
     container_name: node-exporter
     ports:
-      - "9100:9100"
+      - '9100:9100'
     restart: unless-stopped
 
   cadvisor:
@@ -94,7 +94,7 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     ports:
-      - "8080:8080"
+      - '8080:8080'
     restart: unless-stopped
 
 volumes:
@@ -235,22 +235,22 @@ app.get('/metrics', async (req, res) => {
 
 ### Infrastructure Alerts
 
-| Alert | Condition | Severity |
-|-------|-----------|----------|
-| High CPU | > 80% for 5 min | Warning |
-| High Memory | > 85% for 5 min | Warning |
-| Disk Full | > 90% | Critical |
+| Alert          | Condition                   | Severity |
+| -------------- | --------------------------- | -------- |
+| High CPU       | > 80% for 5 min             | Warning  |
+| High Memory    | > 85% for 5 min             | Warning  |
+| Disk Full      | > 90%                       | Critical |
 | Container Down | restart_count > 3 in 10 min | Critical |
 
 ### Application Alerts
 
-| Alert | Condition | Severity |
-|-------|-----------|----------|
-| Agent Pool Empty | active_agents == 0 | Critical |
-| High Error Rate | errors/min > 10 | Warning |
-| Task Queue Backup | queue_depth > 50 | Warning |
-| Slow Responses | p95 latency > 30s | Warning |
-| Bot Not Responding | no messages in 30 min | Warning |
+| Alert              | Condition             | Severity |
+| ------------------ | --------------------- | -------- |
+| Agent Pool Empty   | active_agents == 0    | Critical |
+| High Error Rate    | errors/min > 10       | Warning  |
+| Task Queue Backup  | queue_depth > 50      | Warning  |
+| Slow Responses     | p95 latency > 30s     | Warning  |
+| Bot Not Responding | no messages in 30 min | Warning  |
 
 ---
 
@@ -267,8 +267,8 @@ contactPoints:
       - uid: telegram
         type: telegram
         settings:
-          bottoken: "YOUR_ALERT_BOT_TOKEN"
-          chatid: "YOUR_CHAT_ID"
+          bottoken: 'YOUR_ALERT_BOT_TOKEN'
+          chatid: 'YOUR_CHAT_ID'
         disableResolveMessage: false
 ```
 
@@ -279,6 +279,7 @@ contactPoints:
 ## Dashboard Panels
 
 ### Server Health
+
 - CPU usage (line graph)
 - Memory usage (line graph)
 - Disk usage (gauge)
@@ -286,6 +287,7 @@ contactPoints:
 - Container status (table)
 
 ### Lugh Application
+
 - Messages per minute (line graph)
 - Active agents (gauge)
 - Task queue depth (line graph)
@@ -293,6 +295,7 @@ contactPoints:
 - Response latency p50/p95/p99 (line graph)
 
 ### Business Metrics
+
 - Tasks completed today (counter)
 - Agent utilization % (gauge)
 - Cost estimate (counter)
@@ -316,10 +319,12 @@ If you want minimal setup first:
 ## External Uptime Monitoring
 
 **Free options:**
+
 - [Better Uptime](https://betteruptime.com) - 10 monitors free
 - [UptimeRobot](https://uptimerobot.com) - 50 monitors free
 
 **Setup:**
+
 1. Monitor: `http://54.76.67.56:3000/health`
 2. Check every 5 minutes
 3. Alert to Telegram/Email on down
@@ -328,13 +333,13 @@ If you want minimal setup first:
 
 ## Implementation Priority
 
-| Task | Effort | Impact |
-|------|--------|--------|
-| `/health` endpoint | 5 min | High |
-| External uptime monitor | 10 min | High |
-| Cron alert script | 5 min | Medium |
-| `/metrics` endpoint | 30 min | Medium |
-| Prometheus + Grafana | 1 hour | Medium |
-| Full dashboard | 2 hours | Low (nice to have) |
+| Task                    | Effort  | Impact             |
+| ----------------------- | ------- | ------------------ |
+| `/health` endpoint      | 5 min   | High               |
+| External uptime monitor | 10 min  | High               |
+| Cron alert script       | 5 min   | Medium             |
+| `/metrics` endpoint     | 30 min  | Medium             |
+| Prometheus + Grafana    | 1 hour  | Medium             |
+| Full dashboard          | 2 hours | Low (nice to have) |
 
 **Start with:** Health endpoint + external uptime monitor. That covers 80% of "is it working?"

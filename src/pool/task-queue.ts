@@ -6,13 +6,7 @@
  */
 
 import { Pool } from 'pg';
-import type {
-  PoolTask,
-  TaskRequest,
-  TaskStatus,
-  TaskResult,
-  ResultType,
-} from './types.js';
+import type { PoolTask, TaskRequest, TaskStatus, TaskResult, ResultType } from './types.js';
 
 export class TaskQueue {
   constructor(private pool: Pool) {}
@@ -93,8 +87,7 @@ export class TaskQueue {
           started_at as "startedAt",
           completed_at as "completedAt",
           error
-        `
-,
+        `,
         [agentId]
       );
 
@@ -105,19 +98,13 @@ export class TaskQueue {
       const task = result.rows[0];
 
       // Parse JSON fields
-      task.payload =
-        typeof task.payload === 'string'
-          ? JSON.parse(task.payload)
-          : task.payload;
+      task.payload = typeof task.payload === 'string' ? JSON.parse(task.payload) : task.payload;
 
       if (task.result) {
-        task.result =
-          typeof task.result === 'string' ? JSON.parse(task.result) : task.result;
+        task.result = typeof task.result === 'string' ? JSON.parse(task.result) : task.result;
       }
 
-      console.log(
-        `[TaskQueue] Dequeued task ${task.id} for agent ${agentId}`
-      );
+      console.log(`[TaskQueue] Dequeued task ${task.id} for agent ${agentId}`);
 
       return task;
     } catch (error) {
@@ -226,14 +213,10 @@ export class TaskQueue {
       const task = result.rows[0];
 
       // Parse JSON fields
-      task.payload =
-        typeof task.payload === 'string'
-          ? JSON.parse(task.payload)
-          : task.payload;
+      task.payload = typeof task.payload === 'string' ? JSON.parse(task.payload) : task.payload;
 
       if (task.result) {
-        task.result =
-          typeof task.result === 'string' ? JSON.parse(task.result) : task.result;
+        task.result = typeof task.result === 'string' ? JSON.parse(task.result) : task.result;
       }
 
       return task;
@@ -260,10 +243,7 @@ export class TaskQueue {
         [taskId, resultType, JSON.stringify(content)]
       );
     } catch (error) {
-      console.error(
-        `[TaskQueue] Failed to add result to task '${taskId}':`,
-        error
-      );
+      console.error(`[TaskQueue] Failed to add result to task '${taskId}':`, error);
       throw error;
     }
   }
@@ -288,10 +268,9 @@ export class TaskQueue {
         [taskId]
       );
 
-      return result.rows.map((row) => ({
+      return result.rows.map(row => ({
         ...row,
-        content:
-          typeof row.content === 'string' ? JSON.parse(row.content) : row.content,
+        content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content,
       }));
     } catch (error) {
       console.error(`[TaskQueue] Failed to get results for task '${taskId}':`, error);

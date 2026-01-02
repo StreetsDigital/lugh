@@ -394,7 +394,8 @@ async function main(): Promise<void> {
       swarmId: swarmId ?? 'test-swarm-001',
       role: role ?? 'Code Reviewer',
       title: title ?? 'Review authentication module',
-      description: description ?? 'Analyze the auth module for security vulnerabilities and best practices.',
+      description:
+        description ?? 'Analyze the auth module for security vulnerabilities and best practices.',
       priority: (priority as 'critical' | 'high' | 'medium' | 'low') ?? 'high',
     });
     return res.json({ success: true, approval });

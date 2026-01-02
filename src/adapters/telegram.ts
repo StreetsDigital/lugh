@@ -83,11 +83,7 @@ export class TelegramAdapter implements IPlatformAdapter {
    * Send a file to the user via Telegram
    * Supports local file paths or Buffer content
    */
-  async sendFile(
-    chatId: string,
-    filePath: string,
-    caption?: string
-  ): Promise<void> {
+  async sendFile(chatId: string, filePath: string, caption?: string): Promise<void> {
     const id = parseInt(chatId);
     console.log(`[Telegram] sendFile called: ${filePath}`);
 
@@ -263,9 +259,14 @@ export class TelegramAdapter implements IPlatformAdapter {
       for (const [swarmId, agents] of bySwarm) {
         summary += `🐝 **Swarm:** \`${swarmId}\`\n`;
         for (const req of agents) {
-          const priorityEmoji = req.priority === 'critical' ? '🔴' :
-                               req.priority === 'high' ? '🟠' :
-                               req.priority === 'medium' ? '🟡' : '🟢';
+          const priorityEmoji =
+            req.priority === 'critical'
+              ? '🔴'
+              : req.priority === 'high'
+                ? '🟠'
+                : req.priority === 'medium'
+                  ? '🟡'
+                  : '🟢';
           summary += `  ${priorityEmoji} ${req.role}: ${req.title}\n`;
         }
         summary += '\n';
@@ -327,7 +328,10 @@ export class TelegramAdapter implements IPlatformAdapter {
       try {
         if (data.startsWith('approve:')) {
           const approvalId = data.replace('approve:', '');
-          const success = await telegramApprovalHandler.handleApprove(approvalId, userId.toString());
+          const success = await telegramApprovalHandler.handleApprove(
+            approvalId,
+            userId.toString()
+          );
 
           if (success) {
             await ctx.answerCbQuery('Approved!');
@@ -366,7 +370,10 @@ export class TelegramAdapter implements IPlatformAdapter {
         // ========== AGENT SPAWN APPROVALS ==========
         else if (data.startsWith('agent_approve:')) {
           const approvalId = data.replace('agent_approve:', '');
-          const success = await telegramAgentApprovalHandler.handleAgentApprove(approvalId, userId.toString());
+          const success = await telegramAgentApprovalHandler.handleAgentApprove(
+            approvalId,
+            userId.toString()
+          );
 
           if (success) {
             await ctx.answerCbQuery('🚀 Agent starting!');
@@ -382,7 +389,10 @@ export class TelegramAdapter implements IPlatformAdapter {
           }
         } else if (data.startsWith('agent_reject:')) {
           const approvalId = data.replace('agent_reject:', '');
-          const success = await telegramAgentApprovalHandler.handleAgentReject(approvalId, userId.toString());
+          const success = await telegramAgentApprovalHandler.handleAgentReject(
+            approvalId,
+            userId.toString()
+          );
 
           if (success) {
             await ctx.answerCbQuery('Agent skipped');
@@ -398,12 +408,18 @@ export class TelegramAdapter implements IPlatformAdapter {
           }
         } else if (data.startsWith('agent_approve_all:')) {
           const swarmId = data.replace('agent_approve_all:', '');
-          const count = await telegramAgentApprovalHandler.handleApproveAllInSwarm(swarmId, userId.toString());
+          const count = await telegramAgentApprovalHandler.handleApproveAllInSwarm(
+            swarmId,
+            userId.toString()
+          );
 
           await ctx.answerCbQuery(`✅ Approved ${count} agents`);
-          await ctx.reply(`✅ **Auto-approved ${count} remaining agents** in swarm \`${swarmId}\``, {
-            parse_mode: 'Markdown',
-          });
+          await ctx.reply(
+            `✅ **Auto-approved ${count} remaining agents** in swarm \`${swarmId}\``,
+            {
+              parse_mode: 'Markdown',
+            }
+          );
         } else if (data.startsWith('agent_details:')) {
           const approvalId = data.replace('agent_details:', '');
           const details = telegramAgentApprovalHandler.getAgentDetails(approvalId);
@@ -448,15 +464,24 @@ export class TelegramAdapter implements IPlatformAdapter {
       const startMatch = /(?:please\s+)?start\s+agent[- ]?([a-z0-9]+)/i.exec(message.toLowerCase());
       if (startMatch) {
         const agentIdFragment = startMatch[1];
-        const result = await telegramAgentApprovalHandler.approveByAgentId(agentIdFragment, userId.toString());
+        const result = await telegramAgentApprovalHandler.approveByAgentId(
+          agentIdFragment,
+          userId.toString()
+        );
         if (result.success) {
-          await ctx.reply(`✅ **Agent approved!**\n\n🎭 Role: ${result.role}\n📋 Task: ${result.title}\n\n_Agent is now starting..._`, {
-            parse_mode: 'Markdown',
-          });
+          await ctx.reply(
+            `✅ **Agent approved!**\n\n🎭 Role: ${result.role}\n📋 Task: ${result.title}\n\n_Agent is now starting..._`,
+            {
+              parse_mode: 'Markdown',
+            }
+          );
         } else {
-          await ctx.reply(`❌ Could not find pending agent matching \`${agentIdFragment}\`\n\n_Try /pending to see all pending agents_`, {
-            parse_mode: 'Markdown',
-          });
+          await ctx.reply(
+            `❌ Could not find pending agent matching \`${agentIdFragment}\`\n\n_Try /pending to see all pending agents_`,
+            {
+              parse_mode: 'Markdown',
+            }
+          );
         }
         return; // Don't pass to main message handler
       }

@@ -7,12 +7,7 @@
  */
 
 import { isEnabled } from '../config/features';
-import type {
-  DecomposedTask,
-  AgentResult,
-  SynthesizedResult,
-  ResultSection,
-} from './types';
+import type { DecomposedTask, AgentResult, SynthesizedResult, ResultSection } from './types';
 
 /**
  * ResultSynthesizer class
@@ -32,9 +27,7 @@ export class ResultSynthesizer {
     decomposedTask: DecomposedTask,
     results: AgentResult[]
   ): Promise<SynthesizedResult> {
-    console.log(
-      `[ResultSynthesizer] Synthesizing ${results.length} agent results`
-    );
+    console.log(`[ResultSynthesizer] Synthesizing ${results.length} agent results`);
 
     // Calculate totals
     const totalTokensUsed = results.reduce((sum, r) => sum + r.tokensUsed, 0);
@@ -50,11 +43,7 @@ export class ResultSynthesizer {
     const allNextSteps = this.collectNextSteps(results);
 
     // Generate executive summary
-    const summary = await this.generateSummary(
-      decomposedTask,
-      results,
-      sections
-    );
+    const summary = await this.generateSummary(decomposedTask, results, sections);
 
     const synthesizedResult: SynthesizedResult = {
       summary,
@@ -115,7 +104,7 @@ export class ResultSynthesizer {
       return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
     });
 
-    return sortedResults.map((result) => ({
+    return sortedResults.map(result => ({
       title: roleNames[result.role] || result.role,
       role: result.role,
       content: result.details,
@@ -190,17 +179,11 @@ export class ResultSynthesizer {
     _sections: ResultSection[]
   ): Promise<string> {
     // Build context from results
-    const summaries = results
-      .map((r) => `**${r.role}**: ${r.summary}`)
-      .join('\n');
+    const summaries = results.map(r => `**${r.role}**: ${r.summary}`).join('\n');
 
-    const artifactCount = results.reduce(
-      (sum, r) => sum + r.artifacts.length,
-      0
-    );
+    const artifactCount = results.reduce((sum, r) => sum + r.artifacts.length, 0);
 
-    const avgConfidence =
-      results.reduce((sum, r) => sum + r.confidence, 0) / results.length;
+    const avgConfidence = results.reduce((sum, r) => sum + r.confidence, 0) / results.length;
 
     const prompt = `You are creating an executive summary for a project analysis.
 
@@ -248,7 +231,7 @@ Be direct and actionable. Write for a technical founder or product manager.`;
         throw new Error(`Claude API error: ${response.status}`);
       }
 
-      const data = await response.json() as {
+      const data = (await response.json()) as {
         content: Array<{ type: string; text?: string }>;
       };
       const content = data.content[0];
@@ -269,18 +252,15 @@ Be direct and actionable. Write for a technical founder or product manager.`;
   /**
    * Generate fallback summary without API call
    */
-  private generateFallbackSummary(
-    decomposedTask: DecomposedTask,
-    results: AgentResult[]
-  ): string {
-    const successfulResults = results.filter((r) => r.confidence > 0);
+  private generateFallbackSummary(decomposedTask: DecomposedTask, results: AgentResult[]): string {
+    const successfulResults = results.filter(r => r.confidence > 0);
     const topRecs = this.collectRecommendations(results).slice(0, 3);
 
     let summary = `## ${decomposedTask.projectName}\n\n`;
     summary += `${decomposedTask.projectDescription}\n\n`;
     summary += `### Analysis Summary\n\n`;
     summary += `Completed ${successfulResults.length} of ${results.length} analyses covering `;
-    summary += results.map((r) => r.role.replace('-', ' ')).join(', ');
+    summary += results.map(r => r.role.replace('-', ' ')).join(', ');
     summary += '.\n\n';
 
     if (topRecs.length > 0) {

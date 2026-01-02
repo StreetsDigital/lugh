@@ -21,11 +21,13 @@
 ## Phase 1: Voice Commands (Days 1-2)
 
 ### Setup
+
 - [ ] Install OpenAI SDK: `bun add openai`
 - [ ] Add `OPENAI_API_KEY` to `.env`
 - [ ] Configure voice command settings in env
 
 ### Core Implementation
+
 - [ ] Create `src/services/voice-transcription.ts`
   - [ ] Implement `transcribeVoiceMessage()` function
   - [ ] Add audio file download helper
@@ -46,12 +48,14 @@
   - [ ] Clean up temp audio files
 
 ### Database Operations
+
 - [ ] Create `src/db/voice-commands.ts`
   - [ ] `createVoiceCommand()` - Store transcription
   - [ ] `getVoiceCommandsByConversation()` - History
   - [ ] `getVoiceCommandStats()` - Analytics
 
 ### Testing
+
 - [ ] Unit tests for intent parser
   - [ ] Test approve/reject patterns
   - [ ] Test command parsing
@@ -60,6 +64,7 @@
 - [ ] Manual test with real voice notes
 
 ### Validation
+
 - [ ] Voice transcription < 3s
 - [ ] 90%+ accuracy on standard commands
 - [ ] Fallback to Claude for complex commands works
@@ -70,6 +75,7 @@
 ## Phase 2: Inline Quick Actions (Day 2)
 
 ### Core Implementation
+
 - [ ] Create `src/adapters/telegram/keyboards.ts`
   - [ ] `buildApprovalKeyboard()` - Approve/reject/diff buttons
   - [ ] `buildTaskActionKeyboard()` - Execute/edit/cancel
@@ -86,6 +92,7 @@
   - [ ] Answer callback queries (prevent "loading" state)
 
 ### Update Approvals
+
 - [ ] Modify `src/handlers/approval-handler.ts`
   - [ ] Send approvals with inline keyboards
   - [ ] Update approval method tracking
@@ -93,12 +100,14 @@
   - [ ] Handle keyboard interactions
 
 ### Testing
+
 - [ ] Unit tests for keyboard builders
 - [ ] Integration test: button click → approval
 - [ ] Manual test: verify buttons appear and work
 - [ ] Test message editing after approval
 
 ### Validation
+
 - [ ] All approval requests have inline keyboards
 - [ ] Button clicks execute in < 1s
 - [ ] Messages update to show result
@@ -109,6 +118,7 @@
 ## Phase 3: Rich Code Previews (Day 3)
 
 ### Core Implementation
+
 - [ ] Install diff library: `bun add diff`
 - [ ] Create `src/services/diff-formatter.ts`
   - [ ] `formatDiffPreview()` - Single file diff
@@ -124,6 +134,7 @@
   - [ ] `truncatePreview()` - Limit lines
 
 ### Update Approvals
+
 - [ ] Modify approval message formatting
   - [ ] Include code preview in approval requests
   - [ ] Add diff stats (+X -Y)
@@ -131,6 +142,7 @@
   - [ ] Add "View full diff" button
 
 ### Testing
+
 - [ ] Unit tests for diff formatting
   - [ ] Test additions/deletions counting
   - [ ] Test truncation at line limit
@@ -139,6 +151,7 @@
 - [ ] Manual test: verify previews render correctly
 
 ### Validation
+
 - [ ] Diffs show +/- lines clearly
 - [ ] Preview limited to 15 lines
 - [ ] Full diff available on request
@@ -149,6 +162,7 @@
 ## Phase 4: Photo-to-Task (Days 3-4)
 
 ### Core Implementation
+
 - [ ] Create `src/services/vision-analyzer.ts`
   - [ ] `analyzeImage()` - Claude Vision integration
   - [ ] Parse vision response
@@ -169,6 +183,7 @@
   - [ ] Handle task selection callbacks
 
 ### Database Operations
+
 - [ ] Create `src/db/vision-tasks.ts`
   - [ ] `createVisionTask()` - Store analysis
   - [ ] `getVisionTasksByConversation()` - History
@@ -176,6 +191,7 @@
   - [ ] `getVisionTaskStats()` - Analytics
 
 ### Testing
+
 - [ ] Unit tests for vision response formatting
 - [ ] Integration test: photo → analysis → task creation
 - [ ] Manual tests with different image types:
@@ -185,6 +201,7 @@
   - [ ] Architecture diagram
 
 ### Validation
+
 - [ ] Image analysis < 5s
 - [ ] 80%+ accuracy on type classification
 - [ ] Tasks suggested are relevant
@@ -195,6 +212,7 @@
 ## Phase 5: Reaction Shortcuts (Day 4)
 
 ### Core Implementation
+
 - [ ] Add emoji action mapping
 - [ ] Implement reply-to-message pattern
 - [ ] Add quick approval via emoji response
@@ -206,11 +224,13 @@
   - [ ] Maintain context from replied message
 
 ### Testing
+
 - [ ] Unit tests for emoji parsing
 - [ ] Integration test: reply with emoji → action
 - [ ] Manual test: verify shortcuts work
 
 ### Validation
+
 - [ ] Emoji responses execute correct actions
 - [ ] Context maintained from original message
 - [ ] Works alongside button interactions
@@ -220,6 +240,7 @@
 ## Phase 6: Smart Notifications (Day 5)
 
 ### Core Implementation
+
 - [ ] Create `src/services/notifications.ts`
   - [ ] `sendSmartNotification()` - Main sender
   - [ ] `getPriorityEmoji()` - Priority indicators
@@ -232,17 +253,20 @@
   - [ ] `notifyHighRiskAction()` - Critical approvals
 
 ### Integration
+
 - [ ] Update orchestrator to use smart notifications
 - [ ] Update approval handler for rich contexts
 - [ ] Add notification preferences support
 
 ### Testing
+
 - [ ] Unit tests for notification formatting
 - [ ] Test priority levels (critical/high/medium/low)
 - [ ] Test disable_notification flag for low priority
 - [ ] Manual test: verify rich previews appear
 
 ### Validation
+
 - [ ] Priority levels respected
 - [ ] Context-rich previews included
 - [ ] Actionable notifications have buttons
@@ -253,6 +277,7 @@
 ## Documentation & Polish (Day 6)
 
 ### Documentation
+
 - [ ] Create `docs/phone-vibecoding-v2.md`
   - [ ] Setup instructions
   - [ ] Feature overview with examples
@@ -274,17 +299,20 @@
   - [ ] Update environment variables
 
 ### Environment Variables
+
 - [ ] Update `.env.example` with V2 vars
 - [ ] Update `.env.staging.example`
 - [ ] Update `.env.prod.example`
 - [ ] Document each variable
 
 ### Configuration
+
 - [ ] Add V2 feature flags to config
 - [ ] Document defaults
 - [ ] Add validation for settings
 
 ### Testing Cleanup
+
 - [ ] Run full test suite
 - [ ] Fix any breaking tests
 - [ ] Add missing test coverage
@@ -295,6 +323,7 @@
 ## Integration & E2E Testing (Day 6-7)
 
 ### End-to-End Scenarios
+
 - [ ] **Voice Command Flow**
   - [ ] Send voice note → transcribe → execute → respond
   - [ ] Test approval via voice
@@ -320,6 +349,7 @@
   - [ ] Silent vs. sound notifications
 
 ### Performance Testing
+
 - [ ] Voice transcription speed (target: < 3s)
 - [ ] Button response time (target: < 1s)
 - [ ] Vision analysis speed (target: < 5s)
@@ -327,6 +357,7 @@
 - [ ] Code preview generation (target: < 2s)
 
 ### Error Handling
+
 - [ ] Whisper API failures
 - [ ] Vision API failures
 - [ ] Invalid voice commands
@@ -339,25 +370,28 @@
 ## Deployment Preparation
 
 ### Database
+
 - [ ] Run migration on staging
 - [ ] Verify migration on staging
 - [ ] Backup production database
 - [ ] Run migration on production
 
 ### Environment Setup
+
 - [ ] Add OpenAI API key to staging
 - [ ] Add OpenAI API key to production
 - [ ] Configure V2 feature flags
 - [ ] Test API connectivity
 
 ### Rollout Plan
+
 - [ ] Deploy to staging first
 - [ ] Test all V2 features on staging
 - [ ] Enable features incrementally:
   1. Voice commands only
-  2. + Inline keyboards
-  3. + Vision analysis
-  4. + Smart notifications (full V2)
+  2. - Inline keyboards
+  3. - Vision analysis
+  4. - Smart notifications (full V2)
 - [ ] Monitor logs and errors
 - [ ] Deploy to production
 
@@ -366,6 +400,7 @@
 ## Post-Deployment
 
 ### Monitoring
+
 - [ ] Monitor voice command success rate
 - [ ] Monitor vision analysis accuracy
 - [ ] Monitor approval response times
@@ -373,12 +408,14 @@
 - [ ] Track API costs (Whisper + Vision)
 
 ### Analytics Queries
+
 - [ ] Voice command stats view
 - [ ] Vision task stats view
 - [ ] Approval method distribution
 - [ ] Response time analysis
 
 ### User Feedback
+
 - [ ] Collect feedback on voice commands
 - [ ] Collect feedback on photo tasks
 - [ ] Track feature adoption rates
@@ -389,26 +426,31 @@
 ## Success Metrics
 
 **Voice Commands:**
+
 - [ ] 90%+ transcription accuracy on standard commands
 - [ ] < 3s average transcription time
 - [ ] 50%+ of approvals use voice (adoption goal)
 
 **Inline Actions:**
+
 - [ ] < 1s average button response time
 - [ ] 80%+ of approvals use buttons vs. text commands
 - [ ] Zero timeout errors on button clicks
 
 **Code Previews:**
+
 - [ ] 100% of approval requests include preview
 - [ ] < 2s average preview generation
 - [ ] Diffs accurately show changes
 
 **Photo Tasks:**
+
 - [ ] 80%+ classification accuracy
 - [ ] < 5s average analysis time
 - [ ] 30%+ of tasks initiated via photo (adoption goal)
 
 **Smart Notifications:**
+
 - [ ] 100% of notifications have priority set
 - [ ] Context-rich previews in all notifications
 - [ ] Actionable items have appropriate buttons
@@ -420,6 +462,7 @@
 If critical issues found:
 
 1. **Disable V2 features via env vars:**
+
    ```env
    VOICE_COMMANDS_ENABLED=false
    VISION_ENABLED=false
@@ -452,21 +495,25 @@ Items not in V2 scope:
 
 ## Notes & Learnings
 
-*(Add notes during implementation)*
+_(Add notes during implementation)_
 
 ### Challenges Encountered:
+
 -
 
 ### Optimizations Made:
+
 -
 
 ### Things to Improve:
+
 -
 
 ### Cost Analysis:
-- Whisper API: $___/month
-- Vision API: $___/month
-- Total V2 overhead: $___/month
+
+- Whisper API: $\_\_\_/month
+- Vision API: $\_\_\_/month
+- Total V2 overhead: $\_\_\_/month
 
 ---
 

@@ -82,15 +82,15 @@ worktree:
 
 Environment variables override all other configuration:
 
-| Variable                       | Description                | Default       |
-| ------------------------------ | -------------------------- | ------------- |
-| `LUGH_HOME`                  | Base directory for Lugh  | `~/.lugh`   |
-| `DEFAULT_AI_ASSISTANT`         | Default AI assistant       | `claude`      |
-| `TELEGRAM_STREAMING_MODE`      | Telegram streaming         | `stream`      |
-| `DISCORD_STREAMING_MODE`       | Discord streaming          | `batch`       |
-| `SLACK_STREAMING_MODE`         | Slack streaming            | `batch`       |
-| `GITHUB_STREAMING_MODE`        | GitHub streaming           | `batch`       |
-| `MAX_CONCURRENT_CONVERSATIONS` | Concurrency limit          | `10`          |
+| Variable                       | Description             | Default   |
+| ------------------------------ | ----------------------- | --------- |
+| `LUGH_HOME`                    | Base directory for Lugh | `~/.lugh` |
+| `DEFAULT_AI_ASSISTANT`         | Default AI assistant    | `claude`  |
+| `TELEGRAM_STREAMING_MODE`      | Telegram streaming      | `stream`  |
+| `DISCORD_STREAMING_MODE`       | Discord streaming       | `batch`   |
+| `SLACK_STREAMING_MODE`         | Slack streaming         | `batch`   |
+| `GITHUB_STREAMING_MODE`        | GitHub streaming        | `batch`   |
+| `MAX_CONCURRENT_CONVERSATIONS` | Concurrency limit       | `10`      |
 
 ## Docker Configuration
 

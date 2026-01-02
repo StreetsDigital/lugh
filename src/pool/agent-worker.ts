@@ -32,10 +32,7 @@ export class AgentWorker {
   private isRunning = false;
   private heartbeatTimer?: NodeJS.Timeout;
 
-  constructor(
-    pool: Pool,
-    config?: AgentWorkerConfig
-  ) {
+  constructor(pool: Pool, config?: AgentWorkerConfig) {
     this.agentId = config?.agentId || `agent-${uuid().slice(0, 8)}`;
     this.capabilities = config?.capabilities || ['general'];
     this.heartbeatInterval = config?.heartbeatInterval || 30000; // 30 seconds
@@ -61,18 +58,15 @@ export class AgentWorker {
       await this.registry.register(this.agentId, this.capabilities);
 
       // Subscribe to task assignment channel
-      await this.pubsub.subscribe(
-        `agent_task_assigned_${this.agentId}`,
-        (task) => this.handleTaskAssignment(task as PoolTask)
+      await this.pubsub.subscribe(`agent_task_assigned_${this.agentId}`, task =>
+        this.handleTaskAssignment(task as PoolTask)
       );
 
       // Subscribe to task availability notifications
-      await this.pubsub.subscribe('agent_task_available', () =>
-        this.checkForWork()
-      );
+      await this.pubsub.subscribe('agent_task_available', () => this.checkForWork());
 
       // Subscribe to stop signals
-      await this.pubsub.subscribe(`agent_stop_${this.agentId}`, (payload) =>
+      await this.pubsub.subscribe(`agent_stop_${this.agentId}`, payload =>
         this.handleStopSignal(payload as { taskId: string })
       );
 
@@ -141,10 +135,7 @@ export class AgentWorker {
       console.error(`[Agent ${this.agentId}] Task ${task.id} failed:`, error);
 
       // Mark task as failed
-      await this.queue.fail(
-        task.id,
-        error instanceof Error ? error.message : String(error)
-      );
+      await this.queue.fail(task.id, error instanceof Error ? error.message : String(error));
     } finally {
       // Clear current task and return to idle
       this.currentTask = null;
@@ -167,16 +158,12 @@ export class AgentWorker {
    * 3. Stream results back via queue.addResult()
    * 4. Return the final result
    */
-  private async executeTask(
-    task: PoolTask
-  ): Promise<Record<string, unknown>> {
-    console.log(
-      `[Agent ${this.agentId}] Executing task type: ${task.taskType}`
-    );
+  private async executeTask(task: PoolTask): Promise<Record<string, unknown>> {
+    console.log(`[Agent ${this.agentId}] Executing task type: ${task.taskType}`);
 
     // TODO: Implement actual task execution with Claude Code
     // For now, simulate work
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     return {
       status: 'success',
@@ -189,13 +176,9 @@ export class AgentWorker {
   /**
    * Handle stop signal for current task
    */
-  private async handleStopSignal(payload: {
-    taskId: string;
-  }): Promise<void> {
+  private async handleStopSignal(payload: { taskId: string }): Promise<void> {
     if (this.currentTask?.id === payload.taskId) {
-      console.warn(
-        `[Agent ${this.agentId}] Received stop signal for task ${payload.taskId}`
-      );
+      console.warn(`[Agent ${this.agentId}] Received stop signal for task ${payload.taskId}`);
 
       // TODO: Implement graceful task cancellation
       // For now, just log it
@@ -234,9 +217,7 @@ export class AgentWorker {
    * Shutdown the agent worker
    */
   async shutdown(signal?: string): Promise<void> {
-    console.log(
-      `[Agent ${this.agentId}] Shutting down${signal ? ` (${signal})` : ''}...`
-    );
+    console.log(`[Agent ${this.agentId}] Shutting down${signal ? ` (${signal})` : ''}...`);
 
     this.isRunning = false;
 

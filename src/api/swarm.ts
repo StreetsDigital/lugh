@@ -8,12 +8,7 @@
 
 import { Router, type Request, type Response } from 'express';
 import { isEnabled } from '../config/features';
-import {
-  swarmCoordinator,
-  resultSynthesizer,
-  getAvailableRoles,
-  taskDecomposer,
-} from '../swarm';
+import { swarmCoordinator, resultSynthesizer, getAvailableRoles, taskDecomposer } from '../swarm';
 import type { SwarmSession } from '../swarm/types';
 
 /**
@@ -36,7 +31,7 @@ export function createSwarmRouter(): Router {
   const router = Router();
 
   // Set up event streaming from coordinator
-  swarmCoordinator.onEvent((event) => {
+  swarmCoordinator.onEvent(event => {
     const clients = sseClients.get(event.swarmId) || [];
     const eventData = JSON.stringify(event);
 
@@ -71,11 +66,11 @@ export function createSwarmRouter(): Router {
       );
 
       // Get the initial session state
-      const session = await new Promise<SwarmSession>((resolve) => {
+      const session = await new Promise<SwarmSession>(resolve => {
         const checkSession = () => {
           const sessions = swarmCoordinator.getActiveSessions();
           const session = sessions.find(
-            (s) => s.originalRequest === request && s.status !== 'completed'
+            s => s.originalRequest === request && s.status !== 'completed'
           );
           if (session) {
             resolve(session);
@@ -110,7 +105,7 @@ export function createSwarmRouter(): Router {
       });
 
       // Continue execution in background
-      sessionPromise.catch((error) => {
+      sessionPromise.catch(error => {
         console.error('[Swarm API] Swarm execution failed:', error);
       });
     } catch (error) {
@@ -139,7 +134,7 @@ export function createSwarmRouter(): Router {
       res.json({
         projectName: decomposedTask.projectName,
         projectDescription: decomposedTask.projectDescription,
-        subTasks: decomposedTask.subTasks.map((t) => ({
+        subTasks: decomposedTask.subTasks.map(t => ({
           id: t.id,
           role: t.role,
           title: t.title,
@@ -182,9 +177,8 @@ export function createSwarmRouter(): Router {
             completed: progress.completed,
             running: progress.running,
             failed: progress.failed,
-            percent: progress.total > 0
-              ? Math.round((progress.completed / progress.total) * 100)
-              : 0,
+            percent:
+              progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 0,
           }
         : null,
       agents: progress?.agents || [],
@@ -283,7 +277,7 @@ export function createSwarmRouter(): Router {
 
     // Import role configs for descriptions
     import('../swarm/role-configs').then(({ ROLE_CONFIGS }) => {
-      const roleDetails = roles.map((role) => ({
+      const roleDetails = roles.map(role => ({
         id: role,
         name: ROLE_CONFIGS[role].name,
         description: ROLE_CONFIGS[role].description,
@@ -303,7 +297,7 @@ export function createSwarmRouter(): Router {
     const sessions = swarmCoordinator.getActiveSessions();
 
     res.json(
-      sessions.map((s) => ({
+      sessions.map(s => ({
         swarmId: s.id,
         conversationId: s.conversationId,
         status: s.status,
@@ -319,7 +313,8 @@ export function createSwarmRouter(): Router {
    * Get available LLM providers
    */
   router.get('/providers', async (_req: Request, res: Response) => {
-    const { getAvailableLLMProviders, DEFAULT_PROVIDER_CONFIGS, llmProviderFactory } = await import('../swarm');
+    const { getAvailableLLMProviders, DEFAULT_PROVIDER_CONFIGS, llmProviderFactory } =
+      await import('../swarm');
 
     const available = getAvailableLLMProviders();
     const allProviders = Object.entries(DEFAULT_PROVIDER_CONFIGS).map(([type, config]) => ({
@@ -329,7 +324,8 @@ export function createSwarmRouter(): Router {
       available: available.includes(type as any),
     }));
 
-    const customConfigs = llmProviderFactory.listConfigs()
+    const customConfigs = llmProviderFactory
+      .listConfigs()
       .filter(c => c.config.type === 'custom')
       .map(c => ({
         id: c.id,
@@ -444,9 +440,9 @@ export function createSwarmRouter(): Router {
       }
 
       const startTime = Date.now();
-      const result = await provider.chat(
-        [{ role: 'user', content: 'Say "hello" in exactly one word.' }]
-      );
+      const result = await provider.chat([
+        { role: 'user', content: 'Say "hello" in exactly one word.' },
+      ]);
       const latency = Date.now() - startTime;
 
       res.json({

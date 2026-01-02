@@ -18,11 +18,11 @@ After deep-diving into the CAMEL AI ecosystem (OWL, CRAB, OASIS, and core CAMEL)
 
 CAMEL implements a 3-tier memory architecture:
 
-| Memory Type | Purpose | Storage |
-|-------------|---------|---------|
-| **ChatHistoryMemory** | Recent conversation context | Key-value (recency-based) |
-| **VectorDBMemory** | Semantic search across history | Qdrant/Milvus embeddings |
-| **LongtermAgentMemory** | Hybrid of both | Combined retrieval |
+| Memory Type             | Purpose                        | Storage                   |
+| ----------------------- | ------------------------------ | ------------------------- |
+| **ChatHistoryMemory**   | Recent conversation context    | Key-value (recency-based) |
+| **VectorDBMemory**      | Semantic search across history | Qdrant/Milvus embeddings  |
+| **LongtermAgentMemory** | Hybrid of both                 | Combined retrieval        |
 
 ### What to Implement in Lugh
 
@@ -96,6 +96,7 @@ CREATE INDEX memory_embedding_idx ON memory_records
 ### What OWL Has
 
 OWL provides 20+ toolkits:
+
 - ArxivToolkit, GitHubToolkit, BrowserToolkit
 - CodeExecutionToolkit, TerminalToolkit
 - MCP protocol for extensibility
@@ -159,14 +160,14 @@ export class ToolRegistry {
 
 ### Built-in Toolkits to Create
 
-| Toolkit | Tools | Priority |
-|---------|-------|----------|
-| **GitToolkit** | clone, commit, push, createBranch, createPR | P0 |
-| **GitHubToolkit** | searchIssues, createIssue, commentOnPR | P0 |
-| **FileToolkit** | read, write, search, glob | P0 |
-| **NotificationToolkit** | sendTelegram, sendSlack, sendEmail | P1 |
-| **WebToolkit** | fetch, search, scrape | P1 |
-| **DatabaseToolkit** | query, insert, update | P2 |
+| Toolkit                 | Tools                                       | Priority |
+| ----------------------- | ------------------------------------------- | -------- |
+| **GitToolkit**          | clone, commit, push, createBranch, createPR | P0       |
+| **GitHubToolkit**       | searchIssues, createIssue, commentOnPR      | P0       |
+| **FileToolkit**         | read, write, search, glob                   | P0       |
+| **NotificationToolkit** | sendTelegram, sendSlack, sendEmail          | P1       |
+| **WebToolkit**          | fetch, search, scrape                       | P1       |
+| **DatabaseToolkit**     | query, insert, update                       | P2       |
 
 **Effort**: 4-5 days
 **Priority**: P0 - Extends agent capabilities
@@ -217,16 +218,12 @@ export class UnifiedEnvironment {
     this.environments.set(platform.getPlatformType(), {
       name: platform.getPlatformType(),
       actions: this.extractActions(platform),
-      observe: () => platform.getLatestMessages?.() ?? Promise.resolve([])
+      observe: () => platform.getLatestMessages?.() ?? Promise.resolve([]),
     });
   }
 
   // Cross-platform action
-  async execute(
-    environmentName: string,
-    actionName: string,
-    input: unknown
-  ): Promise<unknown>;
+  async execute(environmentName: string, actionName: string, input: unknown): Promise<unknown>;
 
   // Agent can query any environment
   async observeAll(): Promise<Map<string, Observation>>;
@@ -262,6 +259,7 @@ result = workforce.process(complex_task)
 ```
 
 Key components:
+
 - **task_agent**: Decomposes tasks into subtasks
 - **coordinator_agent**: Assigns subtasks to workers
 - **RolePlayingWorker**: Two agents debate/collaborate on a task
@@ -303,8 +301,8 @@ export class Workforce {
 // src/workforce/role-playing-worker.ts
 export class RolePlayingWorker implements Worker {
   constructor(
-    private role1: RoleConfig,  // e.g., "architect"
-    private role2: RoleConfig,  // e.g., "critic"
+    private role1: RoleConfig, // e.g., "architect"
+    private role2: RoleConfig, // e.g., "critic"
     private maxTurns: number = 10
   ) {}
 
@@ -329,11 +327,11 @@ export class RolePlayingWorker implements Worker {
 
 ### New Worker Types
 
-| Worker | Pattern | Use Case |
-|--------|---------|----------|
-| **SingleAgentWorker** | One agent, one task | Simple research |
-| **RolePlayingWorker** | Two agents debate | Architecture decisions |
-| **ConsensusWorker** | N agents vote | Code review |
+| Worker                 | Pattern                | Use Case               |
+| ---------------------- | ---------------------- | ---------------------- |
+| **SingleAgentWorker**  | One agent, one task    | Simple research        |
+| **RolePlayingWorker**  | Two agents debate      | Architecture decisions |
+| **ConsensusWorker**    | N agents vote          | Code review            |
 | **HierarchicalWorker** | Manager + subordinates | Complex implementation |
 
 **Effort**: 4-5 days
@@ -346,6 +344,7 @@ export class RolePlayingWorker implements Worker {
 ### What OASIS Has
 
 OASIS scales to **1 million agents** using:
+
 - Async processing (`asyncio`)
 - SQLite state persistence
 - Agent graph structure
@@ -425,6 +424,7 @@ export class AgentStatePersistence {
 ### What OWL Has
 
 OWL uses **Model Context Protocol (MCP)** as a universal tool interface:
+
 - Any tool becomes an MCP server
 - Any MCP server can be used by agents
 - Standardized tool discovery and execution
@@ -458,7 +458,7 @@ export function toolkitToMCPServer(toolkit: FunctionTool[]): MCPServer {
       const tool = toolkit.find(t => t.name === name);
       if (!tool) throw new Error(`Tool ${name} not found`);
       return tool.execute(args);
-    }
+    },
   };
 }
 
@@ -485,36 +485,40 @@ export class MCPClient {
 ## Implementation Roadmap
 
 ### Phase 1: Foundation (Week 1-2)
-| Feature | Source | Effort | Files |
-|---------|--------|--------|-------|
-| Memory System | CAMEL | 3-4 days | `src/memory/*` |
-| Tool Registry | OWL | 2-3 days | `src/tools/*` |
-| Basic Toolkits | OWL | 2-3 days | `src/tools/toolkits/*` |
+
+| Feature        | Source | Effort   | Files                  |
+| -------------- | ------ | -------- | ---------------------- |
+| Memory System  | CAMEL  | 3-4 days | `src/memory/*`         |
+| Tool Registry  | OWL    | 2-3 days | `src/tools/*`          |
+| Basic Toolkits | OWL    | 2-3 days | `src/tools/toolkits/*` |
 
 ### Phase 2: Intelligence (Week 3-4)
-| Feature | Source | Effort | Files |
-|---------|--------|--------|-------|
-| RolePlaying Worker | CAMEL | 2-3 days | `src/workforce/*` |
-| Cross-Platform Actions | CRAB | 3-4 days | `src/environments/*` |
-| MCP Integration | OWL | 3-4 days | `src/mcp/*` |
+
+| Feature                | Source | Effort   | Files                |
+| ---------------------- | ------ | -------- | -------------------- |
+| RolePlaying Worker     | CAMEL  | 2-3 days | `src/workforce/*`    |
+| Cross-Platform Actions | CRAB   | 3-4 days | `src/environments/*` |
+| MCP Integration        | OWL    | 3-4 days | `src/mcp/*`          |
 
 ### Phase 3: Scale (Week 5)
-| Feature | Source | Effort | Files |
-|---------|--------|--------|-------|
-| Agent Graph | OASIS | 2-3 days | `src/scale/*` |
-| State Persistence | OASIS | 1-2 days | `src/scale/*` |
-| Action Space | OASIS | 1 day | `src/scale/*` |
+
+| Feature           | Source | Effort   | Files         |
+| ----------------- | ------ | -------- | ------------- |
+| Agent Graph       | OASIS  | 2-3 days | `src/scale/*` |
+| State Persistence | OASIS  | 1-2 days | `src/scale/*` |
+| Action Space      | OASIS  | 1 day    | `src/scale/*` |
 
 ---
 
 ## Quick Wins (Can Ship This Week)
 
 ### 1. Conversation Summary in Sessions
+
 ```typescript
 // Add to src/db/sessions.ts
 interface Session {
   // existing fields...
-  summary?: string;  // Add this
+  summary?: string; // Add this
 }
 
 // On session end, generate summary
@@ -526,26 +530,31 @@ async function summarizeAndSave(sessionId: string): Promise<void> {
 ```
 
 ### 2. Tool Execution Logging
+
 ```typescript
 // Add to src/db/approvals.ts - already exists!
 // Just need to query and analyze patterns
 async function getSuccessfulToolPatterns(codebaseId: string): Promise<ToolPattern[]> {
-  return db.query(`
+  return db.query(
+    `
     SELECT tool_name, tool_input, COUNT(*) as usage_count
     FROM approvals
     WHERE session_id IN (SELECT id FROM sessions WHERE codebase_id = $1)
     GROUP BY tool_name, tool_input
     ORDER BY usage_count DESC
-  `, [codebaseId]);
+  `,
+    [codebaseId]
+  );
 }
 ```
 
 ### 3. Role Success Tracking
+
 ```typescript
 // Add to src/swarm/types.ts
 interface DecomposedTask {
   // existing fields...
-  outcomeRoles?: { role: AgentRole; success: boolean }[];  // Track what worked
+  outcomeRoles?: { role: AgentRole; success: boolean }[]; // Track what worked
 }
 ```
 

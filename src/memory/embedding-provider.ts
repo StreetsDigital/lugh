@@ -18,11 +18,7 @@ export class OpenAIEmbeddingProvider implements IEmbeddingProvider {
   private baseUrl: string;
   private dimensions: number;
 
-  constructor(config?: {
-    apiKey?: string;
-    model?: string;
-    baseUrl?: string;
-  }) {
+  constructor(config?: { apiKey?: string; model?: string; baseUrl?: string }) {
     this.apiKey = config?.apiKey || process.env.OPENAI_API_KEY || '';
     this.model = config?.model || 'text-embedding-3-small';
     this.baseUrl = config?.baseUrl || 'https://api.openai.com/v1';
@@ -49,9 +45,7 @@ export class OpenAIEmbeddingProvider implements IEmbeddingProvider {
    */
   async embedBatch(texts: string[]): Promise<number[][]> {
     if (!this.apiKey) {
-      throw new Error(
-        '[EmbeddingProvider] OPENAI_API_KEY is required for embeddings'
-      );
+      throw new Error('[EmbeddingProvider] OPENAI_API_KEY is required for embeddings');
     }
 
     const response = await fetch(`${this.baseUrl}/embeddings`, {
@@ -77,7 +71,7 @@ export class OpenAIEmbeddingProvider implements IEmbeddingProvider {
 
     // Sort by index to maintain order
     const sorted = data.data.sort((a, b) => a.index - b.index);
-    return sorted.map((d) => d.embedding);
+    return sorted.map(d => d.embedding);
   }
 
   /**

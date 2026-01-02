@@ -50,16 +50,17 @@ export class AgentMemory implements IAgentMemory {
 
     // Vector DB is optional - only create if explicitly enabled or embeddings available
     const enableVector = options?.enableVectorDB ?? Boolean(process.env.OPENAI_API_KEY);
-    this.vectorDB = options?.vectorDB !== undefined
-      ? options.vectorDB
-      : (enableVector ? createVectorDBBlock() : null);
+    this.vectorDB =
+      options?.vectorDB !== undefined
+        ? options.vectorDB
+        : enableVector
+          ? createVectorDBBlock()
+          : null;
 
     this.contextConfig = { ...DEFAULT_CONTEXT_CONFIG, ...options?.contextConfig };
 
     if (!this.vectorDB) {
-      console.log(
-        '[AgentMemory] Vector DB disabled (set OPENAI_API_KEY for semantic search)'
-      );
+      console.log('[AgentMemory] Vector DB disabled (set OPENAI_API_KEY for semantic search)');
     }
   }
 
@@ -74,11 +75,10 @@ export class AgentMemory implements IAgentMemory {
       this.contextConfig.recentMessageCount
     );
 
-    const recentFormatted = recentMessages.length > 0
-      ? recentMessages
-          .map((m) => `**${m.role}**: ${m.content}`)
-          .join('\n\n')
-      : '_No recent messages_';
+    const recentFormatted =
+      recentMessages.length > 0
+        ? recentMessages.map(m => `**${m.role}**: ${m.content}`).join('\n\n')
+        : '_No recent messages_';
 
     // Get semantic results if vector DB is available
     let semanticFormatted = '_Semantic search not available_';
@@ -93,12 +93,13 @@ export class AgentMemory implements IAgentMemory {
 
         if (semanticResults.length > 0) {
           semanticFormatted = semanticResults
-            .map((r) => {
-              const typeLabel = r.record.recordType === 'code'
-                ? `[Code: ${r.record.metadata?.filePath || 'unknown'}]`
-                : r.record.recordType === 'decision'
-                  ? '[Decision]'
-                  : '[Context]';
+            .map(r => {
+              const typeLabel =
+                r.record.recordType === 'code'
+                  ? `[Code: ${r.record.metadata?.filePath || 'unknown'}]`
+                  : r.record.recordType === 'decision'
+                    ? '[Decision]'
+                    : '[Context]';
               return `${typeLabel} (relevance: ${(r.score * 100).toFixed(0)}%)\n${r.record.content}`;
             })
             .join('\n\n---\n\n');
@@ -112,8 +113,8 @@ export class AgentMemory implements IAgentMemory {
     }
 
     // Apply template
-    return this.contextConfig.template!
-      .replace('{recentMessages}', recentFormatted)
+    return this.contextConfig
+      .template!.replace('{recentMessages}', recentFormatted)
       .replace('{semanticResults}', semanticFormatted);
   }
 
@@ -176,7 +177,9 @@ export class AgentMemory implements IAgentMemory {
     metadata?: Record<string, unknown>
   ): Promise<void> {
     if (!this.vectorDB) {
-      console.warn('[AgentMemory] Vector DB not available, decision not stored for semantic search');
+      console.warn(
+        '[AgentMemory] Vector DB not available, decision not stored for semantic search'
+      );
       return;
     }
 
@@ -258,9 +261,7 @@ export class AgentMemory implements IAgentMemory {
     workingMemoryKeys: string[];
   }> {
     const chatHistoryCount = await this.chatHistory.count(conversationId);
-    const vectorDBCount = this.vectorDB
-      ? await this.vectorDB.count(conversationId)
-      : 0;
+    const vectorDBCount = this.vectorDB ? await this.vectorDB.count(conversationId) : 0;
 
     return {
       chatHistoryCount,

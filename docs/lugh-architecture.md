@@ -26,6 +26,7 @@ Lugh is the unified directory and configuration system for the remote-coding-age
 ```
 
 **Purpose:**
+
 - `workspaces/` - Repositories cloned via `/clone` command or GitHub adapter
 - `worktrees/` - Isolated git worktrees created per conversation/issue/PR
 - `config.yaml` - Non-secret user preferences
@@ -43,6 +44,7 @@ any-repo/.lugh/
 ```
 
 **Purpose:**
+
 - `commands/` - Slash command templates (priority over `.claude/commands/`, `.agents/commands/`)
 - `workflows/` - Future workflow engine definitions
 - `config.yaml` - Project-specific settings
@@ -50,6 +52,7 @@ any-repo/.lugh/
 ### Docker: `/.lugh/`
 
 In Docker containers, the Lugh home is fixed at `/.lugh/` (root level). This is:
+
 - Mounted as a named volume for persistence
 - Not overridable by end users (simplifies container setup)
 
@@ -95,12 +98,12 @@ function isDocker(): boolean {
 
 ### Platform-Specific Paths
 
-| Platform | `getLughHome()` |
-|----------|-------------------|
-| macOS | `/Users/<username>/.lugh` |
-| Linux | `/home/<username>/.lugh` |
-| Windows | `C:\Users\<username>\.lugh` |
-| Docker | `/.lugh` |
+| Platform | `getLughHome()`             |
+| -------- | --------------------------- |
+| macOS    | `/Users/<username>/.lugh`   |
+| Linux    | `/home/<username>/.lugh`    |
+| Windows  | `C:\Users\<username>\.lugh` |
+| Docker   | `/.lugh`                    |
 
 ## Configuration System
 
@@ -130,14 +133,14 @@ const repoConfig = await loadRepoConfig(repoPath);
 
 Key configuration options:
 
-| Option | Env Override | Default |
-|--------|--------------|---------|
-| `LUGH_HOME` | `LUGH_HOME` | `~/.lugh` |
-| Default AI Assistant | `DEFAULT_AI_ASSISTANT` | `claude` |
-| Telegram Streaming | `TELEGRAM_STREAMING_MODE` | `stream` |
-| Discord Streaming | `DISCORD_STREAMING_MODE` | `batch` |
-| Slack Streaming | `SLACK_STREAMING_MODE` | `batch` |
-| GitHub Streaming | `GITHUB_STREAMING_MODE` | `batch` |
+| Option               | Env Override              | Default   |
+| -------------------- | ------------------------- | --------- |
+| `LUGH_HOME`          | `LUGH_HOME`               | `~/.lugh` |
+| Default AI Assistant | `DEFAULT_AI_ASSISTANT`    | `claude`  |
+| Telegram Streaming   | `TELEGRAM_STREAMING_MODE` | `stream`  |
+| Discord Streaming    | `DISCORD_STREAMING_MODE`  | `batch`   |
+| Slack Streaming      | `SLACK_STREAMING_MODE`    | `batch`   |
+| GitHub Streaming     | `GITHUB_STREAMING_MODE`   | `batch`   |
 
 ## Command Folders
 
@@ -156,6 +159,7 @@ First match wins. No migration required.
 To add a new managed directory:
 
 1. Add function to `src/utils/lugh-paths.ts`:
+
 ```typescript
 export function getLughNewPath(): string {
   return join(getLughHome(), 'new-directory');
@@ -171,6 +175,7 @@ export function getLughNewPath(): string {
 To add new configuration options:
 
 1. Add type to `src/config/config-types.ts`:
+
 ```typescript
 export interface GlobalConfig {
   // ...existing
@@ -219,6 +224,7 @@ export interface GlobalConfig {
 ### Workflow Engine
 
 The `.lugh/workflows/` directory is reserved for:
+
 - YAML workflow definitions
 - Multi-step automated processes
 - Agent orchestration rules
@@ -226,6 +232,7 @@ The `.lugh/workflows/` directory is reserved for:
 ### UI Integration
 
 The config type system is designed for:
+
 - Future web UI configuration
 - API-driven config updates
 - Real-time config validation
@@ -233,6 +240,7 @@ The config type system is designed for:
 ### Multi-Tenant / SaaS
 
 Path structure supports future scenarios:
+
 - Per-user isolation
 - Organization-level config
 - Shared workflow templates

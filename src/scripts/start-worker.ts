@@ -44,10 +44,7 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2);
   let agentId = process.env.AGENT_ID;
   let capabilities = process.env.AGENT_CAPABILITIES?.split(',') || ['general'];
-  let heartbeatInterval = parseInt(
-    process.env.AGENT_HEARTBEAT_INTERVAL || '30000',
-    10
-  );
+  let heartbeatInterval = parseInt(process.env.AGENT_HEARTBEAT_INTERVAL || '30000', 10);
 
   for (const arg of args) {
     if (arg.startsWith('--agent-id=')) {
@@ -87,7 +84,7 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error) => {
+main().catch(error => {
   console.error('[Worker] Fatal error:', error);
   process.exit(1);
 });

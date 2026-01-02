@@ -12,6 +12,7 @@ After analyzing the [CAMEL AI framework](https://github.com/camel-ai/camel) (15k
 ## Background
 
 CAMEL AI is built on four foundational principles:
+
 - **Evolvability**: Agents continuously improve through data generation
 - **Scalability**: Designed for millions of agents
 - **Statefulness**: Memory across multi-step interactions
@@ -26,6 +27,7 @@ Lugh already has solid multi-agent foundations (`src/swarm/`), but lacks several
 **Problem**: Lugh has basic session management but no structured memory for agent continuity.
 
 **CAMEL's Approach**: Three-tier memory architecture:
+
 - Short-term (conversation buffer)
 - Long-term (persistent vector store)
 - Working memory (task-specific scratchpad)
@@ -35,8 +37,8 @@ Lugh already has solid multi-agent foundations (`src/swarm/`), but lacks several
 ```typescript
 // src/memory/types.ts
 interface AgentMemory {
-  shortTerm: ConversationBuffer;    // Recent messages, auto-summarized
-  longTerm: VectorStore;            // Embeddings of past decisions/code
+  shortTerm: ConversationBuffer; // Recent messages, auto-summarized
+  longTerm: VectorStore; // Embeddings of past decisions/code
   workingMemory: Map<string, unknown>; // Task-specific state
 }
 
@@ -53,6 +55,7 @@ interface VectorStore {
 ```
 
 **Files to Create**:
+
 - `src/memory/conversation-buffer.ts`
 - `src/memory/vector-store.ts`
 - `src/memory/memory-manager.ts`
@@ -88,6 +91,7 @@ interface CodeChunk {
 ```
 
 **Integration Points**:
+
 - Index on `/clone` command
 - Re-index on file changes (via git hooks or polling)
 - Query before sending prompt to add relevant context
@@ -141,8 +145,8 @@ interface ComposedRole extends RoleConfig {
 // src/swarm/agent-messaging.ts
 interface AgentMessage {
   id: string;
-  from: string;      // Agent ID
-  to: string | '*';  // Agent ID or broadcast
+  from: string; // Agent ID
+  to: string | '*'; // Agent ID or broadcast
   type: 'request' | 'response' | 'broadcast' | 'handoff';
   topic: string;
   content: string;
@@ -158,6 +162,7 @@ interface AgentMailbox {
 ```
 
 **Use Cases**:
+
 - Architecture agent asks Security agent to review a design
 - Implementation agent requests clarification from PM agent
 - Handoff patterns between planning and execution
@@ -195,6 +200,7 @@ interface ToolRegistry {
 ```
 
 **Example Tools**:
+
 - `web-search`: Search the web for documentation
 - `slack-notify`: Send notifications to Slack
 - `jira-create`: Create Jira tickets
@@ -240,14 +246,17 @@ interface PatternLearner {
 ## Implementation Plan
 
 ### Phase 1: Foundation (P0)
+
 1. Memory Systems - 2-3 days
 2. RAG/Codebase Indexing - 3-4 days
 
 ### Phase 2: Intelligence (P1)
+
 3. Dynamic Role Assignment - 1-2 days
 4. Inter-Agent Communication - 2-3 days
 
 ### Phase 3: Extensibility (P2)
+
 5. Custom Tool Registry - 2-3 days
 6. Self-Improvement Logging - 4-5 days
 

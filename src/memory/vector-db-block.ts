@@ -35,7 +35,7 @@ const DEFAULT_CONFIG: VectorDBConfig = {
 async function isPgVectorAvailable(): Promise<boolean> {
   try {
     const result = await pool.query(
-      'SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = \'vector\') as available'
+      "SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'vector') as available"
     );
     return result.rows[0]?.available === true;
   } catch {
@@ -54,9 +54,11 @@ export class VectorDBBlock implements IVectorDBBlock {
 
   constructor(config?: Partial<VectorDBConfig>, embedder?: IEmbeddingProvider) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-    this.embedder = embedder || createEmbeddingProvider({
-      model: this.config.embeddingModel,
-    });
+    this.embedder =
+      embedder ||
+      createEmbeddingProvider({
+        model: this.config.embeddingModel,
+      });
   }
 
   /**
@@ -68,7 +70,7 @@ export class VectorDBBlock implements IVectorDBBlock {
       if (!this.pgVectorAvailable) {
         console.warn(
           '[VectorDBBlock] pgvector extension not available, using in-memory fallback. ' +
-          'For production, run: CREATE EXTENSION vector;'
+            'For production, run: CREATE EXTENSION vector;'
         );
       }
     }
@@ -78,9 +80,7 @@ export class VectorDBBlock implements IVectorDBBlock {
   /**
    * Write a record (without embedding - use addWithEmbedding for semantic storage)
    */
-  async write(
-    record: Omit<MemoryRecord, 'id' | 'createdAt'>
-  ): Promise<MemoryRecord> {
+  async write(record: Omit<MemoryRecord, 'id' | 'createdAt'>): Promise<MemoryRecord> {
     return this.addWithEmbedding(record);
   }
 
@@ -180,8 +180,8 @@ export class VectorDBBlock implements IVectorDBBlock {
     );
 
     return result.rows
-      .filter((row) => row.similarity >= this.config.similarityThreshold)
-      .map((row) => ({
+      .filter(row => row.similarity >= this.config.similarityThreshold)
+      .map(row => ({
         record: {
           id: row.id,
           conversationId,
@@ -213,10 +213,10 @@ export class VectorDBBlock implements IVectorDBBlock {
 
     // Sort by similarity and filter by threshold
     return scored
-      .filter((s) => s.score >= this.config.similarityThreshold)
+      .filter(s => s.score >= this.config.similarityThreshold)
       .sort((a, b) => b.score - a.score)
       .slice(0, topK)
-      .map((s) => ({
+      .map(s => ({
         record: s.record,
         score: s.score,
         source: 'vector_db' as const,

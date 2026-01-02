@@ -44,26 +44,13 @@ export type {
 } from './types';
 
 // Chat History Block
-export {
-  ChatHistoryBlock,
-  createChatHistoryBlock,
-} from './chat-history-block';
+export { ChatHistoryBlock, createChatHistoryBlock } from './chat-history-block';
 
 // Vector DB Block
-export {
-  VectorDBBlock,
-  createVectorDBBlock,
-} from './vector-db-block';
+export { VectorDBBlock, createVectorDBBlock } from './vector-db-block';
 
 // Embedding Provider
-export {
-  OpenAIEmbeddingProvider,
-  createEmbeddingProvider,
-} from './embedding-provider';
+export { OpenAIEmbeddingProvider, createEmbeddingProvider } from './embedding-provider';
 
 // Agent Memory (unified)
-export {
-  AgentMemory,
-  getAgentMemory,
-  createAgentMemory,
-} from './agent-memory';
+export { AgentMemory, getAgentMemory, createAgentMemory } from './agent-memory';

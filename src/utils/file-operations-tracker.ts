@@ -8,10 +8,7 @@
  */
 
 import { basename } from 'path';
-import {
-  FileOperation,
-  FileOperationsSummary,
-} from '../types';
+import { FileOperation, FileOperationsSummary } from '../types';
 
 /**
  * Tools that read files
@@ -47,10 +44,7 @@ export class FileOperationsTracker {
   /**
    * Record a tool call and extract any file operations
    */
-  recordToolCall(
-    toolName: string,
-    toolInput?: Record<string, unknown>
-  ): FileOperation | null {
+  recordToolCall(toolName: string, toolInput?: Record<string, unknown>): FileOperation | null {
     if (!toolInput) return null;
 
     const operation = this.extractFileOperation(toolName, toolInput);
@@ -257,12 +251,8 @@ export function formatFileOperationsSummary(
 /**
  * Format a list of file paths for display
  */
-function formatFileList(
-  files: string[],
-  maxFiles: number,
-  verbose: boolean
-): string {
-  const displayFiles = files.slice(0, maxFiles).map((f) => {
+function formatFileList(files: string[], maxFiles: number, verbose: boolean): string {
+  const displayFiles = files.slice(0, maxFiles).map(f => {
     // Show just filename unless verbose
     return verbose ? f : basename(f);
   });
@@ -280,13 +270,10 @@ function formatFileList(
  * Get a brief one-line summary of file operations
  * Good for batch mode where we want minimal noise
  */
-export function getBriefFileOperationsSummary(
-  summary: FileOperationsSummary
-): string {
+export function getBriefFileOperationsSummary(summary: FileOperationsSummary): string {
   const counts: string[] = [];
 
-  const totalModified =
-    summary.filesWritten.length + summary.filesEdited.length;
+  const totalModified = summary.filesWritten.length + summary.filesEdited.length;
   if (totalModified > 0) {
     counts.push(`${totalModified} file${totalModified > 1 ? 's' : ''} modified`);
   }
