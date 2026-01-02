@@ -89,7 +89,35 @@ jobs:
             set -e
             echo "🚀 Starting deployment..."
 
+            # Check if lugh directory exists (first-time setup)
+            if [ ! -d ~/lugh ]; then
+              echo "📁 First-time setup: cloning repository..."
+              cd ~
+              git clone https://github.com/StreetsDigital/lugh.git
+              cd lugh
+              echo "⚠️  IMPORTANT: Create ~/lugh/.env file with production secrets!"
+              echo "⚠️  See docs/deployment-setup.md for setup instructions."
+              echo "❌ First-time setup incomplete. Please:"
+              echo "   1. SSH into server"
+              echo "   2. Create ~/lugh/.env with production secrets"
+              echo "   3. Run: docker compose --profile with-db up -d --build"
+              exit 1
+            fi
+
             cd ~/lugh
+
+            # Check for .env file (critical for docker compose)
+            if [ ! -f .env ]; then
+              echo "❌ Missing .env file!"
+              echo "⚠️  Create ~/lugh/.env with production secrets (DATABASE_URL, TELEGRAM_BOT_TOKEN, etc.)"
+              echo "⚠️  See docs/deployment-setup.md for required environment variables."
+              exit 1
+            fi
+
+            # Create necessary directories
+            echo "📁 Creating directories..."
+            mkdir -p ~/.lugh/workspaces
+            mkdir -p ~/.lugh/worktrees
 
             # Pull latest code
             echo "📥 Pulling latest code..."
@@ -115,7 +143,12 @@ jobs:
 
             # Health checks
             echo "🏥 Running health checks..."
-            curl -sf http://localhost:3000/health || { echo "❌ Lugh health check failed"; exit 1; }
+            curl -sf http://localhost:3000/health || {
+              echo "❌ Lugh health check failed"
+              echo "📋 Recent logs:"
+              docker compose logs --tail=50 app-with-db
+              exit 1
+            }
             echo "✅ Lugh healthy"
 
             # Check LangGraph if available
