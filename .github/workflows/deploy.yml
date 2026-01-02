@@ -89,7 +89,7 @@ jobs:
             set -e
             echo "🚀 Starting deployment..."
 
-            cd ~/makewithLugh
+            cd ~/lugh
 
             # Pull latest code
             echo "📥 Pulling latest code..."
