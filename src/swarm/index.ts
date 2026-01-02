@@ -60,3 +60,20 @@ export { SwarmCoordinator, swarmCoordinator } from './swarm-coordinator';
 
 // Result synthesizer
 export { ResultSynthesizer, resultSynthesizer } from './result-synthesizer';
+
+// Freewheel mode - natural language multi-agent control
+export {
+  parseFreewheelIntent,
+  summarizeIntent,
+  MODEL_ALIASES,
+  MODEL_TIERS,
+  type FreewheelIntent,
+  type FreewheelSession,
+  type ExecutionMode,
+  type SwarmStrategy,
+  type CheckpointType,
+  type ModelAssignment,
+} from './freewheel-mode';
+
+// Freewheel coordinator
+export { FreewheelCoordinator, freewheelCoordinator } from './freewheel-coordinator';

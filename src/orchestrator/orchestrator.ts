@@ -45,6 +45,8 @@ import {
 } from '../utils/file-operations-tracker';
 import { swarmCoordinator } from '../swarm/swarm-coordinator';
 import { createTelegramSwarmCoordinator } from '../swarm/telegram-swarm-coordinator';
+import { freewheelCoordinator, summarizeIntent } from '../swarm/freewheel-coordinator';
+import { isFreewheelRequest, getTelegramFreewheelHandler } from '../adapters/telegram-freewheel';
 import { isEnabled } from '../config/features';
 
 /**
@@ -532,6 +534,76 @@ Remember: The user already decided to run this command. Take action now.`;
 }
 
 /**
+ * Handle freewheel mode requests
+ * Natural language multi-agent execution with user control
+ */
+async function handleFreewheelRequest(
+  conversation: Conversation,
+  message: string,
+  platform: IPlatformAdapter,
+  conversationId: string
+): Promise<void> {
+  console.log('[Orchestrator] Starting freewheel execution');
+
+  // Check if freewheel mode is enabled
+  if (!isEnabled('FREEWHEEL_MODE')) {
+    await platform.sendMessage(
+      conversationId,
+      '❌ Freewheel mode is not enabled.\n\n' +
+        'Add to your .env file:\n' +
+        '```\n' +
+        'FEATURE_MULTI_LLM=true\n' +
+        'FEATURE_SWARM_COORDINATION=true\n' +
+        'FEATURE_FREEWHEEL_MODE=true\n' +
+        '```'
+    );
+    return;
+  }
+
+  if (!freewheelCoordinator) {
+    await platform.sendMessage(
+      conversationId,
+      '❌ Freewheel coordinator not initialized. Check feature flags.'
+    );
+    return;
+  }
+
+  try {
+    // For Telegram, set up the UI handler
+    if (platform.getPlatformType() === 'telegram' && platform.getBot) {
+      const bot = platform.getBot();
+      getTelegramFreewheelHandler(bot);
+    }
+
+    // Start freewheel session
+    const session = await freewheelCoordinator.start(message, conversationId);
+
+    // If cancelled during confirmation, notify user
+    if (session.status === 'cancelled') {
+      await platform.sendMessage(conversationId, '❌ Freewheel execution cancelled.');
+      return;
+    }
+
+    // Send summary of what happened
+    if (session.status === 'completed' && session.swarmId) {
+      await platform.sendMessage(
+        conversationId,
+        `✅ **Freewheel execution completed!**\n\n` +
+          `Mode: ${session.intent.mode}\n` +
+          `Strategy: ${session.intent.strategy}`
+      );
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Orchestrator] Freewheel execution failed:', errorMessage);
+    await platform.sendMessage(
+      conversationId,
+      `❌ **Freewheel Failed**\n\n${errorMessage}`
+    );
+  }
+}
+
+/**
  * Handle swarm execution for parallel agent coordination
  */
 async function handleSwarmExecution(
@@ -856,7 +928,14 @@ export async function handleMessage(
         }
       }
     } else {
-      // Regular message - route through router template OR direct to Claude
+      // Regular message - check for freewheel request first
+      if (isEnabled('FREEWHEEL_MODE') && isFreewheelRequest(message)) {
+        console.log('[Orchestrator] Detected freewheel request, routing to swarm');
+        await handleFreewheelRequest(conversation, message, platform, conversationId);
+        return;
+      }
+
+      // Route through router template OR direct to Claude
       if (conversation.codebase_id) {
         // Has codebase - use router template if available
         const routerTemplate = await templateDb.getTemplate('router');
