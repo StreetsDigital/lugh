@@ -84,7 +84,7 @@ jobs:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
-          script_stop: false
+          script_stop: true
           script: |
             set -e
             echo "🚀 Starting deployment..."
@@ -154,14 +154,16 @@ jobs:
             # Stop existing services
             echo "🛑 Stopping existing services..."
             docker compose -f docker-compose.fullstack.yml down 2>/dev/null || true
+            docker compose -f docker-compose.prod.yml down 2>/dev/null || true
+            docker compose -f docker-compose.staging.yml down 2>/dev/null || true
             docker compose --profile with-db down 2>/dev/null || true
 
             # Build and start full stack
             echo "🔨 Building and starting services..."
             if [ -f docker-compose.fullstack.yml ]; then
-              docker compose -f docker-compose.fullstack.yml up -d --build
+              docker compose -f docker-compose.fullstack.yml up -d --build --remove-orphans
             else
-              docker compose --profile with-db up -d --build
+              docker compose --profile with-db up -d --build --remove-orphans
             fi
 
             # Wait for startup
