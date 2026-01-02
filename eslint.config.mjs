@@ -16,6 +16,16 @@ export default tseslint.config(
       '**/*.js', // Ignore JS files (like jest.config.js)
       '*.mjs', // Ignore ESLint config itself
       '**/*.test.ts', // Ignore test files (excluded from tsconfig)
+
+      // Experimental features (disabled in production via feature flags)
+      'src/swarm/**', // FEATURE_SWARM_COORDINATION
+      'src/api/llm-config.ts', // FEATURE_MULTI_LLM
+      'src/api/swarm.ts', // FEATURE_SWARM_COORDINATION
+      'src/tools/**', // Experimental function tools
+      'src/pool/**', // FEATURE_AGENT_POOL
+      'src/agent/worker.ts', // FEATURE_AGENT_POOL
+      'src/adapters/telegram-agent-approvals.ts', // FEATURE_PHONE_APPROVALS
+      'langgraph-service/**', // Python service (separate linting)
     ],
   },
 

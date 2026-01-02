@@ -189,6 +189,8 @@ export class GitHubAdapter implements IPlatformAdapter {
         console.error('[GitHub] Signature length mismatch:', {
           receivedLength: signatureBuffer.length,
           computedLength: digestBuffer.length,
+          receivedSignature: signature.substring(0, 30) + '...',
+          payloadLength: payload.length,
         });
         return false;
       }
