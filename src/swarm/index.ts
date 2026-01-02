@@ -61,19 +61,19 @@ export { SwarmCoordinator, swarmCoordinator } from './swarm-coordinator';
 // Result synthesizer
 export { ResultSynthesizer, resultSynthesizer } from './result-synthesizer';
 
-// Freewheel mode - natural language multi-agent control
+// YOLO mode - natural language multi-agent control
 export {
-  parseFreewheelIntent,
+  parseYoloIntent,
   summarizeIntent,
   MODEL_ALIASES,
   MODEL_TIERS,
-  type FreewheelIntent,
-  type FreewheelSession,
+  type YoloIntent,
+  type YoloSession,
   type ExecutionMode,
   type SwarmStrategy,
   type CheckpointType,
   type ModelAssignment,
-} from './freewheel-mode';
+} from './yolo-mode';
 
-// Freewheel coordinator
-export { FreewheelCoordinator, freewheelCoordinator } from './freewheel-coordinator';
+// YOLO coordinator
+export { YoloCoordinator, yoloCoordinator } from './yolo-coordinator';

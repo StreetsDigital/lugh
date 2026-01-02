@@ -1,8 +1,8 @@
 /**
- * Telegram Freewheel UI
+ * Telegram Yolo UI
  * =====================
  *
- * Provides Telegram-specific UI components for freewheel mode:
+ * Provides Telegram-specific UI components for yolo mode:
  * - Inline keyboards for approval/control
  * - Status messages with progress
  * - Mid-flight intervention buttons
@@ -11,15 +11,15 @@
 import type { Telegraf, Context, Markup } from 'telegraf';
 import type { CallbackQuery, Message } from 'telegraf/types';
 import {
-  freewheelCoordinator,
+  yoloCoordinator,
   type ApprovalResponse,
-} from '../swarm/freewheel-coordinator';
+} from '../swarm/yolo-coordinator';
 import {
   summarizeIntent,
-  type FreewheelSession,
+  type YoloSession,
   type CheckpointType,
-  type FreewheelIntent,
-} from '../swarm/freewheel-mode';
+  type YoloIntent,
+} from '../swarm/yolo-mode';
 
 // ============================================================================
 // TYPES
@@ -43,14 +43,14 @@ interface PendingQuestion {
 }
 
 // ============================================================================
-// TELEGRAM FREEWHEEL HANDLER
+// TELEGRAM YOLO HANDLER
 // ============================================================================
 
 /**
- * TelegramFreewheelHandler
- * Manages Telegram UI for freewheel mode
+ * TelegramYoloHandler
+ * Manages Telegram UI for yolo mode
  */
-export class TelegramFreewheelHandler {
+export class TelegramYoloHandler {
   private bot: Telegraf;
   private pendingApprovals: Map<string, PendingApproval> = new Map();
   private pendingQuestions: Map<string, PendingQuestion> = new Map();
@@ -71,42 +71,42 @@ export class TelegramFreewheelHandler {
    */
   private setupCallbackHandlers(): void {
     // Handle approval responses
-    this.bot.action(/^freewheel:approve:(.+):(.+)$/, async (ctx) => {
+    this.bot.action(/^yolo:approve:(.+):(.+)$/, async (ctx) => {
       const sessionId = ctx.match[1];
       const option = ctx.match[2];
       await this.handleApprovalCallback(ctx, sessionId, option, true);
     });
 
-    this.bot.action(/^freewheel:reject:(.+)$/, async (ctx) => {
+    this.bot.action(/^yolo:reject:(.+)$/, async (ctx) => {
       const sessionId = ctx.match[1];
       await this.handleApprovalCallback(ctx, sessionId, '', false);
     });
 
     // Handle control actions
-    this.bot.action(/^freewheel:pause:(.+)$/, async (ctx) => {
+    this.bot.action(/^yolo:pause:(.+)$/, async (ctx) => {
       const sessionId = ctx.match[1];
       await this.handlePause(ctx, sessionId);
     });
 
-    this.bot.action(/^freewheel:resume:(.+)$/, async (ctx) => {
+    this.bot.action(/^yolo:resume:(.+)$/, async (ctx) => {
       const sessionId = ctx.match[1];
       await this.handleResume(ctx, sessionId);
     });
 
-    this.bot.action(/^freewheel:cancel:(.+)$/, async (ctx) => {
+    this.bot.action(/^yolo:cancel:(.+)$/, async (ctx) => {
       const sessionId = ctx.match[1];
       await this.handleCancel(ctx, sessionId);
     });
 
     // Handle question responses
-    this.bot.action(/^freewheel:answer:(.+):(.+)$/, async (ctx) => {
+    this.bot.action(/^yolo:answer:(.+):(.+)$/, async (ctx) => {
       const sessionId = ctx.match[1];
       const answer = decodeURIComponent(ctx.match[2]);
       await this.handleQuestionCallback(ctx, sessionId, answer);
     });
 
     // Handle confirmation
-    this.bot.action(/^freewheel:confirm:(.+)$/, async (ctx) => {
+    this.bot.action(/^yolo:confirm:(.+)$/, async (ctx) => {
       const sessionId = ctx.match[1];
       const pending = this.pendingQuestions.get(sessionId);
       if (pending) {
@@ -117,7 +117,7 @@ export class TelegramFreewheelHandler {
       }
     });
 
-    this.bot.action(/^freewheel:modify:(.+)$/, async (ctx) => {
+    this.bot.action(/^yolo:modify:(.+)$/, async (ctx) => {
       const sessionId = ctx.match[1];
       await ctx.answerCbQuery('Send your modifications as a message');
       // TODO: Set up message listener for modifications
@@ -128,22 +128,22 @@ export class TelegramFreewheelHandler {
    * Set up coordinator callbacks
    */
   private setupCoordinatorCallbacks(): void {
-    if (!freewheelCoordinator) return;
+    if (!yoloCoordinator) return;
 
     // Approval requests
-    freewheelCoordinator.setApprovalCallback(
+    yoloCoordinator.setApprovalCallback(
       async (session, checkpoint, description, options) => {
         return this.sendApprovalRequest(session, checkpoint, description, options);
       }
     );
 
     // Status updates
-    freewheelCoordinator.setStatusCallback(async (session, message, data) => {
+    yoloCoordinator.setStatusCallback(async (session, message, data) => {
       await this.sendStatusUpdate(session, message, data);
     });
 
     // Questions
-    freewheelCoordinator.setQuestionCallback(async (session, question, options) => {
+    yoloCoordinator.setQuestionCallback(async (session, question, options) => {
       return this.sendQuestion(session, question, options);
     });
   }
@@ -156,7 +156,7 @@ export class TelegramFreewheelHandler {
    * Send approval request with inline keyboard
    */
   private async sendApprovalRequest(
-    session: FreewheelSession,
+    session: YoloSession,
     checkpoint: CheckpointType,
     description: string,
     options: string[]
@@ -211,13 +211,13 @@ export class TelegramFreewheelHandler {
   ): { reply_markup: { inline_keyboard: Array<Array<{ text: string; callback_data: string }>> } } {
     const buttons = options.map((opt) => ({
       text: opt,
-      callback_data: `freewheel:approve:${sessionId}:${encodeURIComponent(opt)}`,
+      callback_data: `yolo:approve:${sessionId}:${encodeURIComponent(opt)}`,
     }));
 
     // Add cancel button
     buttons.push({
       text: '❌ Cancel',
-      callback_data: `freewheel:reject:${sessionId}`,
+      callback_data: `yolo:reject:${sessionId}`,
     });
 
     // Arrange in rows of 2
@@ -271,7 +271,7 @@ export class TelegramFreewheelHandler {
    * Send status update with control buttons
    */
   async sendStatusUpdate(
-    session: FreewheelSession,
+    session: YoloSession,
     message: string,
     data?: Record<string, unknown>
   ): Promise<void> {
@@ -315,8 +315,8 @@ export class TelegramFreewheelHandler {
       reply_markup: {
         inline_keyboard: [
           [
-            { text: '⏸️ Pause', callback_data: `freewheel:pause:${sessionId}` },
-            { text: '🛑 Cancel', callback_data: `freewheel:cancel:${sessionId}` },
+            { text: '⏸️ Pause', callback_data: `yolo:pause:${sessionId}` },
+            { text: '🛑 Cancel', callback_data: `yolo:cancel:${sessionId}` },
           ],
         ],
       },
@@ -327,13 +327,13 @@ export class TelegramFreewheelHandler {
    * Handle pause action
    */
   private async handlePause(ctx: Context, sessionId: string): Promise<void> {
-    const success = await freewheelCoordinator?.pause(sessionId);
+    const success = await yoloCoordinator?.pause(sessionId);
     if (success) {
       await ctx.editMessageReplyMarkup({
         inline_keyboard: [
           [
-            { text: '▶️ Resume', callback_data: `freewheel:resume:${sessionId}` },
-            { text: '🛑 Cancel', callback_data: `freewheel:cancel:${sessionId}` },
+            { text: '▶️ Resume', callback_data: `yolo:resume:${sessionId}` },
+            { text: '🛑 Cancel', callback_data: `yolo:cancel:${sessionId}` },
           ],
         ],
       });
@@ -347,13 +347,13 @@ export class TelegramFreewheelHandler {
    * Handle resume action
    */
   private async handleResume(ctx: Context, sessionId: string): Promise<void> {
-    const success = await freewheelCoordinator?.resume(sessionId);
+    const success = await yoloCoordinator?.resume(sessionId);
     if (success) {
       await ctx.editMessageReplyMarkup({
         inline_keyboard: [
           [
-            { text: '⏸️ Pause', callback_data: `freewheel:pause:${sessionId}` },
-            { text: '🛑 Cancel', callback_data: `freewheel:cancel:${sessionId}` },
+            { text: '⏸️ Pause', callback_data: `yolo:pause:${sessionId}` },
+            { text: '🛑 Cancel', callback_data: `yolo:cancel:${sessionId}` },
           ],
         ],
       });
@@ -367,7 +367,7 @@ export class TelegramFreewheelHandler {
    * Handle cancel action
    */
   private async handleCancel(ctx: Context, sessionId: string): Promise<void> {
-    const success = await freewheelCoordinator?.cancel(sessionId);
+    const success = await yoloCoordinator?.cancel(sessionId);
     if (success) {
       await ctx.editMessageReplyMarkup(undefined);
       await ctx.answerCbQuery('Cancelled');
@@ -384,7 +384,7 @@ export class TelegramFreewheelHandler {
    * Send question to user
    */
   private async sendQuestion(
-    session: FreewheelSession,
+    session: YoloSession,
     question: string,
     options?: string[]
   ): Promise<string> {
@@ -397,7 +397,7 @@ export class TelegramFreewheelHandler {
     if (options && options.length > 0) {
       const buttons = options.map((opt) => ({
         text: opt,
-        callback_data: `freewheel:answer:${session.id}:${encodeURIComponent(opt)}`,
+        callback_data: `yolo:answer:${session.id}:${encodeURIComponent(opt)}`,
       }));
 
       // Arrange in rows of 2
@@ -466,11 +466,11 @@ export class TelegramFreewheelHandler {
   // =========================================================================
 
   /**
-   * Send initial confirmation message for freewheel intent
+   * Send initial confirmation message for yolo intent
    */
   async sendIntentConfirmation(
     chatId: number,
-    intent: FreewheelIntent,
+    intent: YoloIntent,
     sessionId: string
   ): Promise<boolean> {
     const summary = summarizeIntent(intent);
@@ -479,10 +479,10 @@ export class TelegramFreewheelHandler {
       reply_markup: {
         inline_keyboard: [
           [
-            { text: '✅ Proceed', callback_data: `freewheel:confirm:${sessionId}` },
-            { text: '⚙️ Modify', callback_data: `freewheel:modify:${sessionId}` },
+            { text: '✅ Proceed', callback_data: `yolo:confirm:${sessionId}` },
+            { text: '⚙️ Modify', callback_data: `yolo:modify:${sessionId}` },
           ],
-          [{ text: '❌ Cancel', callback_data: `freewheel:reject:${sessionId}` }],
+          [{ text: '❌ Cancel', callback_data: `yolo:reject:${sessionId}` }],
         ],
       },
     };
@@ -535,8 +535,8 @@ export class TelegramFreewheelHandler {
   /**
    * Get emoji for session status
    */
-  private getStatusEmoji(status: FreewheelSession['status']): string {
-    const emojis: Record<FreewheelSession['status'], string> = {
+  private getStatusEmoji(status: YoloSession['status']): string {
+    const emojis: Record<YoloSession['status'], string> = {
       parsing: '🔍',
       confirming: '❓',
       running: '⚡',
@@ -580,25 +580,25 @@ export class TelegramFreewheelHandler {
 // FACTORY
 // ============================================================================
 
-let handler: TelegramFreewheelHandler | null = null;
+let handler: TelegramYoloHandler | null = null;
 
 /**
- * Get or create the Telegram freewheel handler
+ * Get or create the Telegram yolo handler
  */
-export function getTelegramFreewheelHandler(bot: Telegraf): TelegramFreewheelHandler {
+export function getTelegramYoloHandler(bot: Telegraf): TelegramYoloHandler {
   if (!handler) {
-    handler = new TelegramFreewheelHandler(bot);
+    handler = new TelegramYoloHandler(bot);
   }
   return handler;
 }
 
 /**
- * Check if a message looks like a freewheel request
+ * Check if a message looks like a yolo request
  */
-export function isFreewheelRequest(message: string): boolean {
-  const freewheelPatterns = [
-    // Explicit freewheel triggers
-    /\b(go wild|freewheel|full autonomy|do your thing|have at it)\b/i,
+export function isYoloRequest(message: string): boolean {
+  const yoloPatterns = [
+    // Explicit yolo triggers
+    /\b(go wild|yolo|full autonomy|do your thing|have at it)\b/i,
 
     // Multi-agent triggers
     /\b(\d+)\s*agents?\b/i,
@@ -614,5 +614,5 @@ export function isFreewheelRequest(message: string): boolean {
     /\b(check with me|ask me before|approve each)\b/i,
   ];
 
-  return freewheelPatterns.some((pattern) => pattern.test(message));
+  return yoloPatterns.some((pattern) => pattern.test(message));
 }

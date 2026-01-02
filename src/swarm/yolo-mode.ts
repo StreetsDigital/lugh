@@ -1,5 +1,5 @@
 /**
- * Freewheel Mode
+ * Yolo Mode
  * ==============
  *
  * Natural language interface for controlling multi-agent execution.
@@ -7,7 +7,7 @@
  * through conversational commands.
  *
  * Examples:
- * - "Build me an auth system" (defaults to freewheel)
+ * - "Build me an auth system" (defaults to yolo)
  * - "Go wild, make this codebase better"
  * - "Use 3 agents debating the architecture"
  * - "Check with me before each major change"
@@ -25,7 +25,7 @@ import type { AgentRole } from './types';
  * Execution modes for multi-agent tasks
  */
 export type ExecutionMode =
-  | 'freewheel' // Full autonomy - agents work independently
+  | 'yolo' // Full autonomy - agents work independently
   | 'supervised' // User gets updates but doesn't block
   | 'controlled' // User approves at checkpoints
   | 'debate'; // Agents argue approaches, user picks winner
@@ -53,11 +53,11 @@ export type CheckpointType =
 /**
  * User intent parsed from natural language
  */
-export interface FreewheelIntent {
+export interface YoloIntent {
   /** The actual task/request stripped of control instructions */
   task: string;
 
-  /** Execution mode (freewheel, supervised, controlled, debate) */
+  /** Execution mode (yolo, supervised, controlled, debate) */
   mode: ExecutionMode;
 
   /** Multi-agent strategy */
@@ -164,15 +164,15 @@ export const MODEL_ALIASES: Record<string, ModelAssignment> = {
 // ============================================================================
 
 /**
- * Parse natural language message to extract freewheel intent
+ * Parse natural language message to extract yolo intent
  */
-export function parseFreewheelIntent(message: string): FreewheelIntent {
+export function parseYoloIntent(message: string): YoloIntent {
   const lowerMessage = message.toLowerCase();
 
   // Default intent
-  const intent: FreewheelIntent = {
+  const intent: YoloIntent = {
     task: message,
-    mode: 'freewheel',
+    mode: 'yolo',
     strategy: 'hybrid' as SwarmStrategy,
     modelAssignments: new Map(),
     checkpoints: [],
@@ -186,14 +186,14 @@ export function parseFreewheelIntent(message: string): FreewheelIntent {
   // DETECT EXECUTION MODE
   // =========================================================================
 
-  // Freewheel indicators
+  // Yolo indicators
   if (
-    /\b(go wild|freewheel|full autonomy|do your thing|have at it|go for it|just do it|figure it out)\b/i.test(
+    /\b(go wild|yolo|full autonomy|do your thing|have at it|go for it|just do it|figure it out)\b/i.test(
       lowerMessage
     )
   ) {
-    intent.mode = 'freewheel';
-    intent.checkpoints = []; // No checkpoints in freewheel
+    intent.mode = 'yolo';
+    intent.checkpoints = []; // No checkpoints in yolo
   }
 
   // Supervised indicators
@@ -354,7 +354,7 @@ export function parseFreewheelIntent(message: string): FreewheelIntent {
   // Remove control phrases from the task
   let cleanTask = message;
   const controlPhrases = [
-    /\b(go wild|freewheel|full autonomy|do your thing|have at it)\b/gi,
+    /\b(go wild|yolo|full autonomy|do your thing|have at it)\b/gi,
     /\b(check with me|ask me first|confirm before|wait for approval)\b/gi,
     /\b(use \w+(?:-\w+)? for \w+)/gi,
     /\b(use \w+(?:-\w+)?)\b(?!\s+for)/gi,
@@ -382,7 +382,7 @@ export function parseFreewheelIntent(message: string): FreewheelIntent {
 /**
  * Generate a human-readable summary of the parsed intent
  */
-export function summarizeIntent(intent: FreewheelIntent): string {
+export function summarizeIntent(intent: YoloIntent): string {
   const lines: string[] = [];
 
   lines.push(`**Task:** ${intent.task}`);
@@ -390,7 +390,7 @@ export function summarizeIntent(intent: FreewheelIntent): string {
 
   // Mode
   const modeDescriptions: Record<ExecutionMode, string> = {
-    freewheel: 'Full autonomy - agents work independently',
+    yolo: 'Full autonomy - agents work independently',
     supervised: 'Supervised - you get updates but agents proceed',
     controlled: 'Controlled - you approve at checkpoints',
     debate: 'Debate mode - agents argue approaches, you pick winner',
@@ -440,16 +440,16 @@ export function summarizeIntent(intent: FreewheelIntent): string {
 }
 
 // ============================================================================
-// FREEWHEEL SESSION
+// YOLO SESSION
 // ============================================================================
 
 /**
- * A freewheel execution session with control state
+ * A yolo execution session with control state
  */
-export interface FreewheelSession {
+export interface YoloSession {
   id: string;
   conversationId: string;
-  intent: FreewheelIntent;
+  intent: YoloIntent;
   status: 'parsing' | 'confirming' | 'running' | 'paused' | 'waiting_approval' | 'completed' | 'cancelled';
   swarmId?: string;
   currentPhase?: string;
@@ -473,7 +473,7 @@ export interface FreewheelSession {
 // ============================================================================
 
 export default {
-  parseFreewheelIntent,
+  parseYoloIntent,
   summarizeIntent,
   MODEL_ALIASES,
   MODEL_TIERS,

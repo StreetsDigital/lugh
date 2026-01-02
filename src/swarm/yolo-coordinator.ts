@@ -1,5 +1,5 @@
 /**
- * Freewheel Coordinator
+ * Yolo Coordinator
  * =====================
  *
  * Bridges natural language intent to swarm execution.
@@ -9,15 +9,15 @@
 import { v4 as uuidv4 } from 'uuid';
 import { isEnabled } from '../config/features';
 import {
-  parseFreewheelIntent,
+  parseYoloIntent,
   summarizeIntent,
   MODEL_ALIASES,
-  type FreewheelIntent,
-  type FreewheelSession,
+  type YoloIntent,
+  type YoloSession,
   type ExecutionMode,
   type CheckpointType,
   type ModelAssignment,
-} from './freewheel-mode';
+} from './yolo-mode';
 import { swarmCoordinator, SwarmCoordinator } from './swarm-coordinator';
 import { agentSpawner, DynamicAgentSpawner } from './agent-spawner';
 import { taskDecomposer, TaskDecomposer } from './task-decomposer';
@@ -40,7 +40,7 @@ export interface ApprovalResponse {
  * Callback for requesting user approval
  */
 export type ApprovalRequestCallback = (
-  session: FreewheelSession,
+  session: YoloSession,
   checkpoint: CheckpointType,
   description: string,
   options: string[]
@@ -50,7 +50,7 @@ export type ApprovalRequestCallback = (
  * Callback for sending status updates
  */
 export type StatusUpdateCallback = (
-  session: FreewheelSession,
+  session: YoloSession,
   update: string,
   data?: Record<string, unknown>
 ) => Promise<void>;
@@ -59,24 +59,24 @@ export type StatusUpdateCallback = (
  * Callback for asking user questions
  */
 export type QuestionCallback = (
-  session: FreewheelSession,
+  session: YoloSession,
   question: string,
   options?: string[]
 ) => Promise<string>;
 
 // ============================================================================
-// FREEWHEEL COORDINATOR
+// YOLO COORDINATOR
 // ============================================================================
 
 /**
- * FreewheelCoordinator class
- * Manages the full lifecycle of a freewheel execution
+ * YoloCoordinator class
+ * Manages the full lifecycle of a yolo execution
  */
-export class FreewheelCoordinator {
+export class YoloCoordinator {
   private coordinator: SwarmCoordinator;
   private spawner: DynamicAgentSpawner;
   private decomposer: TaskDecomposer;
-  private sessions: Map<string, FreewheelSession> = new Map();
+  private sessions: Map<string, YoloSession> = new Map();
 
   // Callbacks for user interaction
   private onApprovalRequest?: ApprovalRequestCallback;
@@ -86,7 +86,7 @@ export class FreewheelCoordinator {
   constructor() {
     if (!isEnabled('SWARM_COORDINATION')) {
       throw new Error(
-        '[FreewheelCoordinator] SWARM_COORDINATION feature is not enabled. ' +
+        '[YoloCoordinator] SWARM_COORDINATION feature is not enabled. ' +
           'Set FEATURE_SWARM_COORDINATION=true (requires MULTI_LLM).'
       );
     }
@@ -126,19 +126,19 @@ export class FreewheelCoordinator {
   // =========================================================================
 
   /**
-   * Start a freewheel execution from a natural language message
+   * Start a yolo execution from a natural language message
    */
   async start(
     message: string,
     conversationId: string,
     skipConfirmation = false
-  ): Promise<FreewheelSession> {
-    const sessionId = `freewheel-${uuidv4().substring(0, 8)}`;
-    console.log(`[FreewheelCoordinator] Starting session ${sessionId}`);
+  ): Promise<YoloSession> {
+    const sessionId = `yolo-${uuidv4().substring(0, 8)}`;
+    console.log(`[YoloCoordinator] Starting session ${sessionId}`);
 
     // Parse intent from natural language
-    const intent = parseFreewheelIntent(message);
-    console.log(`[FreewheelCoordinator] Parsed intent:`, {
+    const intent = parseYoloIntent(message);
+    console.log(`[YoloCoordinator] Parsed intent:`, {
       mode: intent.mode,
       strategy: intent.strategy,
       agentCount: intent.agentCount,
@@ -146,7 +146,7 @@ export class FreewheelCoordinator {
     });
 
     // Create session
-    const session: FreewheelSession = {
+    const session: YoloSession = {
       id: sessionId,
       conversationId,
       intent,
@@ -162,7 +162,7 @@ export class FreewheelCoordinator {
     this.applyModelAssignments(intent);
 
     // If confirmation required and not skipped, ask user
-    if (!skipConfirmation && intent.mode !== 'freewheel') {
+    if (!skipConfirmation && intent.mode !== 'yolo') {
       session.status = 'confirming';
       const confirmed = await this.confirmIntent(session);
       if (!confirmed) {
@@ -182,9 +182,9 @@ export class FreewheelCoordinator {
   /**
    * Confirm intent with user before proceeding
    */
-  private async confirmIntent(session: FreewheelSession): Promise<boolean> {
+  private async confirmIntent(session: YoloSession): Promise<boolean> {
     if (!this.onQuestion) {
-      console.log('[FreewheelCoordinator] No question callback, auto-confirming');
+      console.log('[YoloCoordinator] No question callback, auto-confirming');
       return true;
     }
 
@@ -210,7 +210,7 @@ export class FreewheelCoordinator {
   /**
    * Execute the session based on its mode and strategy
    */
-  private async executeSession(session: FreewheelSession): Promise<void> {
+  private async executeSession(session: YoloSession): Promise<void> {
     const { intent } = session;
 
     try {
@@ -259,7 +259,7 @@ export class FreewheelCoordinator {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`[FreewheelCoordinator] Execution failed:`, errorMessage);
+      console.error(`[YoloCoordinator] Execution failed:`, errorMessage);
       session.status = 'cancelled';
       await this.sendStatus(session, `Execution failed: ${errorMessage}`);
       throw error;
@@ -270,7 +270,7 @@ export class FreewheelCoordinator {
    * Handle swarm events and apply checkpoints
    */
   private async handleSwarmEvent(
-    session: FreewheelSession,
+    session: YoloSession,
     event: SwarmEvent
   ): Promise<void> {
     const { intent } = session;
@@ -367,12 +367,12 @@ export class FreewheelCoordinator {
   /**
    * Apply model assignments from intent to spawner
    */
-  private applyModelAssignments(intent: FreewheelIntent): void {
+  private applyModelAssignments(intent: YoloIntent): void {
     // Set default model if specified
     if (intent.defaultModel) {
       this.spawner.setDefaultProvider(intent.defaultModel.provider);
       console.log(
-        `[FreewheelCoordinator] Default provider: ${intent.defaultModel.provider}`
+        `[YoloCoordinator] Default provider: ${intent.defaultModel.provider}`
       );
     }
 
@@ -394,7 +394,7 @@ export class FreewheelCoordinator {
       if (agentRole) {
         this.spawner.setRoleProvider(agentRole, assignment.provider);
         console.log(
-          `[FreewheelCoordinator] ${agentRole} provider: ${assignment.provider}`
+          `[YoloCoordinator] ${agentRole} provider: ${assignment.provider}`
         );
       }
     }
@@ -408,14 +408,14 @@ export class FreewheelCoordinator {
    * Request user approval at a checkpoint
    */
   private async requestApproval(
-    session: FreewheelSession,
+    session: YoloSession,
     checkpoint: CheckpointType,
     description: string,
     options: string[]
   ): Promise<boolean> {
     if (!this.onApprovalRequest) {
       console.log(
-        '[FreewheelCoordinator] No approval callback, auto-approving'
+        '[YoloCoordinator] No approval callback, auto-approving'
       );
       return true;
     }
@@ -452,7 +452,7 @@ export class FreewheelCoordinator {
    * Send status update to user
    */
   private async sendStatus(
-    session: FreewheelSession,
+    session: YoloSession,
     message: string,
     data?: Record<string, unknown>
   ): Promise<void> {
@@ -552,7 +552,7 @@ export class FreewheelCoordinator {
     });
 
     // Parse new instructions and merge with existing intent
-    const newIntent = parseFreewheelIntent(newInstructions);
+    const newIntent = parseYoloIntent(newInstructions);
 
     // Merge model assignments
     for (const [role, model] of newIntent.modelAssignments) {
@@ -560,7 +560,7 @@ export class FreewheelCoordinator {
     }
 
     // Update other settings if specified
-    if (newIntent.mode !== 'freewheel') {
+    if (newIntent.mode !== 'yolo') {
       session.intent.mode = newIntent.mode;
     }
     if (newIntent.strategy !== 'parallel') {
@@ -587,14 +587,14 @@ export class FreewheelCoordinator {
   /**
    * Get a session by ID
    */
-  getSession(sessionId: string): FreewheelSession | undefined {
+  getSession(sessionId: string): YoloSession | undefined {
     return this.sessions.get(sessionId);
   }
 
   /**
    * Get session by conversation ID
    */
-  getSessionByConversation(conversationId: string): FreewheelSession | undefined {
+  getSessionByConversation(conversationId: string): YoloSession | undefined {
     for (const session of this.sessions.values()) {
       if (session.conversationId === conversationId) {
         return session;
@@ -606,7 +606,7 @@ export class FreewheelCoordinator {
   /**
    * Get all active sessions
    */
-  getActiveSessions(): FreewheelSession[] {
+  getActiveSessions(): YoloSession[] {
     return Array.from(this.sessions.values()).filter(
       (s) => s.status === 'running' || s.status === 'paused' || s.status === 'waiting_approval'
     );
@@ -649,12 +649,12 @@ export class FreewheelCoordinator {
 // SINGLETON
 // ============================================================================
 
-export const freewheelCoordinator = isEnabled('SWARM_COORDINATION')
-  ? new FreewheelCoordinator()
-  : (null as unknown as FreewheelCoordinator);
+export const yoloCoordinator = isEnabled('SWARM_COORDINATION')
+  ? new YoloCoordinator()
+  : (null as unknown as YoloCoordinator);
 
 // ============================================================================
 // CONVENIENCE EXPORTS
 // ============================================================================
 
-export { parseFreewheelIntent, summarizeIntent, MODEL_ALIASES };
+export { parseYoloIntent, summarizeIntent, MODEL_ALIASES };

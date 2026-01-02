@@ -169,9 +169,9 @@ export const FEATURE_DEFINITIONS: Record<string, FeatureDefinition> = {
     dependencies: ['SWARM_COORDINATION'],
   },
 
-  FREEWHEEL_MODE: {
-    key: 'FREEWHEEL_MODE',
-    name: 'Freewheel Mode',
+  YOLO_MODE: {
+    key: 'YOLO_MODE',
+    name: 'YOLO Mode',
     description:
       'Natural language control of multi-agent execution with autonomous or supervised modes',
     maturity: 'experimental',

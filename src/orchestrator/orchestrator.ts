@@ -45,8 +45,8 @@ import {
 } from '../utils/file-operations-tracker';
 import { swarmCoordinator } from '../swarm/swarm-coordinator';
 import { createTelegramSwarmCoordinator } from '../swarm/telegram-swarm-coordinator';
-import { freewheelCoordinator, summarizeIntent } from '../swarm/freewheel-coordinator';
-import { isFreewheelRequest, getTelegramFreewheelHandler } from '../adapters/telegram-freewheel';
+import { yoloCoordinator, summarizeIntent } from '../swarm/yolo-coordinator';
+import { isYoloRequest, getTelegramYoloHandler } from '../adapters/telegram-yolo';
 import { isEnabled } from '../config/features';
 
 /**
@@ -534,36 +534,36 @@ Remember: The user already decided to run this command. Take action now.`;
 }
 
 /**
- * Handle freewheel mode requests
+ * Handle YOLO mode requests
  * Natural language multi-agent execution with user control
  */
-async function handleFreewheelRequest(
+async function handleYoloRequest(
   conversation: Conversation,
   message: string,
   platform: IPlatformAdapter,
   conversationId: string
 ): Promise<void> {
-  console.log('[Orchestrator] Starting freewheel execution');
+  console.log('[Orchestrator] Starting YOLO execution');
 
-  // Check if freewheel mode is enabled
-  if (!isEnabled('FREEWHEEL_MODE')) {
+  // Check if YOLO mode is enabled
+  if (!isEnabled('YOLO_MODE')) {
     await platform.sendMessage(
       conversationId,
-      '❌ Freewheel mode is not enabled.\n\n' +
+      '❌ YOLO mode is not enabled.\n\n' +
         'Add to your .env file:\n' +
         '```\n' +
         'FEATURE_MULTI_LLM=true\n' +
         'FEATURE_SWARM_COORDINATION=true\n' +
-        'FEATURE_FREEWHEEL_MODE=true\n' +
+        'FEATURE_YOLO_MODE=true\n' +
         '```'
     );
     return;
   }
 
-  if (!freewheelCoordinator) {
+  if (!yoloCoordinator) {
     await platform.sendMessage(
       conversationId,
-      '❌ Freewheel coordinator not initialized. Check feature flags.'
+      '❌ YOLO coordinator not initialized. Check feature flags.'
     );
     return;
   }
@@ -572,15 +572,15 @@ async function handleFreewheelRequest(
     // For Telegram, set up the UI handler
     if (platform.getPlatformType() === 'telegram' && platform.getBot) {
       const bot = platform.getBot();
-      getTelegramFreewheelHandler(bot);
+      getTelegramYoloHandler(bot);
     }
 
-    // Start freewheel session
-    const session = await freewheelCoordinator.start(message, conversationId);
+    // Start YOLO session
+    const session = await yoloCoordinator.start(message, conversationId);
 
     // If cancelled during confirmation, notify user
     if (session.status === 'cancelled') {
-      await platform.sendMessage(conversationId, '❌ Freewheel execution cancelled.');
+      await platform.sendMessage(conversationId, '❌ YOLO execution cancelled.');
       return;
     }
 
@@ -588,17 +588,17 @@ async function handleFreewheelRequest(
     if (session.status === 'completed' && session.swarmId) {
       await platform.sendMessage(
         conversationId,
-        `✅ **Freewheel execution completed!**\n\n` +
+        `✅ **YOLO execution completed!**\n\n` +
           `Mode: ${session.intent.mode}\n` +
           `Strategy: ${session.intent.strategy}`
       );
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[Orchestrator] Freewheel execution failed:', errorMessage);
+    console.error('[Orchestrator] YOLO execution failed:', errorMessage);
     await platform.sendMessage(
       conversationId,
-      `❌ **Freewheel Failed**\n\n${errorMessage}`
+      `❌ **YOLO Failed**\n\n${errorMessage}`
     );
   }
 }
@@ -928,10 +928,10 @@ export async function handleMessage(
         }
       }
     } else {
-      // Regular message - check for freewheel request first
-      if (isEnabled('FREEWHEEL_MODE') && isFreewheelRequest(message)) {
-        console.log('[Orchestrator] Detected freewheel request, routing to swarm');
-        await handleFreewheelRequest(conversation, message, platform, conversationId);
+      // Regular message - check for YOLO request first
+      if (isEnabled('YOLO_MODE') && isYoloRequest(message)) {
+        console.log('[Orchestrator] Detected YOLO request, routing to swarm');
+        await handleYoloRequest(conversation, message, platform, conversationId);
         return;
       }
 
