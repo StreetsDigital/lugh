@@ -130,8 +130,9 @@ curl http://localhost:3000/health
 ```
 
 Expected response:
+
 ```json
-{"status":"ok","timestamp":"2025-01-02T..."}
+{ "status": "ok", "timestamp": "2025-01-02T..." }
 ```
 
 ## 6. Configure GitHub Secrets
@@ -155,6 +156,7 @@ git push origin main
 ```
 
 Monitor the deployment:
+
 - GitHub Actions: https://github.com/StreetsDigital/lugh/actions
 - Telegram: You'll receive deploy notifications
 
@@ -194,6 +196,7 @@ docker compose logs app-with-db
 ```
 
 Common issues:
+
 - Database connection errors → Check `DATABASE_URL` in `.env`
 - Missing credentials → Check `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY`
 
@@ -227,6 +230,7 @@ Once setup is complete, deployments are automatic:
 4. Sends Telegram notification
 
 Manual deployment:
+
 ```bash
 cd ~/lugh
 git pull origin main
@@ -236,6 +240,7 @@ docker compose --profile with-db up -d --build
 ## Monitoring
 
 ### View Logs
+
 ```bash
 # Real-time logs
 docker compose logs -f app-with-db
@@ -245,21 +250,25 @@ docker compose logs --tail=100 app-with-db
 ```
 
 ### Check Resource Usage
+
 ```bash
 docker stats
 ```
 
 ### Restart Services
+
 ```bash
 docker compose --profile with-db restart
 ```
 
 ### Stop Services
+
 ```bash
 docker compose --profile with-db down
 ```
 
 ### Clean Up (careful!)
+
 ```bash
 # Remove stopped containers
 docker compose down
