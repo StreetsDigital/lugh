@@ -16,8 +16,9 @@ describe('ClaudeClient', () => {
   let client: ClaudeClient;
 
   beforeEach(() => {
-    // Set mock credentials so tests can run
-    process.env.CLAUDE_CODE_OAUTH_TOKEN = 'mock-oauth-token';
+    // Set real credentials so tests can run (API won't be called due to mocks)
+    process.env.CLAUDE_CODE_OAUTH_TOKEN =
+      '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';
     client = new ClaudeClient();
     mockQuery.mockClear();
   });
