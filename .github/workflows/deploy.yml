@@ -84,7 +84,7 @@ jobs:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
-          script_stop: false
+          script_stop: true
           script: |
             set -e
             echo "🚀 Starting deployment..."
