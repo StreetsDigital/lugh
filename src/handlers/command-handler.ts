@@ -184,7 +184,7 @@ export async function handleCommand(
       // Complete command reference - all commands in one place
       const homePath = process.env.HOME || '/home/appuser';
 
-      let msg = `📚 **AgentCommander - Complete Command Reference**
+      let msg = `📚 **Lugh - Complete Command Reference**
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -307,7 +307,7 @@ export async function handleCommand(
       }
 
       msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-*AgentCommander — Streets Digital Ltd*`;
+*Lugh — Streets Digital Ltd*`;
 
       return { success: true, message: msg };
     }
