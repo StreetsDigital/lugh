@@ -55,6 +55,9 @@ const mockGetIsolationProvider = mock(() => ({
   create: mockIsolationProviderCreate,
 }));
 
+// Approval database mocks
+const mockCreateApproval = mock(() => Promise.resolve({ id: 'approval-123' }));
+
 mock.module('../db/conversations', () => ({
   getOrCreateConversation: mockGetOrCreateConversation,
   updateConversation: mockUpdateConversation,
@@ -90,6 +93,10 @@ mock.module('../db/sessions', () => ({
   updateSession: mockUpdateSession,
   deactivateSession: mockDeactivateSession,
   updateSessionMetadata: mockUpdateSessionMetadata,
+}));
+
+mock.module('../db/approvals', () => ({
+  createApproval: mockCreateApproval,
 }));
 
 mock.module('../db/command-templates', () => ({
@@ -191,6 +198,7 @@ describe('orchestrator', () => {
     mockUpdateSession.mockClear();
     mockDeactivateSession.mockClear();
     mockUpdateSessionMetadata.mockClear();
+    mockCreateApproval.mockClear();
     mockGetTemplate.mockClear();
     mockHandleCommand.mockClear();
     mockParseCommand.mockClear();
@@ -390,17 +398,23 @@ describe('orchestrator', () => {
   });
 
   describe('regular messages', () => {
-    test('sends error when no codebase configured', async () => {
+    test('routes to Claude when no codebase configured', async () => {
       mockGetOrCreateConversation.mockResolvedValue({
         ...mockConversation,
         codebase_id: null,
       });
+      mockClient.sendQuery.mockImplementation(async function* () {
+        yield { type: 'result', sessionId: 'session-id' };
+      });
 
       await handleMessage(platform, 'chat-456', 'Hello, help me with code');
 
-      expect(platform.sendMessage).toHaveBeenCalledWith(
-        'chat-456',
-        'No codebase configured. Use /clone for a new repo or /repos to list your current repos you can switch to.'
+      // Should route directly to Claude with global context
+      expect(mockClient.sendQuery).toHaveBeenCalledWith(
+        'Hello, help me with code',
+        expect.any(String),
+        undefined, // No session to resume
+        undefined // No approvalContext
       );
     });
   });
