@@ -8,27 +8,27 @@ Go to: **Settings → Secrets and variables → Actions → New repository secre
 
 ### SSH Access Secrets
 
-| Secret Name | Description | Example |
-|-------------|-------------|---------|
-| `LIGHTSAIL_HOST` | Server IP or hostname | `54.123.45.67` |
-| `LIGHTSAIL_USER` | SSH username | `bitnami` or `ubuntu` |
+| Secret Name         | Description                    | Example                                                                               |
+| ------------------- | ------------------------------ | ------------------------------------------------------------------------------------- |
+| `LIGHTSAIL_HOST`    | Server IP or hostname          | `54.123.45.67`                                                                        |
+| `LIGHTSAIL_USER`    | SSH username                   | `bitnami` or `ubuntu`                                                                 |
 | `LIGHTSAIL_SSH_KEY` | Private SSH key (full content) | `-----BEGIN OPENSSH PRIVATE KEY-----`<br>`...`<br>`-----END OPENSSH PRIVATE KEY-----` |
 
 ### Application Secrets
 
-| Secret Name | Description | Where to Get |
-|-------------|-------------|--------------|
-| `CLAUDE_CODE_OAUTH_TOKEN` | Claude OAuth token | From your `.env.prod` file or Claude Max subscription |
-| `TELEGRAM_BOT_TOKEN` | Production Telegram bot token | From @BotFather after creating bot |
-| `TELEGRAM_ALLOWED_USER_IDS` | Comma-separated Telegram user IDs | Your Telegram user ID (send message to @userinfobot) |
-| `GH_TOKEN` | GitHub Personal Access Token | GitHub Settings → Developer settings → Personal access tokens |
-| `WEBHOOK_SECRET` | GitHub webhook secret | Random string (e.g., `openssl rand -hex 32`) |
-| `GITHUB_ALLOWED_USERS` | Comma-separated GitHub usernames | e.g., `streetsdigital,octocat` |
+| Secret Name                 | Description                       | Where to Get                                                  |
+| --------------------------- | --------------------------------- | ------------------------------------------------------------- |
+| `CLAUDE_CODE_OAUTH_TOKEN`   | Claude OAuth token                | From your `.env.prod` file or Claude Max subscription         |
+| `TELEGRAM_BOT_TOKEN`        | Production Telegram bot token     | From @BotFather after creating bot                            |
+| `TELEGRAM_ALLOWED_USER_IDS` | Comma-separated Telegram user IDs | Your Telegram user ID (send message to @userinfobot)          |
+| `GH_TOKEN`                  | GitHub Personal Access Token      | GitHub Settings → Developer settings → Personal access tokens |
+| `WEBHOOK_SECRET`            | GitHub webhook secret             | Random string (e.g., `openssl rand -hex 32`)                  |
+| `GITHUB_ALLOWED_USERS`      | Comma-separated GitHub usernames  | e.g., `streetsdigital,octocat`                                |
 
 ### Notification Secrets
 
-| Secret Name | Description | Where to Get |
-|-------------|-------------|--------------|
+| Secret Name        | Description                                      | Where to Get                 |
+| ------------------ | ------------------------------------------------ | ---------------------------- |
 | `TELEGRAM_CHAT_ID` | Your Telegram chat ID (for deploy notifications) | Send message to @userinfobot |
 
 ## Getting Your Telegram User ID
