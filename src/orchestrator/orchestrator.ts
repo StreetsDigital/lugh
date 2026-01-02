@@ -491,7 +491,7 @@ function getToolRiskLevel(
  * Format a risk notification message for Telegram
  * Reserved for future use when blocking approval mode is implemented
  */
-function _formatRiskNotification(
+function formatRiskNotification(
   toolName: string,
   toolInput: Record<string, unknown>,
   riskLevel: string
@@ -511,7 +511,7 @@ function _formatRiskNotification(
 }
 
 // Export for potential future use
-void _formatRiskNotification;
+void formatRiskNotification;
 
 /**
  * Wraps command content with execution context to signal the AI should execute immediately

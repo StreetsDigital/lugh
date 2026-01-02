@@ -1187,7 +1187,9 @@ Keep your response concise and helpful. The user stopped you for a reason - find
               '--add',
               'safe.directory',
               targetPath,
-            ]).catch(() => {});
+            ]).catch(() => {
+              // Silently ignore errors - safe.directory config is optional
+            });
 
             console.log(`[Command] Cloned ${identifier} to ${targetPath}`);
 
