@@ -424,8 +424,8 @@ export class LLMProvider {
 
     // OpenRouter requires additional headers
     if (this.config.type === 'openrouter') {
-      headers['HTTP-Referer'] = 'https://agentcommander.local';
-      headers['X-Title'] = 'AgentCommander Swarm';
+      headers['HTTP-Referer'] = 'https://lugh.local';
+      headers['X-Title'] = 'Lugh Swarm';
     }
 
     const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
