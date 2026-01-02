@@ -177,6 +177,9 @@ describe('orchestrator', () => {
   };
 
   beforeEach(() => {
+    // Set mock credentials so Claude client doesn't throw error
+    process.env.CLAUDE_CODE_OAUTH_TOKEN = 'mock-oauth-token';
+
     platform = new MockPlatformAdapter();
     mockGetOrCreateConversation.mockClear();
     mockUpdateConversation.mockClear();
@@ -256,6 +259,11 @@ describe('orchestrator', () => {
   afterEach(() => {
     // Restore mock to passthrough mode for other test files
     mockReadFile.mockImplementation(originalReadFile);
+
+    // Clean up environment variables
+    delete process.env.CLAUDE_CODE_OAUTH_TOKEN;
+    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.CLAUDE_API_KEY;
   });
 
   describe('slash commands (non-invoke)', () => {
@@ -357,7 +365,8 @@ describe('orchestrator', () => {
       expect(mockClient.sendQuery).toHaveBeenCalledWith(
         wrapCommandForExecution('plan', 'Plan the following: Add dark mode'),
         '/workspace/project',
-        'claude-session-xyz'
+        'claude-session-xyz',
+        undefined // approvalContext
       );
     });
 
@@ -373,7 +382,8 @@ describe('orchestrator', () => {
       expect(mockClient.sendQuery).toHaveBeenCalledWith(
         wrapCommandForExecution('plan', 'Command text here') + '\n\n---\n\nIssue #42: Fix the bug',
         expect.any(String),
-        'claude-session-xyz' // Uses existing session's ID
+        'claude-session-xyz', // Uses existing session's ID
+        undefined // approvalContext
       );
     });
   });
@@ -419,7 +429,8 @@ describe('orchestrator', () => {
       expect(mockClient.sendQuery).toHaveBeenCalledWith(
         'Router prompt with fix the login bug',
         '/workspace/project',
-        'claude-session-xyz'
+        'claude-session-xyz',
+        undefined // approvalContext
       );
     });
 
@@ -434,7 +445,8 @@ describe('orchestrator', () => {
       expect(mockClient.sendQuery).toHaveBeenCalledWith(
         'fix the login bug',
         '/workspace/project',
-        'claude-session-xyz'
+        'claude-session-xyz',
+        undefined // approvalContext
       );
     });
   });
@@ -471,7 +483,8 @@ describe('orchestrator', () => {
       expect(mockClient.sendQuery).toHaveBeenCalledWith(
         wrapCommandForExecution('plan', 'Plan command'),
         '/workspace/project',
-        'claude-session-xyz'
+        'claude-session-xyz',
+        undefined // approvalContext
       );
     });
 
@@ -637,7 +650,8 @@ describe('orchestrator', () => {
       expect(mockClient.sendQuery).toHaveBeenCalledWith(
         wrapCommandForExecution('plan', 'Plan command'),
         '/workspace/project', // conversation.cwd
-        'claude-session-xyz' // Uses existing session's ID
+        'claude-session-xyz', // Uses existing session's ID
+        undefined // approvalContext
       );
     });
 
@@ -680,7 +694,8 @@ describe('orchestrator', () => {
       expect(mockClient.sendQuery).toHaveBeenCalledWith(
         wrapCommandForExecution('plan', 'Plan command'),
         '/workspace/test-project/worktrees/thread-chat-456', // From auto-created env
-        'claude-session-xyz'
+        'claude-session-xyz',
+        undefined // approvalContext
       );
     });
 
@@ -719,7 +734,8 @@ describe('orchestrator', () => {
       expect(mockClient.sendQuery).toHaveBeenCalledWith(
         wrapCommandForExecution('plan', 'Plan command'),
         '/workspace/isolation-env', // working_path from isolation env
-        'claude-session-xyz'
+        'claude-session-xyz',
+        undefined // approvalContext
       );
     });
   });
@@ -806,7 +822,8 @@ describe('orchestrator', () => {
       expect(mockClient.sendQuery).toHaveBeenCalledWith(
         wrapCommandForExecution('plan', 'Plan command'),
         '/workspace/project', // From existing env working_path
-        'claude-session-xyz'
+        'claude-session-xyz',
+        undefined // approvalContext
       );
     });
   });
