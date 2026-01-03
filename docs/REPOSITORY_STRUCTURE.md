@@ -56,28 +56,28 @@ lugh/
 
 ### Directory Breakdown
 
-| Directory | Purpose | Key Files |
-|-----------|---------|-----------|
-| `adapters/` | Platform integrations | telegram.ts, slack.ts, discord.ts, test.ts |
-| `clients/` | AI assistant clients | claude.ts, codex.ts, langgraph.ts, factory.ts |
-| `orchestrator/` | Conversation management | orchestrator.ts, abort-manager.ts, recovery.ts |
-| `handlers/` | Slash command processing | command-handler.ts |
-| `db/` | Database operations | connection.ts, conversations.ts, sessions.ts |
-| `types/` | TypeScript definitions | index.ts |
-| `config/` | Configuration management | config-loader.ts, features.ts |
-| `utils/` | Shared utilities | variable-substitution.ts, path-validation.ts |
-| `isolation/` | Worktree isolation | providers/worktree.ts |
-| `agent/` | Claude Agent SDK integration | claude-session.ts, heartbeat.ts, worker.ts |
-| `llm/` | LLM provider selection | providers.ts |
-| `api/` | REST API endpoints | llm-config.ts, llm-proxy.ts, swarm.ts |
-| `services/` | Business logic services | cleanup-service.ts |
-| `pool/` | Agent pool coordination | agent-registry.ts, pool-coordinator.ts, task-queue.ts |
-| `swarm/` | Multi-agent swarm | swarm-coordinator.ts, task-decomposer.ts |
-| `memory/` | Memory & embedding system | agent-memory.ts, embedding-provider.ts |
-| `redis/` | Redis client & channels | client.ts, channels.ts, messages.ts |
-| `tools/` | Tool/function registry | function-tool.ts, registry.ts, toolkit.ts |
-| `scripts/` | CLI scripts | setup-auth.ts, start-worker.ts |
-| `test/` | Test utilities | setup.ts, mocks/ |
+| Directory       | Purpose                      | Key Files                                             |
+| --------------- | ---------------------------- | ----------------------------------------------------- |
+| `adapters/`     | Platform integrations        | telegram.ts, slack.ts, discord.ts, test.ts            |
+| `clients/`      | AI assistant clients         | claude.ts, codex.ts, langgraph.ts, factory.ts         |
+| `orchestrator/` | Conversation management      | orchestrator.ts, abort-manager.ts, recovery.ts        |
+| `handlers/`     | Slash command processing     | command-handler.ts                                    |
+| `db/`           | Database operations          | connection.ts, conversations.ts, sessions.ts          |
+| `types/`        | TypeScript definitions       | index.ts                                              |
+| `config/`       | Configuration management     | config-loader.ts, features.ts                         |
+| `utils/`        | Shared utilities             | variable-substitution.ts, path-validation.ts          |
+| `isolation/`    | Worktree isolation           | providers/worktree.ts                                 |
+| `agent/`        | Claude Agent SDK integration | claude-session.ts, heartbeat.ts, worker.ts            |
+| `llm/`          | LLM provider selection       | providers.ts                                          |
+| `api/`          | REST API endpoints           | llm-config.ts, llm-proxy.ts, swarm.ts                 |
+| `services/`     | Business logic services      | cleanup-service.ts                                    |
+| `pool/`         | Agent pool coordination      | agent-registry.ts, pool-coordinator.ts, task-queue.ts |
+| `swarm/`        | Multi-agent swarm            | swarm-coordinator.ts, task-decomposer.ts              |
+| `memory/`       | Memory & embedding system    | agent-memory.ts, embedding-provider.ts                |
+| `redis/`        | Redis client & channels      | client.ts, channels.ts, messages.ts                   |
+| `tools/`        | Tool/function registry       | function-tool.ts, registry.ts, toolkit.ts             |
+| `scripts/`      | CLI scripts                  | setup-auth.ts, start-worker.ts                        |
+| `test/`         | Test utilities               | setup.ts, mocks/                                      |
 
 ### Platform Adapters (`src/adapters/`)
 
@@ -93,6 +93,7 @@ adapters/
 ```
 
 **Features:**
+
 - All implement `IPlatformAdapter` interface
 - Authorization via user ID whitelists
 - Streaming mode support (stream vs batch)
@@ -110,6 +111,7 @@ clients/
 ```
 
 **Supported Assistants:**
+
 - Claude Code SDK (OAuth or API key)
 - OpenAI Codex SDK (token-based)
 - LangGraph (HTTP service)
@@ -135,6 +137,7 @@ swarm/
 ```
 
 **Capabilities:**
+
 - Spawn multiple agents for parallel work
 - Task decomposition and synthesis
 - Redis-based pub/sub coordination
@@ -219,18 +222,18 @@ memory/
 
 **Agent Categories:**
 
-| Category | Count | Examples |
-|----------|-------|----------|
-| Adtech | 9 | prebid, bidder-manager, floors, fpd |
-| AI/ML | 4 | langchain, langgraph, rag, prompts |
-| Architecture | 9 | auction, automation, dashboard, ux |
-| Audit | 12 | code, concurrency, security, tests |
-| Automation | 4 | n8n, zapier, make, apify |
-| Build | 3 | cicd, mcp, openapi |
-| Infrastructure | 7 | docker, redis, supabase, observability |
-| Meta | 3 | dispatcher, production-readiness |
-| Performance | 5 | cost, profiler, load-tests |
-| Security | 3 | api, identity, privacy |
+| Category       | Count | Examples                               |
+| -------------- | ----- | -------------------------------------- |
+| Adtech         | 9     | prebid, bidder-manager, floors, fpd    |
+| AI/ML          | 4     | langchain, langgraph, rag, prompts     |
+| Architecture   | 9     | auction, automation, dashboard, ux     |
+| Audit          | 12    | code, concurrency, security, tests     |
+| Automation     | 4     | n8n, zapier, make, apify               |
+| Build          | 3     | cicd, mcp, openapi                     |
+| Infrastructure | 7     | docker, redis, supabase, observability |
+| Meta           | 3     | dispatcher, production-readiness       |
+| Performance    | 5     | cost, profiler, load-tests             |
+| Security       | 3     | api, identity, privacy                 |
 
 ### Multi-Agent Chains (11 workflows)
 
@@ -406,6 +409,7 @@ migrations/
 ```
 
 **Core Tables:**
+
 - `remote_agent_conversations` - Platform conversation tracking
 - `remote_agent_codebases` - Repository metadata
 - `remote_agent_sessions` - AI session persistence
@@ -413,6 +417,7 @@ migrations/
 - `remote_agent_isolation_environments` - Worktree isolation
 
 **Extended Tables:**
+
 - `remote_agent_approvals` - Approval workflow
 - `remote_agent_llm_configurations` - LLM config storage
 - `remote_agent_agent_pools` - Agent pool management
@@ -423,6 +428,7 @@ migrations/
 ## Key Features Summary
 
 ### 1. Multi-Platform Support
+
 - **Telegram**: Bot API with polling, file sending, approval workflow
 - **Slack**: Socket Mode with thread support
 - **Discord**: Discord.js WebSocket with thread support
@@ -430,24 +436,28 @@ migrations/
 - **Test**: HTTP-based adapter for development
 
 ### 2. AI Assistant Integration
+
 - Claude Code SDK (OAuth + API key)
 - OpenAI Codex SDK
 - LangGraph service integration
 - Factory pattern with fallback support
 
 ### 3. Conversation Management
+
 - Persistent sessions (survive restarts)
 - Git worktree isolation per conversation
 - Session recovery and context management
 - Concurrency control with locks
 
 ### 4. Command System
+
 - 12+ builtin slash commands
 - Custom markdown commands with variable substitution
 - Global workflow templates
 - Variable support: `$1`, `$2`, `$ARGUMENTS`, `$PLAN`
 
 ### 5. Advanced Features
+
 - **Approval Workflow**: Blocking approvals for high-risk operations
 - **Streaming Modes**: Real-time or buffered delivery
 - **Agent Pool**: Multi-agent coordination
@@ -455,6 +465,7 @@ migrations/
 - **Memory System**: Vector embeddings and chat history
 
 ### 6. Development Tools
+
 - Hot reload with `bun --watch`
 - Comprehensive test suite
 - ESLint + Prettier
@@ -464,19 +475,19 @@ migrations/
 
 ## Statistics
 
-| Metric | Count |
-|--------|-------|
-| TypeScript Files | 135 |
-| Source Directories | 22 |
-| Command Templates | 34 |
-| AI Agents | 59 |
-| Multi-Agent Chains | 11 |
-| Database Migrations | 12 |
-| Docker Compose Configs | 5 |
-| Documentation Files | 40+ |
-| Completed Plans | 40+ |
-| Prompt Templates | 12 |
-| Project Templates | 5 |
+| Metric                 | Count |
+| ---------------------- | ----- |
+| TypeScript Files       | 135   |
+| Source Directories     | 22    |
+| Command Templates      | 34    |
+| AI Agents              | 59    |
+| Multi-Agent Chains     | 11    |
+| Database Migrations    | 12    |
+| Docker Compose Configs | 5     |
+| Documentation Files    | 40+   |
+| Completed Plans        | 40+   |
+| Prompt Templates       | 12    |
+| Project Templates      | 5     |
 
 ---
 
