@@ -34,8 +34,8 @@ Control AI coding assistants (Claude Code, Codex) remotely from Telegram, GitHub
 ```bash
 # 1. Get the files
 mkdir remote-agent && cd remote-agent
-curl -fsSL https://raw.githubusercontent.com/dynamous-community/remote-coding-agent/main/deploy/docker-compose.yml -o docker-compose.yml
-curl -fsSL https://raw.githubusercontent.com/dynamous-community/remote-coding-agent/main/deploy/.env.example -o .env
+curl -fsSL https://raw.githubusercontent.com/StreetsDigital/lugh/main/deploy/docker-compose.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/StreetsDigital/lugh/main/deploy/.env.example -o .env
 
 # 2. Configure (edit .env with your tokens)
 nano .env
@@ -51,8 +51,8 @@ curl http://localhost:3000/health
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/dynamous-community/remote-coding-agent
-cd remote-coding-agent
+git clone https://github.com/StreetsDigital/lugh
+cd lugh
 bun install
 
 # 2. Configure
@@ -100,8 +100,8 @@ See [Configuration Guide](docs/configuration.md) for customization options.
 
 **Get started:**
 ```bash
-git clone https://github.com/dynamous-community/remote-coding-agent
-cd remote-coding-agent
+git clone https://github.com/StreetsDigital/lugh
+cd lugh
 ```
 
 ### 1. Core Configuration (Required)

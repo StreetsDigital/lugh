@@ -1,5 +1,5 @@
 {
-  "name": "remote-coding-agent",
+  "name": "lugh",
   "version": "1.0.0",
   "description": "Remote agentic coding platform - Control AI coding assistants from Telegram, Slack, and GitHub",
   "main": "dist/index.js",

@@ -1,10 +1,10 @@
 # Lugh Architecture
 
-This document explains the Lugh directory structure and configuration system for developers contributing to or extending the remote-coding-agent.
+This document explains the Lugh directory structure and configuration system for developers contributing to or extending the lugh.
 
 ## Overview
 
-Lugh is the unified directory and configuration system for the remote-coding-agent. It provides:
+Lugh is the unified directory and configuration system for the lugh. It provides:
 
 1. **Consistent paths** across all platforms (Mac, Linux, Windows, Docker)
 2. **Configuration precedence** chain (env > global > repo > defaults)
