@@ -1895,7 +1895,7 @@ Keep your response concise and helpful. The user stopped you for a reason - find
 
         // Create default config.yaml
         const defaultConfig = `# Lugh repository configuration
-# See: https://github.com/dynamous-community/remote-coding-agent
+# See: https://github.com/StreetsDigital/lugh
 
 # AI assistant preference (optional - overrides global default)
 # assistant: claude

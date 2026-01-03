@@ -143,5 +143,5 @@ commands:
 ### Docker with Custom Volume
 
 ```bash
-docker run -v /my/data:/.lugh ghcr.io/dynamous-community/remote-coding-agent
+docker run -v /my/data:/.lugh ghcr.io/streetsdigital/lugh
 ```

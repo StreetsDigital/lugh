@@ -27,8 +27,8 @@ Before you begin, you'll need:
 mkdir remote-agent && cd remote-agent
 
 # Download docker-compose and env template
-curl -fsSL https://raw.githubusercontent.com/dynamous-community/remote-coding-agent/main/deploy/docker-compose.yml -o docker-compose.yml
-curl -fsSL https://raw.githubusercontent.com/dynamous-community/remote-coding-agent/main/deploy/.env.example -o .env
+curl -fsSL https://raw.githubusercontent.com/StreetsDigital/lugh/main/deploy/docker-compose.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/StreetsDigital/lugh/main/deploy/.env.example -o .env
 ```
 
 ### 1.2 Get Your Credentials
@@ -131,8 +131,8 @@ Send a message to your bot:
 ### 2.1 Clone and Install
 
 ```bash
-git clone https://github.com/dynamous-community/remote-coding-agent
-cd remote-coding-agent
+git clone https://github.com/StreetsDigital/lugh
+cd lugh
 bun install
 ```
 

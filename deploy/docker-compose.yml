@@ -6,11 +6,11 @@
 #   3. Run: docker compose up -d
 #
 # For full documentation, see:
-# https://github.com/dynamous-community/remote-coding-agent
+# https://github.com/StreetsDigital/lugh
 
 services:
   app:
-    image: ghcr.io/dynamous-community/remote-coding-agent:latest
+    image: ghcr.io/streetsdigital/lugh:latest
     restart: unless-stopped
     env_file: .env
     ports:

@@ -821,7 +821,7 @@ cd "${PROJECT_ROOT}"
 **Verify Database - Prime Conversation:**
 ```bash
 # Check conversation created for prime/plan commands
-docker exec remote-coding-agent-app-1 sh -c "
+docker exec lugh-app-1 sh -c "
 psql '$DATABASE_URL' -c \"
 SELECT id, platform_conversation_id, codebase_id, ai_assistant_type
 FROM remote_agent_conversations
@@ -832,7 +832,7 @@ LIMIT 1;
 "
 
 # Store conversation ID for later verification (will be same for prime, plan, and execute)
-COMMAND_WORKFLOW_CONVERSATION_ID=$(docker exec remote-coding-agent-app-1 sh -c "
+COMMAND_WORKFLOW_CONVERSATION_ID=$(docker exec lugh-app-1 sh -c "
 psql '$DATABASE_URL' -t -c \"
 SELECT id FROM remote_agent_conversations
 WHERE platform_conversation_id = '${GITHUB_USERNAME}/${TEST_REPO_NAME}#${COMMAND_ISSUE_NUMBER}'
@@ -842,7 +842,7 @@ ORDER BY created_at DESC LIMIT 1;
 echo "Command Workflow Conversation ID: ${COMMAND_WORKFLOW_CONVERSATION_ID}"
 
 # Check active sessions for this conversation
-docker exec remote-coding-agent-app-1 sh -c "
+docker exec lugh-app-1 sh -c "
 psql '$DATABASE_URL' -c \"
 SELECT id, ai_assistant_type, active, started_at
 FROM remote_agent_sessions
@@ -1021,7 +1021,7 @@ cd "${PROJECT_ROOT}"
 **CRITICAL: Verify Database - Session Separation for Execute:**
 ```bash
 # Check ALL conversations for this repository issue
-docker exec remote-coding-agent-app-1 sh -c "
+docker exec lugh-app-1 sh -c "
 psql '$DATABASE_URL' -c \"
 SELECT id, platform_conversation_id, codebase_id, created_at, updated_at
 FROM remote_agent_conversations
@@ -1038,7 +1038,7 @@ echo "- Session 2: Execute command (should be active)"
 echo ""
 
 # Count conversations for this issue
-CONVERSATION_COUNT=$(docker exec remote-coding-agent-app-1 sh -c "
+CONVERSATION_COUNT=$(docker exec lugh-app-1 sh -c "
 psql '$DATABASE_URL' -t -c \"
 SELECT COUNT(*) FROM remote_agent_conversations
 WHERE platform_conversation_id = '${GITHUB_USERNAME}/${TEST_REPO_NAME}#${COMMAND_ISSUE_NUMBER}';
@@ -1053,7 +1053,7 @@ else
 fi
 
 # Get the conversation ID (should be only one)
-CONVERSATION_ID=$(docker exec remote-coding-agent-app-1 sh -c "
+CONVERSATION_ID=$(docker exec lugh-app-1 sh -c "
 psql '$DATABASE_URL' -t -c \"
 SELECT id FROM remote_agent_conversations
 WHERE platform_conversation_id = '${GITHUB_USERNAME}/${TEST_REPO_NAME}#${COMMAND_ISSUE_NUMBER}'
@@ -1066,7 +1066,7 @@ echo "Conversation ID: ${CONVERSATION_ID}"
 # Verify session separation
 echo ""
 echo "=== Verify Session Separation ==="
-docker exec remote-coding-agent-app-1 sh -c "
+docker exec lugh-app-1 sh -c "
 psql '$DATABASE_URL' -c \"
 SELECT
   s.id as session_id,
@@ -1085,7 +1085,7 @@ ORDER BY s.started_at ASC;
 "
 
 # Count sessions
-SESSION_COUNT=$(docker exec remote-coding-agent-app-1 sh -c "
+SESSION_COUNT=$(docker exec lugh-app-1 sh -c "
 psql '$DATABASE_URL' -t -c \"
 SELECT COUNT(*) FROM remote_agent_sessions s
 JOIN remote_agent_conversations c ON s.conversation_id = c.id
@@ -1104,7 +1104,7 @@ fi
 # Check all sessions for this conversation
 echo ""
 echo "=== All Sessions for This Conversation ==="
-docker exec remote-coding-agent-app-1 sh -c "
+docker exec lugh-app-1 sh -c "
 psql '$DATABASE_URL' -c \"
 SELECT id, ai_assistant_type, active, started_at, ended_at
 FROM remote_agent_sessions
@@ -1114,7 +1114,7 @@ ORDER BY started_at ASC;
 "
 
 # Check if first session (prime/plan) is inactive
-FIRST_SESSION_INACTIVE=$(docker exec remote-coding-agent-app-1 sh -c "
+FIRST_SESSION_INACTIVE=$(docker exec lugh-app-1 sh -c "
 psql '$DATABASE_URL' -t -c \"
 SELECT COUNT(*) FROM remote_agent_sessions
 WHERE conversation_id = '${CONVERSATION_ID}'
@@ -1131,7 +1131,7 @@ else
 fi
 
 # Check if latest session exists and may be active
-LATEST_SESSION_EXISTS=$(docker exec remote-coding-agent-app-1 sh -c "
+LATEST_SESSION_EXISTS=$(docker exec lugh-app-1 sh -c "
 psql '$DATABASE_URL' -t -c \"
 SELECT COUNT(*) FROM remote_agent_sessions
 WHERE conversation_id = '${CONVERSATION_ID}'

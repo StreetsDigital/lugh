@@ -224,12 +224,12 @@ TTL: Auto
 
 ```bash
 # Create application directory
-sudo mkdir -p /remote-coding-agent
-sudo chown deploy:deploy /remote-coding-agent
+sudo mkdir -p /lugh
+sudo chown deploy:deploy /lugh
 
 # Clone repository into the directory
-cd /remote-coding-agent
-git clone https://github.com/dynamous-community/remote-coding-agent .
+cd /lugh
+git clone https://github.com/StreetsDigital/lugh .
 ```
 
 ---
@@ -676,7 +676,7 @@ docker compose -f docker-compose.yml -f docker-compose.cloud.yml logs --tail=100
 
 ```bash
 # Pull latest changes
-cd /remote-coding-agent
+cd /lugh
 git pull
 
 # Rebuild and restart
